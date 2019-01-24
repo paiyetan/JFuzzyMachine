@@ -71,6 +71,38 @@ public class Table {
         return dMatrix;
     }
     
+    public String[] getRow(int index){
+        String[] indexedRow = new String[columnIds.length];
+        for(int i=0; i < indexedRow.length; i++){
+            indexedRow[i] = matrix[index][i];
+        }
+        return indexedRow;
+    }
+    
+    public String[] getColumn(int index){
+        String[] indexedColumn = new String[rowIds.length];
+        for(int i=0; i < indexedColumn.length; i++){
+            indexedColumn[i] = matrix[i][index];
+        }
+        return indexedColumn;
+    }
+    
+    public double[] getRow(int index, Table.TableType type){
+        double[] indexedRow = new double[columnIds.length];
+        for(int i=0; i < indexedRow.length; i++){
+            indexedRow[i] = dMatrix[index][i];
+        }
+        return indexedRow;
+    }
+    
+    public double[] getColumn(int index, Table.TableType type){
+        double[] indexedColumn = new double[rowIds.length];
+        for(int i=0; i < indexedColumn.length; i++){
+            indexedColumn[i] = dMatrix[i][index];
+        }
+        return indexedColumn;
+    }
+    
     
     public void print(String outFile) throws FileNotFoundException{
         PrintWriter printer = new PrintWriter(outFile);

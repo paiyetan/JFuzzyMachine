@@ -19,10 +19,32 @@ public class JFuzzyMachine {
     public JFuzzyMachine(Table exprs, HashMap<String, String> config){
         //Normalize
         //Fuzzyfy
+        FuzzySet[][] fMat = getFuzzyMatrix(exprs);
+        
         //Search...
         //Defuzzyfy...
         //save result
     }
+    
+    public FuzzySet fuzzify(double value){
+         FuzzySet fz;
+        // y1 = (value < 0) ? -value : 0 ; 
+        // y2 = 1 - Math.abs(value);
+        // y3 = (value < 0) ? 0: value ;
+        double y1 = (value < 0) ? -value : 0 ; 
+        double y2 = 1 - Math.abs(value);
+        double y3 = (value <= 0) ? 0: value ;
+        
+        fz = new FuzzySet(y1, y2, y3);
+        return fz;
+    }
+    
+    public double deFuzzify(FuzzySet fz){
+        double dfz;
+        dfz = (fz.getY3() - fz.getY1())/(fz.getY1() + fz.getY2() + fz.getY3());        
+        return dfz;
+    }
+    
     
     /**
      * @param args the command line arguments
@@ -35,6 +57,19 @@ public class JFuzzyMachine {
         
         Table exprs = new Table(config.get("inputFile"), Table.TableType.DOUBLE);
         JFuzzyMachine jfuzz = new JFuzzyMachine(exprs, config);
+    }
+
+    private FuzzySet[][] getFuzzyMatrix(Table exprs) {
+        //Table fuzzyTable;
+        double[][] mat = exprs.getMatrix(Table.TableType.DOUBLE);
+        FuzzySet[][] fMat = new FuzzySet[exprs.getRowIds().length][exprs.getColumnIds().length];
+        
+        for(int i = 0; i < exprs.getRowIds().length; i++){
+            for(int j = 0; j < exprs.getColumnIds().length; j++){
+                fMat[i][j] = this.fuzzify(mat[i][j]);
+            }
+        }
+        return fMat;
     }
 
     
