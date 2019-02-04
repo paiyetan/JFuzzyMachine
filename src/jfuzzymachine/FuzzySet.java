@@ -14,9 +14,9 @@ public class FuzzySet {
     private double y1, y2, y3;
 
     public FuzzySet(double y1, double y2, double y3) {
-        this.y1 = y1;
-        this.y2 = y2;
-        this.y3 = y3;
+        this.y1 = y1; // degree of low
+        this.y2 = y2; // degree of medium
+        this.y3 = y3; // degree of high
     }
 
     public double getY1() {

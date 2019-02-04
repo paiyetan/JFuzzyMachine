@@ -49,7 +49,8 @@ public class Table {
 
     
     public Table(String[] rowIds, 
-            String[] columnIds, String[][] matrix) {
+                 String[] columnIds, 
+                 String[][] matrix) {
         this.rowIds = rowIds;
         this.columnIds = columnIds;
         this.matrix = matrix;
@@ -70,6 +71,29 @@ public class Table {
     public double[][] getMatrix(Table.TableType type) {
         return dMatrix;
     }
+    
+    public int getRowIndex(String rowId){
+        int index = -1;
+        for (int i = 0; i < rowIds.length; i++){
+            if (rowId.equalsIgnoreCase(rowIds[i])){
+                index = i;
+                break;
+            }
+        }
+        return index;
+    }
+    
+    public int getColumnIndex(String columnId){
+        int index = -1;
+        for (int i = 0; i < columnIds.length; i++){
+            if (columnId.equalsIgnoreCase(columnIds[i])){
+                index = i;
+                break;
+            }
+        }
+        return index;
+    }
+    
     
     public String[] getRow(int index){
         String[] indexedRow = new String[columnIds.length];
@@ -101,6 +125,18 @@ public class Table {
             indexedColumn[i] = dMatrix[i][index];
         }
         return indexedColumn;
+    }
+    
+    public String[] removeItem(String[] items, String itemToRemove){
+        String[] newArr = new String[items.length - 1];
+        int newArrIndex = 0;
+        for(int i = 0; i < items.length; i++){
+            if(!items[i].equalsIgnoreCase(itemToRemove)){
+                newArr[newArrIndex] = items[i];
+                newArrIndex++;
+            }
+        }
+        return newArr;
     }
     
     

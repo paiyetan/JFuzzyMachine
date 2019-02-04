@@ -23,7 +23,7 @@ public class ConfigFileReader {
         String line;
         while((line = reader.readLine())!=null){
             String optionValue = line.split("#")[0]; //ignore everything after the config comment character
-            String[] lineArr = optionValue.split("\t");
+            String[] lineArr = optionValue.split("=");
             config.put(lineArr[0], lineArr[1]);
         }
         return config;
