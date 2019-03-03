@@ -29,33 +29,33 @@ public class JFuzzyMachine {
     private final FuzzySet[][] fMat;
     
     private final int ruleTable[][] =
-                          {{1, 1, 1},
-                            {1, 1, 2},
-                            {1, 1, 3},
-                            {1, 2, 1},
-                            {1, 2, 2},
-                            {1, 2, 3},
-                            {1, 3, 1},
-                            {1, 3, 2},
-                            {1, 3, 3},
-                            {2, 1, 1},
-                            {2, 1, 2},
-                            {2, 1, 3},
-                            {2, 2, 1},
-                            {2, 2, 2},
-                            {2, 2, 3},
-                            {2, 3, 1},
-                            {2, 3, 2},
-                            {2, 3, 3},
-                            {3, 1, 1},
-                            {3, 1, 2},
-                            {3, 1, 3},
-                            {3, 2, 1},
-                            {3, 2, 2},
-                            {3, 2, 3},
-                            {3, 3, 1},
-                            {3, 3, 2},
-                            {3, 3, 3}};
+                          {{1, 1, 1}, //0
+                            {1, 1, 2}, //1
+                            {1, 1, 3}, //2
+                            {1, 2, 1}, //3
+                            {1, 2, 2}, //4
+                            {1, 2, 3}, //5
+                            {1, 3, 1}, //6
+                            {1, 3, 2}, //7 
+                            {1, 3, 3}, //8
+                            {2, 1, 1}, //9
+                            {2, 1, 2}, //10
+                            {2, 1, 3}, //11
+                            {2, 2, 1}, //12
+                            {2, 2, 2}, //13
+                            {2, 2, 3}, //14
+                            {2, 3, 1}, //15
+                            {2, 3, 2}, //16
+                            {2, 3, 3}, //17
+                            {3, 1, 1}, //18
+                            {3, 1, 2}, //19
+                            {3, 1, 3}, //20
+                            {3, 2, 1}, //21
+                            {3, 2, 2}, //22
+                            {3, 2, 3}, //23
+                            {3, 3, 1}, //24
+                            {3, 3, 2}, //25
+                            {3, 3, 3}}; //26
     
     public JFuzzyMachine(HashMap<String, String> config) throws IOException{
         
@@ -99,8 +99,9 @@ public class JFuzzyMachine {
     
     public ESearch search() throws FileNotFoundException {
         
+        double r2CutOff = Double.parseDouble(config.get("R2CutOff"));
         ESearch results = new ESearch();
-        PrintWriter printer = new PrintWriter(config.get("inputFile") + ".jfs");  //jFuzzyMachine Search
+        PrintWriter printer = new PrintWriter(config.get("inputFile") + ".tsv");  //jFuzzyMachine Search
         if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
             // print output file header...
             results.printESearchResultFileHeader(printer);
@@ -148,12 +149,14 @@ public class JFuzzyMachine {
                             double error = evaluateE(gene, inputGenes, ruleIndeces); 
                             ESearchResult result = new ESearchResult(gene, numInput, inputGenes, ruleIndeces, error);
                             
-                            
-                            if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
-                                results.printESearchResult(result, printer);
-                            }else{
-                                results.add(result);
-                            }                                  
+                            if(error >= r2CutOff){
+                                
+                                if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
+                                    results.printESearchResult(result, printer);
+                                }else{
+                                    results.add(result);
+                                } 
+                            }
                         }                                               
                     }                                       
                 }
@@ -245,17 +248,17 @@ public class JFuzzyMachine {
         switch (rule[0]) {
             case 3:
                 // if input is low, output is high
-                //zHiList.add(lo);
+                // zHiList.add(lo);
                 zHi = lo;
                 break;
             case 2: 
                 // if input is low, output is medium
-                //zMedList.add(lo);
+                // zMedList.add(lo);
                 zMe = lo;
                 break;
             case 1:
                 // if input is low, output is low
-                //zLoList.add(lo);
+                // zLoList.add(lo);
                 zLo = lo;
                 break;
             default:
@@ -270,7 +273,7 @@ public class JFuzzyMachine {
                 break;
             case 2:
                 // if input is medium, output is medium
-                //zMedList.add(med);
+                // zMedList.add(med);
                 zMe = med;
                 break;
             case 1:
@@ -290,7 +293,7 @@ public class JFuzzyMachine {
                 break;
             case 2:
                 // if input is high, output is medium
-                //zMedList.add(hi);
+                // zMedList.add(hi);
                 zMe = hi;
                 break;
             case 1:
@@ -352,10 +355,8 @@ public class JFuzzyMachine {
                     resultList.remove(resultList.size() - 1);
                 }
             }
-	} 
- 
-    }
-    
+	}  
+    }    
     
     /**
      * @param args the command line arguments
