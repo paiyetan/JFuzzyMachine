@@ -187,6 +187,7 @@ public class JFuzzyMachine {
     }
     */
     
+    /*
     private void searchHelper2(int xCaretValueArrayIndex, 
                                 //String outGene, 
                                 String[] inGenes,
@@ -225,9 +226,9 @@ public class JFuzzyMachine {
         }
         
     }
-      
+    */  
     
-    
+    /*
     public ESearch searchHelper(int numberOfInputs, String outGene, String[] inGenes){
         ESearch results = new ESearch();
         
@@ -264,6 +265,50 @@ public class JFuzzyMachine {
             
         }
         
+        return results; 
+    }
+    */
+    
+    
+    public void searchHelper2(int inputIndex,
+                                int[] inputCombns,
+                                    LinkedList<Rule> ruleList){
+        inputIndex++;
+        if(inputIndex >= inputCombns.length){
+            return;
+        }else{    
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
+                        ruleList.add(new Rule(i, j, k));
+                        searchHelper2(inputIndex,inputCombns,ruleList);
+                    }
+                }
+            }
+        }
+    }
+    
+    public ESearch searchHelper(int numberOfInputs, String outGene, String[] inGenes){
+        ESearch results = new ESearch();
+        
+        // get all possible combinations of inputs (from otherGenes)
+        Combinations inputCombinations = new Combinations(inGenes.length, numberOfInputs);
+
+        // for each combination of inputs...
+        for (int[] inputCombns : inputCombinations) {
+            // get all possible combinations of rules...
+            LinkedList<Rule> ruleList = new LinkedList(); 
+            int inputIndex = -1;
+            searchHelper2(inputIndex, //index of the input gene or feature in the combination of inputs array...
+                          inputCombns, // combination of inputs (gene or features) array..
+                          ruleList // list of rules found to apply; length of this should be equal to the lenght of
+                                            // of the combination of input genes/features for a successful recursive search....
+                            );
+            System.out.println("Found ");
+               
+                
+        }
+       
         return results; 
     }
      
