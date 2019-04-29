@@ -97,6 +97,8 @@ public class JFuzzyMachine {
         return dfz;
     }    
     
+    /**
+     *    
     public ESearch search() throws FileNotFoundException {
         
         double r2CutOff = Double.parseDouble(config.get("R2CutOff"));
@@ -112,10 +114,10 @@ public class JFuzzyMachine {
         String[] genes = exprs.getRowIds();
         for(String gene : genes){
             String[] otherGenes = exprs.removeItem(genes, gene); // get other genes to get combinations of       
-            int[] numInputs = new int[Integer.parseInt(config.get("maxNumberOfInputs"))]; // get max # of inputs       
+            int[] maxInputs = new int[Integer.parseInt(config.get("maxNumberOfInputs"))]; // get max # of inputs       
         
             // for each 1 to max # of inputs
-            for (int i = 0; i < numInputs.length; i++ ){
+            for (int i = 0; i < maxInputs.length; i++ ){
                 int numInput = i + 1; 
                 // get all possible combinations of inputs (from otherGenes)
                 Combinations inputCombinations = new Combinations(otherGenes.length, numInput);
@@ -161,10 +163,103 @@ public class JFuzzyMachine {
                     }                                       
                 }
             }
-        }              
+        } 
         
         printer.close();
         return(results);
+    }
+    * 
+    */
+    
+    public ESearch searchHelper(int numberOfInputs, String outGene, String[] inGenes){
+        ESearch results = new ESearch();
+        
+        // get all possible combinations of inputs (from otherGenes)
+        Combinations inputCombinations = new Combinations(inGenes.length, numberOfInputs);
+
+        // for each combination of inputs...
+        for (int[] inputCombns : inputCombinations) {
+            // get all possible combinations of rules with order (permutations)
+            Combinations ruleCombinations = new Combinations(ruleTable.length, inputCombns.length);
+                                    //NOTE: rule combinations are the row indeces of ruleTable
+            // for each combination of rules...
+            for(int[] ruleCombns : ruleCombinations){
+                // to consider order, permute...
+                PermutateArray pa = new PermutateArray();
+                List<List<Integer>> inputsRulePermutations = pa.permute(ruleCombns);
+
+                // get each permuation...
+                for(List<Integer> inputsRulePermutation : inputsRulePermutations){
+                    // NOTE: the length of the permutation list should be the same as inputCombns..
+
+                    int[] ruleIndeces = new int[inputsRulePermutation.size()];
+                    String[] inputGenes = new String[inputsRulePermutation.size()];
+                    // at this stage evaluate the effect of input_gene(s) on output_gene(s)
+                    // [r_1, r_2, r_3,..r_n]
+                    // [in_1, in_2, in_3, ...in_n]
+
+                    for(int r = 0; r < inputsRulePermutation.size(); r++){
+                        ruleIndeces[r] = inputsRulePermutation.get(r);
+                        inputGenes[r] = inGenes[inputCombns[r]];
+                    }
+
+                    double error = evaluateE(outGene, inputGenes, ruleIndeces);
+                    ESearchResult result = new ESearchResult(outGene, numberOfInputs, inputGenes, ruleIndeces, error);
+
+                    if(error >= r2CutOff){
+
+                        if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
+                            results.printESearchResult(result, printer);
+                        }else{
+                            results.add(result);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return results; 
+    }
+    
+    public ESearch search() throws FileNotFoundException {
+        
+        double r2CutOff = Double.parseDouble(config.get("R2CutOff"));
+        ESearch results = new ESearch();
+        PrintWriter printer = new PrintWriter(config.get("inputFile") + ".jfuz");  //jFuzzyMachine Search
+        // print output file header...
+        results.printESearchResultFileHeader(printer, config);      
+                 
+        // for each gene,
+        String[] genes;
+        if(config.get("useAllGenesAsOutput").equalsIgnoreCase("TRUE")){
+          genes = exprs.getRowIds();
+        }else{
+          int istart = Integer.parseInt(config.get("iGeneStart"));
+          int iend = Integer.parseInt(config.get("iGeneEnd"));
+          int tot = (iend - istart) + 1; // number of output genes to consider
+          String[] expGenes = exprs.getRowIds();
+          genes = new String[tot];
+          for(int i=0;i<tot;i++){
+            genes[i] = expGenes[istart+i];
+          }
+        }
+        
+        for(String gene : genes){
+            String[] otherGenes = exprs.removeItem(genes, gene); // get other genes to get combinations of
+            int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
+            if(maxInputs <= 0){
+                int inputs = Integer.parseInt(config.get("numberOfInputs"));                
+                results = this.searchHelper(inputs, gene, otherGenes);
+            }else{
+                // for each 1 to max # of inputs
+                for (int i = 0; i < maxInputs; i++ ){
+                    int numInput = i + 1;
+                }
+            }
+        }
+            
+        printer.close();
+        return results;
     }
     
     private double evaluateE(String gene, String[] inputGenes, 
@@ -356,7 +451,12 @@ public class JFuzzyMachine {
                 }
             }
 	}  
-    }    
+    }  
+    
+    class RuleTable{
+        
+    }
+    
     
     /**
      * @param args the command line arguments

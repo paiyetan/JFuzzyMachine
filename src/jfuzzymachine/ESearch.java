@@ -8,6 +8,7 @@ package jfuzzymachine;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 
@@ -41,29 +42,42 @@ public class ESearch {
         return results.get(index);
     } 
     
-    public void printESearch(String out) throws FileNotFoundException{
+    public void printESearch(String out, HashMap<String, String> config) throws FileNotFoundException{
         PrintWriter printer = new PrintWriter(out);
         //print table header
-        printESearchResultFileHeader(printer);
+        printESearchResultFileHeader(printer, config);
         for(ESearchResult result : results){
-            printESearchResult(result, printer);
+            printESearchResult(result, printer, config);
         }        
         printer.close();
     }
     
-    public void printESearchResultFileHeader(PrintWriter printer){
+    public void printESearchResultFileHeader(PrintWriter printer, HashMap<String, String> config){
         printer.println("Output\tNumberOfInput(s)\tInput(s)\tRuleInde(ces)x\tError(E)");
+        if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
+            // print output file header...
+            System.out.println("Output\tNumberOfInput(s)\tInput(s)\tRuleInde(ces)x\tError(E)");
+        }        
     }
 
     @SuppressWarnings("NonPublicExported")
-    public void printESearchResult(ESearchResult result, PrintWriter printer) {
-        
+    public void printESearchResult(ESearchResult result, PrintWriter printer, HashMap<String, String> config) {       
         printer.println(result.getOutputGene()  + "\t" + 
                         result.getNumOfInputs() + "\t" +
                         Arrays.toString(result.getInputGenes()) + "\t" +
                         Arrays.toString(result.getRules()) + "\t" +
                         result.getError()
                         );
+        
+        if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
+            // print output file header...
+            System.out.println(result.getOutputGene()  + "\t" + 
+                        result.getNumOfInputs() + "\t" +
+                        Arrays.toString(result.getInputGenes()) + "\t" +
+                        Arrays.toString(result.getRules()) + "\t" +
+                        result.getError()
+            );
+        }   
         
     }
     
