@@ -5,14 +5,16 @@
  */
 package jfuzzymachine;
 
+import tables.RuleTable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import org.apache.commons.math3.util.Combinations;
-import table.Table;
+import tables.Table;
 import utilities.ConfigFileReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 //import jfuzzymachine.ESearch.ESearchResult;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -27,41 +29,17 @@ public class JFuzzyMachine {
     private final HashMap<String, String> config;
     private final Table exprs;
     private final FuzzySet[][] fMat;
+    private final int[][] ruleTable;
     
-    private final int ruleTable[][] =
-                          {{1, 1, 1}, //0
-                            {1, 1, 2}, //1
-                            {1, 1, 3}, //2
-                            {1, 2, 1}, //3
-                            {1, 2, 2}, //4
-                            {1, 2, 3}, //5
-                            {1, 3, 1}, //6
-                            {1, 3, 2}, //7 
-                            {1, 3, 3}, //8
-                            {2, 1, 1}, //9
-                            {2, 1, 2}, //10
-                            {2, 1, 3}, //11
-                            {2, 2, 1}, //12
-                            {2, 2, 2}, //13
-                            {2, 2, 3}, //14
-                            {2, 3, 1}, //15
-                            {2, 3, 2}, //16
-                            {2, 3, 3}, //17
-                            {3, 1, 1}, //18
-                            {3, 1, 2}, //19
-                            {3, 1, 3}, //20
-                            {3, 2, 1}, //21
-                            {3, 2, 2}, //22
-                            {3, 2, 3}, //23
-                            {3, 3, 1}, //24
-                            {3, 3, 2}, //25
-                            {3, 3, 3}}; //26
+    
     
     public JFuzzyMachine(HashMap<String, String> config) throws IOException{
         
+        RuleTable ruleT = new RuleTable();
         this.config = config;
         this.exprs = new Table(config.get("inputFile"), Table.TableType.DOUBLE);
         this.fMat = getFuzzyMatrix();
+        this.ruleTable = ruleT.getRuleTable();
        
     }
     
@@ -171,6 +149,85 @@ public class JFuzzyMachine {
     * 
     */
     
+    /*
+    private void searchHelper2(int xCaretValueArrayIndex, 
+                                //String outGene, 
+                                String[] inGenes,
+                                int inputIndex, 
+                                    int[] inputCombns, 
+                                        double zx, double zy, double zz, 
+                                            LinkedList<Rule> ruleList) {
+        if(inputIndex >= inputCombns.length){
+            return;
+        }else{
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
+                        //index in inputCombns array == int inputIndex
+                        //index in inGenes = 
+                        String inGene = inGenes[inputCombns[inputIndex]];
+                        FuzzySet fuzValue = this.fMat[this.exprs.getRowIndex(inGene)][xCaretValueArrayIndex];
+                        zx = zx + fuzValue.get(i);
+                        zy = zy + fuzValue.get(j);
+                        zz = zz + fuzValue.get(k);
+                        ruleList.add(new Rule(i, j, k));                        
+                        inputIndex++;
+                        searchHelper2(xCaretValueArrayIndex,
+                                        //outGene, 
+                                            inGenes,
+                                             inputIndex, 
+                                                inputCombns, 
+                                                    zx, zy, zz, 
+                                                       ruleList);
+                    }
+                }
+            }
+        }
+        
+    }
+    */
+    
+    private void searchHelper2(int xCaretValueArrayIndex, 
+                                //String outGene, 
+                                String[] inGenes,
+                                int inputIndex, 
+                                    int[] inputCombns, 
+                                        double zx, double zy, double zz, 
+                                            LinkedList<Rule> ruleList) {
+        inputIndex++;
+        if(inputIndex >= inputCombns.length){
+            return;
+            
+        }else{
+            String inGene = inGenes[inputCombns[inputIndex]];
+            FuzzySet fuzValue = this.fMat[this.exprs.getRowIndex(inGene)][xCaretValueArrayIndex];
+                        
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
+                        //index in inputCombns array == int inputIndex
+                        //index in inGenes = 
+                        zx = zx + fuzValue.get(i);
+                        zy = zy + fuzValue.get(j);
+                        zz = zz + fuzValue.get(k);
+                        ruleList.add(new Rule(i, j, k));                        
+                        inputIndex++;
+                        searchHelper2(xCaretValueArrayIndex,
+                                        //outGene, 
+                                            inGenes,
+                                             inputIndex, 
+                                                inputCombns, 
+                                                    zx, zy, zz, 
+                                                       ruleList);
+                    }
+                }
+            }
+        }
+        
+    }
+      
+    
+    
     public ESearch searchHelper(int numberOfInputs, String outGene, String[] inGenes){
         ESearch results = new ESearch();
         
@@ -179,48 +236,37 @@ public class JFuzzyMachine {
 
         // for each combination of inputs...
         for (int[] inputCombns : inputCombinations) {
-            // get all possible combinations of rules with order (permutations)
-            Combinations ruleCombinations = new Combinations(ruleTable.length, inputCombns.length);
-                                    //NOTE: rule combinations are the row indeces of ruleTable
-            // for each combination of rules...
-            for(int[] ruleCombns : ruleCombinations){
-                // to consider order, permute...
-                PermutateArray pa = new PermutateArray();
-                List<List<Integer>> inputsRulePermutations = pa.permute(ruleCombns);
-
-                // get each permuation...
-                for(List<Integer> inputsRulePermutation : inputsRulePermutations){
-                    // NOTE: the length of the permutation list should be the same as inputCombns..
-
-                    int[] ruleIndeces = new int[inputsRulePermutation.size()];
-                    String[] inputGenes = new String[inputsRulePermutation.size()];
-                    // at this stage evaluate the effect of input_gene(s) on output_gene(s)
-                    // [r_1, r_2, r_3,..r_n]
-                    // [in_1, in_2, in_3, ...in_n]
-
-                    for(int r = 0; r < inputsRulePermutation.size(); r++){
-                        ruleIndeces[r] = inputsRulePermutation.get(r);
-                        inputGenes[r] = inGenes[inputCombns[r]];
-                    }
-
-                    double error = evaluateE(outGene, inputGenes, ruleIndeces);
-                    ESearchResult result = new ESearchResult(outGene, numberOfInputs, inputGenes, ruleIndeces, error);
-
-                    if(error >= r2CutOff){
-
-                        if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
-                            results.printESearchResult(result, printer);
-                        }else{
-                            results.add(result);
-                        }
-                    }
-                }
+            // get all possible combinations of rules...
+            double[] xCaretValues = new double[this.exprs.getColumnIds().length];
+            for(int i = 0; i < xCaretValues.length; i++){
+                double zx = 0;
+                double zy = 0;
+                double zz = 0;
+                int inputIndex = -1;
+                
+                int xCaretValueArrayIndex = i;
+                LinkedList<Rule> ruleList = new LinkedList();
+                
+                searchHelper2(xCaretValueArrayIndex,
+                              //outGene,
+                              inGenes,
+                              inputIndex, //index of the input gene or feature in the combination of inputs array...
+                              inputCombns, // combination of inputs (gene or features) array..
+                              zx, zy, zz, // compute zvalues for output feature/gene...
+                              ruleList // list of rules found to apply; length of this should be equal to the lenght of
+                                                // of the combination of input genes/features for a successful recursive search....
+                                );
+                
+                FuzzySet fz = new FuzzySet(zx, zy, zz);
+                
             }
+            
+            
         }
         
         return results; 
     }
-    
+     
     public ESearch search() throws FileNotFoundException {
         
         double r2CutOff = Double.parseDouble(config.get("R2CutOff"));
@@ -421,7 +467,8 @@ public class JFuzzyMachine {
         return z;
         
     }
-        
+
+      
  
     class PermutateArray {        
         
@@ -452,10 +499,6 @@ public class JFuzzyMachine {
             }
 	}  
     }  
-    
-    class RuleTable{
-        
-    }
     
     
     /**

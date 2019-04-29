@@ -13,7 +13,9 @@ public class FuzzySet {
     
     private double y1, y2, y3;
 
-    public FuzzySet(double y1, double y2, double y3) {
+    public FuzzySet(double y1, 
+                        double y2, 
+                            double y3) {
         this.y1 = y1; // degree of low
         this.y2 = y2; // degree of medium
         this.y3 = y3; // degree of high
@@ -39,5 +41,18 @@ public class FuzzySet {
         
         return arr;
     }
-            
+    
+    public double get(int index){
+        //double value = 0;
+        switch (index) {
+            case 1:
+                return y1;
+            case 2:
+                return y2;
+            case 3:
+                return y3;
+            default:
+                return 0;
+        }
+    }
 }
