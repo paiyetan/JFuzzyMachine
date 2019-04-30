@@ -3,7 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/FuzzySet.java</file>
             <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/JFuzzyMachine.java</file>
+            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/tables/RuleTable.java</file>
+            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/Rule.java</file>
+            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/ESearch.java</file>
+            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/tables/Table.java</file>
+            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/test/testunits/CombinationsTest.java</file>
         </group>
     </open-files>
 </project-private>
