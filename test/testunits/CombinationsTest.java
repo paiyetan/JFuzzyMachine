@@ -5,6 +5,7 @@
  */
 package testunits;
 
+import java.util.Arrays;
 import org.apache.commons.math3.util.Combinations;
 
 /**
@@ -16,9 +17,8 @@ public class CombinationsTest {
     public static void main(String[] args){
         Combinations inputCombinations = new Combinations(3, 2);
         for(int[] inputCombns : inputCombinations){
-            for(int in : inputCombns){
-                System.out.print(in + " ");
-            }
+            //System.out.println(inputCombns.toString());
+            System.out.println(Arrays.toString(inputCombns));
             System.out.println();
         }   
     }

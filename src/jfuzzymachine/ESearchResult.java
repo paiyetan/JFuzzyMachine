@@ -14,14 +14,14 @@ public class ESearchResult{
     private final String outputGene;
     private final int numOfInputs;
     private final String[] inputGenes;
-    private final int[] rules;
+    private final String[] rules;
     private final double error;
 
     public ESearchResult(
                          String outputGene, 
                          int numOfInputs, 
                          String[] inputGenes, 
-                         int[] rules, 
+                         String[] rules, 
                          double error
     ) {
 
@@ -45,7 +45,7 @@ public class ESearchResult{
         return inputGenes;
     }
 
-    public int[] getRules() {
+    public String[] getRules() {
         return rules;
     }
 

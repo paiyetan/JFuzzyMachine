@@ -14,7 +14,6 @@ import org.apache.commons.math3.util.Combinations;
 import tables.Table;
 import utilities.ConfigFileReader;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 //import jfuzzymachine.ESearch.ESearchResult;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -29,17 +28,15 @@ public class JFuzzyMachine {
     private final HashMap<String, String> config;
     private final Table exprs;
     private final FuzzySet[][] fMat;
-    private final int[][] ruleTable;
-    
-    
-    
+    //private final int[][] ruleTable;
+        
     public JFuzzyMachine(HashMap<String, String> config) throws IOException{
         
         RuleTable ruleT = new RuleTable();
         this.config = config;
         this.exprs = new Table(config.get("inputFile"), Table.TableType.DOUBLE);
         this.fMat = getFuzzyMatrix();
-        this.ruleTable = ruleT.getRuleTable();
+        //this.ruleTable = ruleT.getRuleTable();
        
     }
     
@@ -58,9 +55,6 @@ public class JFuzzyMachine {
 
     public FuzzySet fuzzify(double value){
          FuzzySet fz;
-        // y1 = (value < 0) ? -value : 0 ; 
-        // y2 = 1 - Math.abs(value);
-        // y3 = (value < 0) ? 0: value ;
         double y1 = (value < 0) ? -value : 0 ; 
         double y2 = 1 - Math.abs(value);
         double y3 = (value <= 0) ? 0: value ;
@@ -75,273 +69,38 @@ public class JFuzzyMachine {
         return dfz;
     }    
     
-    /**
-     *    
-    public ESearch search() throws FileNotFoundException {
-        
-        double r2CutOff = Double.parseDouble(config.get("R2CutOff"));
-        ESearch results = new ESearch();
-        PrintWriter printer = new PrintWriter(config.get("inputFile") + ".tsv");  //jFuzzyMachine Search
-        if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
-            // print output file header...
-            results.printESearchResultFileHeader(printer);
-        }
-       
-                 
-        // for each gene,
-        String[] genes = exprs.getRowIds();
-        for(String gene : genes){
-            String[] otherGenes = exprs.removeItem(genes, gene); // get other genes to get combinations of       
-            int[] maxInputs = new int[Integer.parseInt(config.get("maxNumberOfInputs"))]; // get max # of inputs       
-        
-            // for each 1 to max # of inputs
-            for (int i = 0; i < maxInputs.length; i++ ){
-                int numInput = i + 1; 
-                // get all possible combinations of inputs (from otherGenes)
-                Combinations inputCombinations = new Combinations(otherGenes.length, numInput);
-            
-                // for each combination of inputs...
-                for (int[] inputCombns : inputCombinations) {                
-                    // get all possible combinations of rules with order (permutations)
-                    Combinations ruleCombinations = new Combinations(ruleTable.length, inputCombns.length);
-                                            //NOTE: rule combinations are the row indeces of ruleTable
-                    // for each combination of rules...
-                    for(int[] ruleCombns : ruleCombinations){ 
-                        // to consider order, permute...
-                        PermutateArray pa = new PermutateArray();
-                        List<List<Integer>> inputsRulePermutations = pa.permute(ruleCombns);
-                    
-                        // get each permuation...
-                        for(List<Integer> inputsRulePermutation : inputsRulePermutations){
-                            // NOTE: the length of the permutation list should be the same as inputCombns..                        
-                            
-                            int[] ruleIndeces = new int[inputsRulePermutation.size()];
-                            String[] inputGenes = new String[inputsRulePermutation.size()];
-                            // at this stage evaluate the effect of input_gene(s) on output_gene(s)
-                            // [r_1, r_2, r_3,..r_n]
-                            // [in_1, in_2, in_3, ...in_n]
-                            
-                            for(int r = 0; r < inputsRulePermutation.size(); r++){
-                                ruleIndeces[r] = inputsRulePermutation.get(r);
-                                inputGenes[r] = otherGenes[inputCombns[r]];
-                            }
-                            
-                            double error = evaluateE(gene, inputGenes, ruleIndeces); 
-                            ESearchResult result = new ESearchResult(gene, numInput, inputGenes, ruleIndeces, error);
-                            
-                            if(error >= r2CutOff){
-                                
-                                if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
-                                    results.printESearchResult(result, printer);
-                                }else{
-                                    results.add(result);
-                                } 
-                            }
-                        }                                               
-                    }                                       
-                }
-            }
-        } 
-        
-        printer.close();
-        return(results);
-    }
-    * 
-    */
-    
-    /*
-    private void searchHelper2(int xCaretValueArrayIndex, 
-                                //String outGene, 
-                                String[] inGenes,
-                                int inputIndex, 
-                                    int[] inputCombns, 
-                                        double zx, double zy, double zz, 
-                                            LinkedList<Rule> ruleList) {
-        if(inputIndex >= inputCombns.length){
-            return;
-        }else{
-            for(int i = 1; i <= 3; i++){
-                for(int j = 1; j <= 3; j++){
-                    for(int k = 1; k <= 3; k++){
-                        //index in inputCombns array == int inputIndex
-                        //index in inGenes = 
-                        String inGene = inGenes[inputCombns[inputIndex]];
-                        FuzzySet fuzValue = this.fMat[this.exprs.getRowIndex(inGene)][xCaretValueArrayIndex];
-                        zx = zx + fuzValue.get(i);
-                        zy = zy + fuzValue.get(j);
-                        zz = zz + fuzValue.get(k);
-                        ruleList.add(new Rule(i, j, k));                        
-                        inputIndex++;
-                        searchHelper2(xCaretValueArrayIndex,
-                                        //outGene, 
-                                            inGenes,
-                                             inputIndex, 
-                                                inputCombns, 
-                                                    zx, zy, zz, 
-                                                       ruleList);
-                    }
-                }
-            }
-        }
-        
-    }
-    */
-    
-    /*
-    private void searchHelper2(int xCaretValueArrayIndex, 
-                                //String outGene, 
-                                String[] inGenes,
-                                int inputIndex, 
-                                    int[] inputCombns, 
-                                        double zx, double zy, double zz, 
-                                            LinkedList<Rule> ruleList) {
-        inputIndex++;
-        if(inputIndex >= inputCombns.length){
-            return;
-            
-        }else{
-            String inGene = inGenes[inputCombns[inputIndex]];
-            FuzzySet fuzValue = this.fMat[this.exprs.getRowIndex(inGene)][xCaretValueArrayIndex];
-                        
-            for(int i = 1; i <= 3; i++){
-                for(int j = 1; j <= 3; j++){
-                    for(int k = 1; k <= 3; k++){
-                        //index in inputCombns array == int inputIndex
-                        //index in inGenes = 
-                        zx = zx + fuzValue.get(i);
-                        zy = zy + fuzValue.get(j);
-                        zz = zz + fuzValue.get(k);
-                        ruleList.add(new Rule(i, j, k));                        
-                        inputIndex++;
-                        searchHelper2(xCaretValueArrayIndex,
-                                        //outGene, 
-                                            inGenes,
-                                             inputIndex, 
-                                                inputCombns, 
-                                                    zx, zy, zz, 
-                                                       ruleList);
-                    }
-                }
-            }
-        }
-        
-    }
-    */  
-    
-    /*
-    public ESearch searchHelper(int numberOfInputs, String outGene, String[] inGenes){
-        ESearch results = new ESearch();
-        
-        // get all possible combinations of inputs (from otherGenes)
-        Combinations inputCombinations = new Combinations(inGenes.length, numberOfInputs);
-
-        // for each combination of inputs...
-        for (int[] inputCombns : inputCombinations) {
-            // get all possible combinations of rules...
-            double[] xCaretValues = new double[this.exprs.getColumnIds().length];
-            for(int i = 0; i < xCaretValues.length; i++){
-                double zx = 0;
-                double zy = 0;
-                double zz = 0;
-                int inputIndex = -1;
-                
-                int xCaretValueArrayIndex = i;
-                LinkedList<Rule> ruleList = new LinkedList();
-                
-                searchHelper2(xCaretValueArrayIndex,
-                              //outGene,
-                              inGenes,
-                              inputIndex, //index of the input gene or feature in the combination of inputs array...
-                              inputCombns, // combination of inputs (gene or features) array..
-                              zx, zy, zz, // compute zvalues for output feature/gene...
-                              ruleList // list of rules found to apply; length of this should be equal to the lenght of
-                                                // of the combination of input genes/features for a successful recursive search....
-                                );
-                
-                FuzzySet fz = new FuzzySet(zx, zy, zz);
-                
-            }
-            
-            
-        }
-        
-        return results; 
-    }
-    */
-    
-    /*
-    public void searchHelper2(int inputIndex,
-                                int[] inputCombns,
-                                    LinkedList<Rule> ruleList){
-        inputIndex++;
-        if(inputIndex >= inputCombns.length){
-            return;
-        }else{    
-            for(int i = 1; i <= 3; i++){
-                for(int j = 1; j <= 3; j++){
-                    for(int k = 1; k <= 3; k++){
-                        ruleList.add(new Rule(i, j, k));
-                        searchHelper2(inputIndex,inputCombns,ruleList);
-                    }
-                }
-            }
-        }
-    }
-    
-    public ESearch searchHelper(int numberOfInputs, String outGene, String[] inGenes){
-        ESearch results = new ESearch();
-        
-        // get all possible combinations of inputs (from otherGenes)
-        Combinations inputCombinations = new Combinations(inGenes.length, numberOfInputs);
-
-        // for each combination of inputs...
-        for (int[] inputCombns : inputCombinations) {
-            // get all possible combinations of rules...
-            LinkedList<Rule> ruleList = new LinkedList(); 
-            int inputIndex = -1;
-            searchHelper2(inputIndex, //index of the input gene or feature in the combination of inputs array...
-                          inputCombns, // combination of inputs (gene or features) array..
-                          ruleList // list of rules found to apply; length of this should be equal to the lenght of
-                                            // of the combination of input genes/features for a successful recursive search....
-                            );
-            System.out.println("Found ");
-               
-                
-        }
-       
-        return results; 
-    }
-    */
-    
-    
     private ESearch searchHelper5(int numberOfInputs, 
                                  String outputGene, 
-                                    String[] otherGenes) {
-        ESearch results = new ESearch();
+                                    String[] otherGenes,
+                                    ESearch results) {
+        //ESearch results = new ESearch();
         
         return results;
     }
 
     private ESearch searchHelper4(int numberOfInputs, 
                                  String outputGene, 
-                                    String[] otherGenes) {
-        ESearch results = new ESearch();
+                                    String[] otherGenes,
+                                    ESearch results) {
+        //ESearch results = new ESearch();
         
         return results;
     }
 
     private ESearch searchHelper3(int numberOfInputs, 
                                  String outputGene, 
-                                    String[] otherGenes) {
-        ESearch results = new ESearch();
+                                    String[] otherGenes,
+                                    ESearch results) {
+        //ESearch results = new ESearch();
         
         return results;
     }
 
     private ESearch searchHelper2(int numberOfInputs, 
                                  String outputGene, 
-                                    String[] otherGenes) {
-        ESearch results = new ESearch();
+                                    String[] otherGenes,
+                                    ESearch results) {
+        //ESearch results = new ESearch();
         // get all possible combinations of inputs (from otherGenes)
         Combinations inputCombinations = new Combinations(otherGenes.length, numberOfInputs);
         
@@ -355,7 +114,8 @@ public class JFuzzyMachine {
         // for each combination of inputs...
         for (int[] inputCombns : inputCombinations) {
             
-            LinkedList<Rule> ruleCombns = new LinkedList();
+            //LinkedList<Rule> ruleCombns = new LinkedList();
+            String[] rules = new String[inputCombns.length];
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -364,55 +124,66 @@ public class JFuzzyMachine {
                             for(int m = 1; m <= 3; m++){
                                 for(int n = 1; n <= 3; n++){
 
-                                    ruleCombns.add(new Rule(i,j,k));
-                                    ruleCombns.add(new Rule(l,m,n));
+                                    //ruleCombns.add(new Rule(i,j,k));
+                                    //ruleCombns.add(new Rule(l,m,n));
+                                    rules[0] = new Rule(i,j,k).toString();
+                                    rules[1] = new Rule(l,m,n).toString();
+                                    
+                                    String[] inputGenes = new String[inputCombns.length];
                                     
                                     double[] xCaretValues = new double[outputGeneExpValues.length];
                                     double residualSquaredSum = 0;
                                     
-                                    for(int indx = 0; indx < xCaretValues.length; indx++){
+                                    for(int index = 0; index < xCaretValues.length; index++){
                                         //get input genes 
                                         // NOTE: there are two inputs here
                                         String input1 = otherGenes[inputCombns[0]];
                                         String input2 = otherGenes[inputCombns[1]];
+                                        
+                                        inputGenes[0] = input1;
+                                        inputGenes[1] = input2;
                                         //get fuzzyValues of input genes, 
-                                        FuzzySet fz1 = fMat[exprs.getRowIndex(input1)][indx];
-                                        FuzzySet fz2 = fMat[exprs.getRowIndex(input2)][indx];
+                                        FuzzySet fz1 = fMat[exprs.getRowIndex(input1)][index];
+                                        FuzzySet fz2 = fMat[exprs.getRowIndex(input2)][index];
                                         //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
                                         double zx = fz1.get(i) + fz2.get(l);
                                         double zy = fz1.get(j) + fz2.get(m);
                                         double zz = fz1.get(k) + fz2.get(n);
-                                        //get defuzzified (xCaretValue) value of Z @ position indx
+                                        //get defuzzified (xCaretValue) value of Z @ position index
                                         double dfz = this.deFuzzify(new FuzzySet(zx, zy, zz));
-                                        xCaretValues[indx] = dfz;
+                                        xCaretValues[index] = dfz;
                                         // compute residual and residual squared sum...
-                                        residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[indx] - dfz), 2);
+                                        residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);
                                         
                                     }
                                     
                                     //compute error..
-                                    double E = 1 - (residualSquaredSum/deviationSquaredSum);
-
+                                    double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                                    
+                                    ESearchResult sResults = new ESearchResult(outputGene, 
+                                                                                inputCombns.length,
+                                                                                    inputGenes,
+                                                                                        rules,
+                                                                                            err
+                                                                                        );
+                                    results.add(sResults);
                                 }
                             }
                         }
-
                     }
                 }
             }
             
         }
-                    
-        
-        
         
         return results;
     }
 
     private ESearch searchHelper1(int numberOfInputs, 
                                  String outputGene, 
-                                    String[] otherGenes) {
-        ESearch results = new ESearch();
+                                    String[] otherGenes,
+                                    ESearch results) {
+        //ESearch results = new ESearch();
         
         
         return results;
@@ -421,42 +192,42 @@ public class JFuzzyMachine {
       
     
     
-    public ESearch searchHelper(int numberOfInputs, String outputGene, String[] otherGenes){
-        ESearch results = new ESearch();
-        
+    public ESearch searchHelper(int numberOfInputs, 
+                                String outputGene, 
+                                    String[] otherGenes,
+                                        ESearch results){
+        //ESearch results = new ESearch();        
         switch(numberOfInputs){
             case 5:
                 results = searchHelper5(numberOfInputs, 
-                        outputGene, otherGenes);
+                        outputGene, otherGenes, results);
                 break;
             case 4:
                 results = searchHelper4(numberOfInputs, 
-                        outputGene, otherGenes);
+                        outputGene, otherGenes, results);
                 break;
             case 3:
                 results = searchHelper3(numberOfInputs, 
-                        outputGene, otherGenes);
+                        outputGene, otherGenes, results);
                 break;
             case 2:
                 results = searchHelper2(numberOfInputs, 
-                        outputGene, otherGenes);
+                        outputGene, otherGenes, results);
                 break;
             default:
                 results = searchHelper1(numberOfInputs, 
-                        outputGene, otherGenes);
+                        outputGene, otherGenes, results);
                 break;
                 
         }
         return results;
     }
      
-    public ESearch search() throws FileNotFoundException {
+    public void search() throws FileNotFoundException {
         
         double r2CutOff = Double.parseDouble(config.get("R2CutOff"));
         ESearch results = new ESearch();
-        PrintWriter printer = new PrintWriter(config.get("inputFile") + ".jfuz");  //jFuzzyMachine Search
-        // print output file header...
-        results.printESearchResultFileHeader(printer, config);      
+        PrintWriter printer = new PrintWriter(config.get("inputFile") + ".jfuz");  //jFuzzyMachine Search          
                  
         // for each gene,
         String[] genes;
@@ -478,179 +249,21 @@ public class JFuzzyMachine {
             int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
             if(maxInputs <= 0){
                 int inputs = Integer.parseInt(config.get("numberOfInputs"));                
-                results = this.searchHelper(inputs, gene, otherGenes);
+                results = this.searchHelper(inputs, gene, otherGenes, results);
             }else{
                 // for each 1 to max # of inputs
                 for (int i = 0; i < maxInputs; i++ ){
-                    int numInput = i + 1;
+                    int inputs = i + 1;
+                    results = this.searchHelper(inputs, gene, otherGenes, results);
                 }
             }
         }
-            
+        results.printESearch(printer, config);       
         printer.close();
-        return results;
+        return;
     }
     
-    private double evaluateE(String gene, String[] inputGenes, 
-                                int[] ruleIndeces) {
-        double E = 0;
-        
-        // Given the fuzzified expression of an input gene y = [y1 y2 y3]; 
-        // and the general fuzzy rule r = [r1 r2 r3]; 
-        // the resulting fuzzified expression of the output gene z will be z = [y_r1 y_r2 y_r3];
-        double[][] exprsMatrix = exprs.getMatrix(Table.TableType.DOUBLE);        
-        //double[] xValues = exprs.getRow(exprs.getRowIndex(gene), Table.TableType.DOUBLE); //crisp experimental data
-        double[] xValues = exprsMatrix[exprs.getRowIndex(gene)]; //crisp experimental data
-        double[] xCaretBarValues = new double[xValues.length]; // defuzzified experimental prediction values...
-        
-        Mean m = new Mean();
-        double xBar = m.evaluate(xValues);
-        
-        // get defuzzified (xCaretBarValues) values...
-        for(int i = 0; i < xValues.length; i++){
-            /*
-            double exprsCrispValue = xValues[i]; // get gene value at position_i   
-            FuzzySet exprsFuzzyValue = fMat[exprs.getRowIndex(gene)][i];
-            */
-            
-            FuzzySet[] zArr = new FuzzySet[inputGenes.length]; // intermediate Z values...  
-            
-            for(int j = 0; j < zArr.length; j++){ // each intermediate z value is derived by apply rule to input gene value
-                
-                String inputGene = inputGenes[j];
-                int ruleIndex = ruleIndeces[j];
-                /*
-                   recall Gomley et al (2011): The state of an output node z = [z1 z2 z3] is determined 
-                    by the fuzzy state of an input gene y = [y1 y2 y3] and the rule describing the relation 
-                     from input to output r = [r1 r2 r3] as follows: z = [y_r1 y_r2 y_r3]
-                */
-                FuzzySet inputGeneFuzzyValue = fMat[exprs.getRowIndex(inputGene)][i];
-                // apply rule at ruleIndex in ruleTable on inputGene fuzzyValue
-                zArr[j] = evaluateZ(inputGeneFuzzyValue, ruleIndex);
-            }
-            
-            FuzzySet z = sumIntermediateZValues(zArr);
-            double dfz = deFuzzify(z);
-            xCaretBarValues[i] = dfz;
-                        
-        }
-        
-       /*
-        E = 1 - [ (summation(x_i - xCaretBar_i)^2) / (summation(x_i - xBar)^2) ]        
-        */
-       double upperSS = 0;
-       double lowerSS = 0;
-       for( int i = 0; i < xValues.length; i++){
-           upperSS = upperSS + Math.pow((xValues[i] - xCaretBarValues[i]), 2);
-           lowerSS = lowerSS + Math.pow((xValues[i] - xBar), 2);
-       }
-       E = 1 - ((upperSS/lowerSS)); 
-       return E;
-              
-    }
-
     
-    private FuzzySet evaluateZ(FuzzySet inputFuzzyValue, int ruleIndex) {
-        
-        FuzzySet z;
-        
-        int[] rule = ruleTable[ruleIndex];
-        double lo = inputFuzzyValue.getY1();  // degree of low
-        double med = inputFuzzyValue.getY2(); // degree of medium
-        double hi = inputFuzzyValue.getY3(); // degree of high
-        
-        /*
-            LinkedList<Double> zLoList = new LinkedList();
-            LinkedList<Double> zMedList = new LinkedList();
-            LinkedList<Double> zHiList = new LinkedList();
-        */
-        
-        double zLo = 0;
-        double zMe = 0;
-        double zHi = 0;        
-        
-        switch (rule[0]) {
-            case 3:
-                // if input is low, output is high
-                // zHiList.add(lo);
-                zHi = lo;
-                break;
-            case 2: 
-                // if input is low, output is medium
-                // zMedList.add(lo);
-                zMe = lo;
-                break;
-            case 1:
-                // if input is low, output is low
-                // zLoList.add(lo);
-                zLo = lo;
-                break;
-            default:
-                break;
-        }
-        
-        switch (rule[1]) {
-            case 3:
-                // if input is medium, output is high
-                // zHiList.add(med);
-                zHi = med;
-                break;
-            case 2:
-                // if input is medium, output is medium
-                // zMedList.add(med);
-                zMe = med;
-                break;
-            case 1:
-                // if input is medium, output is low
-                // zLoList.add(med);
-                zLo = med;
-                break;
-            default:
-                break;
-        }
-        
-        switch (rule[2]) {
-            case 3:
-                // if input is high, output is high
-                // zHiList.add(hi);
-                zHi = hi;
-                break;
-            case 2:
-                // if input is high, output is medium
-                // zMedList.add(hi);
-                zMe = hi;
-                break;
-            case 1:
-                // if input is high, output is low
-                // zLoList.add(hi);
-                zLo = hi;
-                break;
-            default:
-                break;
-        }
-        
-        z = new FuzzySet(zLo, zMe, zHi);       
-        return z;
-        
-    }
-
-    private FuzzySet sumIntermediateZValues(FuzzySet[] zArr) {
-        
-        FuzzySet z;
-        double l = 0;
-        double m = 0;
-        double h = 0;
-        
-        for (FuzzySet zArr1 : zArr) {
-            l = l + zArr1.getY1(); //low
-            m = m + zArr1.getY2(); //medium
-            h = h + zArr1.getY3(); //high
-        }
-        z = new FuzzySet(l, m, h);
-        return z;
-        
-    }
-
     
  
     class PermutateArray {        
@@ -691,7 +304,7 @@ public class JFuzzyMachine {
         System.out.println("Starting...");
         // Read input file...
         ConfigFileReader cReader = new ConfigFileReader();
-        HashMap<String, String> config = cReader.read(args[0]);
+        HashMap<String, String> config = cReader.read(args[0]); // configuration file path
         
         System.out.println("Initiating...");
         JFuzzyMachine jfuzz = new JFuzzyMachine(config);

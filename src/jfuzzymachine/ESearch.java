@@ -42,8 +42,7 @@ public class ESearch {
         return results.get(index);
     } 
     
-    public void printESearch(String out, HashMap<String, String> config) throws FileNotFoundException{
-        PrintWriter printer = new PrintWriter(out);
+    public void printESearch(PrintWriter printer, HashMap<String, String> config) throws FileNotFoundException{
         //print table header
         printESearchResultFileHeader(printer, config);
         for(ESearchResult result : results){
