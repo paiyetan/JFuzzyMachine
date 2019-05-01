@@ -106,7 +106,7 @@ public class JFuzzyMachine {
         
         double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
         Mean mean = new Mean();
-        double xBar = mean.evaluate(outputGeneExpValues); // average exoression value for output gene
+        double xBar = mean.evaluate(outputGeneExpValues); // average exoression value for output outputGene
         double deviationSquaredSum = 0;
         for(int i = 0; i < outputGeneExpValues.length; i++){
             deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
@@ -229,32 +229,33 @@ public class JFuzzyMachine {
         ESearch results = new ESearch();
         PrintWriter printer = new PrintWriter(config.get("inputFile") + ".jfuz");  //jFuzzyMachine Search          
                  
-        // for each gene,
-        String[] genes;
+        // for each outputGene,
+        String[] allgenes = exprs.getRowIds();
+        String[] outputGenes;
         if(config.get("useAllGenesAsOutput").equalsIgnoreCase("TRUE")){
-          genes = exprs.getRowIds();
+            outputGenes = allgenes;
         }else{
-          int istart = Integer.parseInt(config.get("iGeneStart"));
-          int iend = Integer.parseInt(config.get("iGeneEnd"));
-          int tot = (iend - istart) + 1; // number of output genes to consider
-          String[] expGenes = exprs.getRowIds();
-          genes = new String[tot];
-          for(int i=0;i<tot;i++){
-            genes[i] = expGenes[istart+i];
-          }
+            int istart = Integer.parseInt(config.get("iGeneStart"));
+            int iend = Integer.parseInt(config.get("iGeneEnd"));
+            int tot = (iend - istart) + 1; // number of output genes to consider
+            String[] expGenes = exprs.getRowIds();
+            outputGenes = new String[tot];
+            for(int i = 0; i < tot; i++){
+              outputGenes[i] = expGenes[istart+i];
+            }
         }
         
-        for(String gene : genes){
-            String[] otherGenes = exprs.removeItem(genes, gene); // get other genes to get combinations of
+        for(String outputGene : outputGenes){
+            String[] otherGenes = exprs.removeItem(allgenes, outputGene); // get other genes to get combinations of
             int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
             if(maxInputs <= 0){
                 int inputs = Integer.parseInt(config.get("numberOfInputs"));                
-                results = this.searchHelper(inputs, gene, otherGenes, results);
+                results = this.searchHelper(inputs, outputGene, otherGenes, results);
             }else{
                 // for each 1 to max # of inputs
                 for (int i = 0; i < maxInputs; i++ ){
                     int inputs = i + 1;
-                    results = this.searchHelper(inputs, gene, otherGenes, results);
+                    results = this.searchHelper(inputs, outputGene, otherGenes, results);
                 }
             }
         }
