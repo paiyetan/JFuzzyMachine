@@ -3,9 +3,26 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/ESearch.java</file>
+            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/ESearchResult.java</file>
+            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/Rule.java</file>
+            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/utilities/ConfigFileReader.java</file>
+            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/JFuzzyMachine.java</file>
+=======
+            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/FuzzySet.java</file>
+>>>>>>> 1c27303e7271d5094a96a4c875e3bd0a96b6ae19
             <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/JFuzzyMachine.java</file>
             <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/ESearchResult.java</file>
             <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/ESearch.java</file>
+<<<<<<< HEAD
+=======
+            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/tables/Table.java</file>
+            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/test/testunits/CombinationsTest.java</file>
+>>>>>>> 9996d0cc98a139fdea60fbd3ca6d3e73088be6fb
+>>>>>>> 1c27303e7271d5094a96a4c875e3bd0a96b6ae19
         </group>
     </open-files>
 </project-private>

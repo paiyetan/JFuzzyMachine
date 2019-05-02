@@ -124,18 +124,14 @@ public class JFuzzyMachine {
                         for(int l = 1; l <= 3; l++){
                             for(int m = 1; m <= 3; m++){
                                 for(int n = 1; n <= 3; n++){
-
-                                    //ruleCombns.add(new Rule(i,j,k));
-                                    //ruleCombns.add(new Rule(l,m,n));
-                                    rules[0] = new Rule(i,j,k).toString();
-                                    rules[1] = new Rule(l,m,n).toString();
                                     
                                     String[] inputGenes = new String[inputCombns.length];
                                     
-                                    double[] xCaretValues = new double[outputGeneExpValues.length];
+                                    //double[] xCaretValues = new double[outputGeneExpValues.length];
                                     double residualSquaredSum = 0;
                                     
-                                    for(int index = 0; index < xCaretValues.length; index++){
+                                    //for(int index = 0; index < xCaretValues.length; index++){
+                                    for(int index = 0; index < outputGeneExpValues.length; index++){
                                         //get input genes 
                                         // NOTE: there are two inputs here
                                         String input1 = otherGenes[inputCombns[0]];
@@ -152,16 +148,18 @@ public class JFuzzyMachine {
                                         double zz = fz1.get(k) + fz2.get(n);
                                         //get defuzzified (xCaretValue) value of Z @ position index
                                         double dfz = this.deFuzzify(new FuzzySet(zx, zy, zz));
-                                        xCaretValues[index] = dfz;
+                                        //xCaretValues[index] = dfz;
                                         // compute residual and residual squared sum...
-                                        residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);
-                                        
+                                        residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                     }
                                     
                                     //compute error..
                                     double err = 1 - (residualSquaredSum/deviationSquaredSum);
                                     
                                     if(err >= eCutOff){
+                                        rules[0] = new Rule(i,j,k).toString();
+                                        rules[1] = new Rule(l,m,n).toString();
+                                    
                                         ESearchResult sResult = new ESearchResult(outputGene, 
                                                                                     inputCombns.length,
                                                                                         inputGenes,
@@ -187,9 +185,63 @@ public class JFuzzyMachine {
                                     String[] otherGenes,
                                         ESearch esearch,
                                         PrintWriter printer){  
-        //ESearch results = new ESearch();
+        // get all possible combinations of inputs (from otherGenes)
+        double eCutOff = Double.parseDouble(config.get("eCutOff"));
+        Combinations inputCombinations = new Combinations(otherGenes.length, numberOfInputs);
         
-                
+        double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
+        Mean mean = new Mean();
+        double xBar = mean.evaluate(outputGeneExpValues); // average exoression value for output outputGene
+        double deviationSquaredSum = 0;
+        for(int i = 0; i < outputGeneExpValues.length; i++){
+            deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+        }
+        // for each combination of inputs...
+        for (int[] inputCombns : inputCombinations) {
+            
+            //LinkedList<Rule> ruleCombns = new LinkedList();
+            String[] rules = new String[inputCombns.length];
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
+                                                         
+                        String[] inputGenes = new String[inputCombns.length];
+
+                        //double[] xCaretValues = new double[outputGeneExpValues.length];
+                        double residualSquaredSum = 0;
+                        //for(int index = 0; index < xCaretValues.length; index++){
+                        for(int index = 0; index < outputGeneExpValues.length; index++){
+                            //get input gene 
+                            String input1 = otherGenes[inputCombns[0]];
+                            inputGenes[0] = input1;
+                            //get fuzzyValues of input genes, 
+                            FuzzySet fz1 = fMat[exprs.getRowIndex(input1)][index];
+                            //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                            double zx = fz1.get(i);
+                            double zy = fz1.get(j);
+                            double zz = fz1.get(k);
+                            //get defuzzified (xCaretValue) value of Z @ position index
+                            double dfz = this.deFuzzify(new FuzzySet(zx, zy, zz));                            
+                            // compute residual and residual squared sum...
+                            residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);
+                        }
+                        //compute error..
+                        double err = 1 - (residualSquaredSum/deviationSquaredSum);
+
+                        if(err >= eCutOff){
+                            rules[0] = new Rule(i,j,k).toString();                           
+                            ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                        inputCombns.length,
+                                                                            inputGenes,
+                                                                                rules,
+                                                                                    err
+                                                                                );                            
+                            esearch.printESearchResult(sResult, printer, config);
+                        }                        
+                    }
+                }
+            }            
+        }                        
     }  
     
     public void searchHelper(int numberOfInputs, 
