@@ -23,8 +23,9 @@ public class Table {
     private String[][] matrix;
     
     private double[][] dMatrix;
+    private float[][] fMatrix;
     
-    public enum TableType {INTEGER, DOUBLE};
+    public enum TableType {INTEGER, DOUBLE, FLOAT};
         
     public Table(String inFilePath) throws IOException{
         read(inFilePath);
@@ -40,8 +41,19 @@ public class Table {
                        dMatrix[i][j] = Double.parseDouble(matrix[i][j]);
                    }
                }
+               break;
+            case FLOAT:
+                fMatrix = new float[rowIds.length][columnIds.length];
+               for(int i = 0; i < rowIds.length; i++){
+                   for(int j = 0; j < columnIds.length; j++){
+                       fMatrix[i][j] = Float.parseFloat(matrix[i][j]);
+                   }
+               }
+               break;
+                
             case INTEGER:
                 //yet to be implemented...
+                break;
             default:
                 break;
         }
@@ -68,10 +80,14 @@ public class Table {
         return matrix;
     }
     
-    public double[][] getMatrix(Table.TableType type) {
+    public double[][] getDoubleMatrix() {
         return dMatrix;
     }
     
+    public float[][] getFloatMatrix() {
+        return fMatrix;
+    }
+        
     public int getRowIndex(String rowId){
         int index = -1;
         for (int i = 0; i < rowIds.length; i++){
@@ -126,6 +142,23 @@ public class Table {
         }
         return indexedColumn;
     }
+    
+    public float[] getRowF(int index, Table.TableType type){
+        float[] indexedRow = new float[columnIds.length];
+        for(int i=0; i < indexedRow.length; i++){
+            indexedRow[i] = fMatrix[index][i];
+        }
+        return indexedRow;
+    }
+    
+    public float[] getColumnF(int index, Table.TableType type){
+        float[] indexedColumn = new float[rowIds.length];
+        for(int i=0; i < indexedColumn.length; i++){
+            indexedColumn[i] = fMatrix[i][index];
+        }
+        return indexedColumn;
+    }
+    
     
     public String[] removeItem(String[] items, String itemToRemove){
         String[] newArr = new String[items.length - 1];

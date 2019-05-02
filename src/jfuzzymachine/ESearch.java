@@ -52,10 +52,10 @@ public class ESearch {
     }
     
     public void printESearchResultFileHeader(PrintWriter printer, HashMap<String, String> config){
-        printer.println("Output\tNumberOfInput(s)\tInput(s)\tRuleInde(ces)x\tError(E)");
+        printer.println("Output\tNumberOfInput(s)\tInput(s)\tRule(s)\tError(E)");
         if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){
             // print output file header...
-            System.out.println("Output\tNumberOfInput(s)\tInput(s)\tRuleInde(ces)x\tError(E)");
+            System.out.println("Output\tNumberOfInput(s)\tInput(s)\tRule(s)\tError(E)");
         }        
     }
 
