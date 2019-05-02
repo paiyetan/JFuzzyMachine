@@ -14,7 +14,9 @@ import org.apache.commons.math3.util.Combinations;
 import tables.Table;
 import utilities.ConfigFileReader;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 //import jfuzzymachine.ESearch.ESearchResult;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
@@ -69,39 +71,38 @@ public class JFuzzyMachine {
         return dfz;
     }    
     
-    private ESearch searchHelper5(int numberOfInputs, 
+    private void searchHelper5(int numberOfInputs, 
                                  String outputGene, 
                                     String[] otherGenes,
-                                    ESearch results) {
-        //ESearch results = new ESearch();
+                                        ESearch esearch,
+                                        PrintWriter printer){  
         
-        return results;
     }
 
-    private ESearch searchHelper4(int numberOfInputs, 
+    private void searchHelper4(int numberOfInputs, 
                                  String outputGene, 
                                     String[] otherGenes,
-                                    ESearch results) {
-        //ESearch results = new ESearch();
+                                        ESearch esearch,
+                                        PrintWriter printer){  
         
-        return results;
     }
 
-    private ESearch searchHelper3(int numberOfInputs, 
+    private void searchHelper3(int numberOfInputs, 
                                  String outputGene, 
                                     String[] otherGenes,
-                                    ESearch results) {
-        //ESearch results = new ESearch();
+                                        ESearch esearch,
+                                        PrintWriter printer){  
         
-        return results;
     }
 
-    private ESearch searchHelper2(int numberOfInputs, 
+    private void searchHelper2(int numberOfInputs, 
                                  String outputGene, 
                                     String[] otherGenes,
-                                    ESearch results) {
+                                        ESearch esearch,
+                                        PrintWriter printer){
         //ESearch results = new ESearch();
         // get all possible combinations of inputs (from otherGenes)
+        double eCutOff = Double.parseDouble(config.get("eCutOff"));
         Combinations inputCombinations = new Combinations(otherGenes.length, numberOfInputs);
         
         double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
@@ -160,13 +161,16 @@ public class JFuzzyMachine {
                                     //compute error..
                                     double err = 1 - (residualSquaredSum/deviationSquaredSum);
                                     
-                                    ESearchResult sResults = new ESearchResult(outputGene, 
-                                                                                inputCombns.length,
-                                                                                    inputGenes,
-                                                                                        rules,
-                                                                                            err
-                                                                                        );
-                                    results.add(sResults);
+                                    if(err >= eCutOff){
+                                        ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                                    inputCombns.length,
+                                                                                        inputGenes,
+                                                                                            rules,
+                                                                                                err
+                                                                                            );
+                                        //results.add(sResults);
+                                        esearch.printESearchResult(sResult, printer, config);
+                                    }
                                 }
                             }
                         }
@@ -175,59 +179,81 @@ public class JFuzzyMachine {
             }
             
         }
-        
-        return results;
+                
     }
 
-    private ESearch searchHelper1(int numberOfInputs, 
+    private void searchHelper1(int numberOfInputs, 
                                  String outputGene, 
                                     String[] otherGenes,
-                                    ESearch results) {
+                                        ESearch esearch,
+                                        PrintWriter printer){  
         //ESearch results = new ESearch();
         
-        
-        return results;
-    }
-
-      
+                
+    }  
     
-    
-    public ESearch searchHelper(int numberOfInputs, 
+    public void searchHelper(int numberOfInputs, 
                                 String outputGene, 
                                     String[] otherGenes,
-                                        ESearch results){
+                                        ESearch esearch,
+                                        PrintWriter printer){    
         //ESearch results = new ESearch();        
         switch(numberOfInputs){
             case 5:
-                results = searchHelper5(numberOfInputs, 
-                        outputGene, otherGenes, results);
+                //results = 
+                searchHelper5(numberOfInputs, 
+                                outputGene, 
+                                    otherGenes, 
+                                        esearch,
+                                            printer
+                );
                 break;
             case 4:
-                results = searchHelper4(numberOfInputs, 
-                        outputGene, otherGenes, results);
+                //results = 
+                searchHelper4(numberOfInputs, 
+                                outputGene, 
+                                    otherGenes, 
+                                        esearch,
+                                            printer
+                );
                 break;
             case 3:
-                results = searchHelper3(numberOfInputs, 
-                        outputGene, otherGenes, results);
+                //results = 
+                searchHelper3(numberOfInputs, 
+                                outputGene, 
+                                    otherGenes, 
+                                        esearch,
+                                    printer
+                );
                 break;
             case 2:
-                results = searchHelper2(numberOfInputs, 
-                        outputGene, otherGenes, results);
+                //results = 
+                searchHelper2(numberOfInputs, 
+                                outputGene, 
+                                    otherGenes, 
+                                        esearch,
+                                    printer
+                );
                 break;
             default:
-                results = searchHelper1(numberOfInputs, 
-                        outputGene, otherGenes, results);
+                //results = 
+                searchHelper1(numberOfInputs, 
+                                outputGene, 
+                                    otherGenes, 
+                                        esearch,
+                                    printer
+                );
                 break;
                 
         }
-        return results;
+        //return results;
     }
      
     public void search() throws FileNotFoundException {
+                
+        ESearch esearch = new ESearch(); // NOTE: to avoid Heap overflow error, use this only for printing...
+        PrintWriter printer = new PrintWriter(config.get("inputFile") + ".jfuz");  //jFuzzyMachine Search     
         
-        double r2CutOff = Double.parseDouble(config.get("R2CutOff"));
-        ESearch results = new ESearch();
-        PrintWriter printer = new PrintWriter(config.get("inputFile") + ".jfuz");  //jFuzzyMachine Search          
                  
         // for each outputGene,
         String[] allgenes = exprs.getRowIds();
@@ -241,27 +267,43 @@ public class JFuzzyMachine {
             String[] expGenes = exprs.getRowIds();
             outputGenes = new String[tot];
             for(int i = 0; i < tot; i++){
-              outputGenes[i] = expGenes[istart+i];
+              outputGenes[i] = expGenes[(istart-1)+i];
             }
         }
+        
+        //Trouble shoot...
+        System.out.println("All Genes#: " + allgenes.length);
+        System.out.println("Output Node Genes#: " + outputGenes.length);
+        esearch.printESearchResultFileHeader(printer, config); // printoutput header...
         
         for(String outputGene : outputGenes){
             String[] otherGenes = exprs.removeItem(allgenes, outputGene); // get other genes to get combinations of
             int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
             if(maxInputs <= 0){
                 int inputs = Integer.parseInt(config.get("numberOfInputs"));                
-                results = this.searchHelper(inputs, outputGene, otherGenes, results);
+                //results = 
+                this.searchHelper(inputs, 
+                                    outputGene, 
+                                        otherGenes, 
+                                            esearch,
+                                                printer
+                                        );
             }else{
                 // for each 1 to max # of inputs
                 for (int i = 0; i < maxInputs; i++ ){
                     int inputs = i + 1;
-                    results = this.searchHelper(inputs, outputGene, otherGenes, results);
+                    //results = 
+                    this.searchHelper(inputs, 
+                                        outputGene, 
+                                            otherGenes, 
+                                                esearch,
+                                                    printer
+                                        );
                 }
             }
         }
-        results.printESearch(printer, config);       
+        //results.printESearch(printer, config);       
         printer.close();
-        return;
     }
     
     
@@ -303,6 +345,9 @@ public class JFuzzyMachine {
      */
     public static void main(String[] args) throws IOException {
         System.out.println("Starting...");
+        Date start = new Date();
+        long start_time = start.getTime();
+
         // Read input file...
         ConfigFileReader cReader = new ConfigFileReader();
         HashMap<String, String> config = cReader.read(args[0]); // configuration file path
@@ -314,6 +359,16 @@ public class JFuzzyMachine {
         jfuzz.search();
         
         System.out.println("...Done!");
+        
+        Date end = new Date();
+        long end_time = end.getTime();
+        
+        System.out.println("   Started: " + start_time + ": " + start.toString());
+        System.out.println("     Ended: " + end_time + ": " + end.toString());
+        System.out.println("Total time: " + (end_time - start_time) + " milliseconds; " + 
+                        TimeUnit.MILLISECONDS.toMinutes(end_time - start_time) + " min(s), "
+                        + (TimeUnit.MILLISECONDS.toSeconds(end_time - start_time) - 
+                           TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(end_time - start_time))) + " seconds.");
     }
    
 
