@@ -78,7 +78,7 @@ public class JFuzzyMachine {
                                         PrintWriter printer){  
         // get all possible combinations of inputs (from otherGenes)
         double eCutOff = Double.parseDouble(config.get("eCutOff"));
-        Combinations inputCombinations = new Combinations(otherGenes.length, numberOfInputs);
+        Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
         
         double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
         Mean mean = new Mean();
@@ -88,10 +88,10 @@ public class JFuzzyMachine {
             deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
         }
         // for each combination of inputs...
-        for (int[] inputCombns : inputCombinations) {
+        for (int[] inputsCombination : inputsCombinations) {
             
             //LinkedList<Rule> ruleCombns = new LinkedList();
-            String[] rules = new String[inputCombns.length];
+            String[] rules = new String[inputsCombination.length];
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -112,20 +112,17 @@ public class JFuzzyMachine {
                                                                 for(int v = 1; v <= 3; v++){
                                                                     for(int w = 1; w <= 3; w++){
 
-                                                                        String[] inputGenes = new String[inputCombns.length];
-
-                                                                        //double[] xCaretValues = new double[outputGeneExpValues.length];
+                                                                        String[] inputGenes = new String[inputsCombination.length];
                                                                         double residualSquaredSum = 0;
-
-                                                                        //for(int index = 0; index < xCaretValues.length; index++){
+                                                                        
                                                                         for(int index = 0; index < outputGeneExpValues.length; index++){
                                                                             //get input genes 
                                                                             // NOTE: there are two inputs here
-                                                                            String input1 = otherGenes[inputCombns[0]];
-                                                                            String input2 = otherGenes[inputCombns[1]];
-                                                                            String input3 = otherGenes[inputCombns[2]];
-                                                                            String input4 = otherGenes[inputCombns[3]];
-                                                                            String input5 = otherGenes[inputCombns[4]];
+                                                                            String input1 = otherGenes[inputsCombination[0]];
+                                                                            String input2 = otherGenes[inputsCombination[1]];
+                                                                            String input3 = otherGenes[inputsCombination[2]];
+                                                                            String input4 = otherGenes[inputsCombination[3]];
+                                                                            String input5 = otherGenes[inputsCombination[4]];
 
                                                                             inputGenes[0] = input1;
                                                                             inputGenes[1] = input2;
@@ -161,7 +158,7 @@ public class JFuzzyMachine {
 
 
                                                                             ESearchResult sResult = new ESearchResult(outputGene, 
-                                                                                                                        inputCombns.length,
+                                                                                                                        inputsCombination.length,
                                                                                                                             inputGenes,
                                                                                                                                 rules,
                                                                                                                                     err
@@ -194,7 +191,7 @@ public class JFuzzyMachine {
                                         PrintWriter printer){  
         // get all possible combinations of inputs (from otherGenes)
         double eCutOff = Double.parseDouble(config.get("eCutOff"));
-        Combinations inputCombinations = new Combinations(otherGenes.length, numberOfInputs);
+        Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
         
         double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
         Mean mean = new Mean();
@@ -204,10 +201,10 @@ public class JFuzzyMachine {
             deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
         }
         // for each combination of inputs...
-        for (int[] inputCombns : inputCombinations) {
+        for (int[] inputsCombination : inputsCombinations) {
             
             //LinkedList<Rule> ruleCombns = new LinkedList();
-            String[] rules = new String[inputCombns.length];
+            String[] rules = new String[inputsCombination.length];
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -224,7 +221,7 @@ public class JFuzzyMachine {
                                                     for(int s = 1; s <= 3; s++){
                                                         for(int t = 1; t <= 3; t++){
                                     
-                                                            String[] inputGenes = new String[inputCombns.length];
+                                                            String[] inputGenes = new String[inputsCombination.length];
 
                                                             //double[] xCaretValues = new double[outputGeneExpValues.length];
                                                             double residualSquaredSum = 0;
@@ -233,10 +230,10 @@ public class JFuzzyMachine {
                                                             for(int index = 0; index < outputGeneExpValues.length; index++){
                                                                 //get input genes 
                                                                 // NOTE: there are two inputs here
-                                                                String input1 = otherGenes[inputCombns[0]];
-                                                                String input2 = otherGenes[inputCombns[1]];
-                                                                String input3 = otherGenes[inputCombns[2]];
-                                                                String input4 = otherGenes[inputCombns[3]];
+                                                                String input1 = otherGenes[inputsCombination[0]];
+                                                                String input2 = otherGenes[inputsCombination[1]];
+                                                                String input3 = otherGenes[inputsCombination[2]];
+                                                                String input4 = otherGenes[inputsCombination[3]];
 
                                                                 inputGenes[0] = input1;
                                                                 inputGenes[1] = input2;
@@ -269,7 +266,7 @@ public class JFuzzyMachine {
 
 
                                                                 ESearchResult sResult = new ESearchResult(outputGene, 
-                                                                                                            inputCombns.length,
+                                                                                                            inputsCombination.length,
                                                                                                                 inputGenes,
                                                                                                                     rules,
                                                                                                                         err
@@ -299,7 +296,7 @@ public class JFuzzyMachine {
                                         PrintWriter printer){
         // get all possible combinations of inputs (from otherGenes)
         double eCutOff = Double.parseDouble(config.get("eCutOff"));
-        Combinations inputCombinations = new Combinations(otherGenes.length, numberOfInputs);
+        Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
         
         double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
         Mean mean = new Mean();
@@ -309,10 +306,10 @@ public class JFuzzyMachine {
             deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
         }
         // for each combination of inputs...
-        for (int[] inputCombns : inputCombinations) {
+        for (int[] inputsCombination : inputsCombinations) {
             
             //LinkedList<Rule> ruleCombns = new LinkedList();
-            String[] rules = new String[inputCombns.length];
+            String[] rules = new String[inputsCombination.length];
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -325,7 +322,7 @@ public class JFuzzyMachine {
                                         for(int p = 1; p <= 3; p++){
                                             for(int q = 1; q <= 3; q++){
                                                 
-                                                String[] inputGenes = new String[inputCombns.length];
+                                                String[] inputGenes = new String[inputsCombination.length];
 
                                                 //double[] xCaretValues = new double[outputGeneExpValues.length];
                                                 double residualSquaredSum = 0;
@@ -334,9 +331,9 @@ public class JFuzzyMachine {
                                                 for(int index = 0; index < outputGeneExpValues.length; index++){
                                                     //get input genes 
                                                     // NOTE: there are two inputs here
-                                                    String input1 = otherGenes[inputCombns[0]];
-                                                    String input2 = otherGenes[inputCombns[1]];
-                                                    String input3 = otherGenes[inputCombns[2]];
+                                                    String input1 = otherGenes[inputsCombination[0]];
+                                                    String input2 = otherGenes[inputsCombination[1]];
+                                                    String input3 = otherGenes[inputsCombination[2]];
 
                                                     inputGenes[0] = input1;
                                                     inputGenes[1] = input2;
@@ -365,7 +362,7 @@ public class JFuzzyMachine {
                                                     rules[2] = new Rule(o,p,q).toString();
                                                     
                                                     ESearchResult sResult = new ESearchResult(outputGene, 
-                                                                                                inputCombns.length,
+                                                                                                inputsCombination.length,
                                                                                                     inputGenes,
                                                                                                         rules,
                                                                                                             err
@@ -392,7 +389,7 @@ public class JFuzzyMachine {
                                         PrintWriter printer){
         // get all possible combinations of inputs (from otherGenes)
         double eCutOff = Double.parseDouble(config.get("eCutOff"));
-        Combinations inputCombinations = new Combinations(otherGenes.length, numberOfInputs);
+        Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
         
         double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
         Mean mean = new Mean();
@@ -402,10 +399,10 @@ public class JFuzzyMachine {
             deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
         }
         // for each combination of inputs...
-        for (int[] inputCombns : inputCombinations) {
+        for (int[] inputsCombination : inputsCombinations) {
             
             //LinkedList<Rule> ruleCombns = new LinkedList();
-            String[] rules = new String[inputCombns.length];
+            String[] rules = new String[inputsCombination.length];
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -414,7 +411,7 @@ public class JFuzzyMachine {
                             for(int m = 1; m <= 3; m++){
                                 for(int n = 1; n <= 3; n++){
                                     
-                                    String[] inputGenes = new String[inputCombns.length];
+                                    String[] inputGenes = new String[inputsCombination.length];
                                     
                                     //double[] xCaretValues = new double[outputGeneExpValues.length];
                                     double residualSquaredSum = 0;
@@ -423,8 +420,8 @@ public class JFuzzyMachine {
                                     for(int index = 0; index < outputGeneExpValues.length; index++){
                                         //get input genes 
                                         // NOTE: there are two inputs here
-                                        String input1 = otherGenes[inputCombns[0]];
-                                        String input2 = otherGenes[inputCombns[1]];
+                                        String input1 = otherGenes[inputsCombination[0]];
+                                        String input2 = otherGenes[inputsCombination[1]];
                                         
                                         inputGenes[0] = input1;
                                         inputGenes[1] = input2;
@@ -450,7 +447,7 @@ public class JFuzzyMachine {
                                         rules[1] = new Rule(l,m,n).toString();
                                     
                                         ESearchResult sResult = new ESearchResult(outputGene, 
-                                                                                    inputCombns.length,
+                                                                                    inputsCombination.length,
                                                                                         inputGenes,
                                                                                             rules,
                                                                                                 err
@@ -620,7 +617,7 @@ public class JFuzzyMachine {
         for(String outputGene : outputGenes){
             String[] otherGenes = exprs.removeItem(allgenes, outputGene); // get other genes to get combinations of
             int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
-            if(maxInputs <= 0){
+            if(maxInputs <= 0){ // a flag to simply use the specified "number of inputs"
                 int inputs = Integer.parseInt(config.get("numberOfInputs"));                
                 //results = 
                 this.searchHelper(inputs, 
@@ -629,7 +626,7 @@ public class JFuzzyMachine {
                                             esearch,
                                                 printer
                                         );
-            }else{
+            }else{ // otherwise use the 
                 // for each 1 to max # of inputs
                 for (int i = 0; i < maxInputs; i++ ){
                     int inputs = i + 1;
@@ -649,7 +646,7 @@ public class JFuzzyMachine {
     
     
     
- 
+ /*
     class PermutateArray {        
         
 	public List<List<Integer>> permute(int[] arr) {
@@ -679,7 +676,7 @@ public class JFuzzyMachine {
             }
 	}  
     }  
-    
+ */   
     
     /**
      * @param args the command line arguments
