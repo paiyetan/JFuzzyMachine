@@ -194,6 +194,7 @@ public class Table {
         printer.close();
     }
 
+    @SuppressWarnings("CallToPrintStackTrace")
     private void read(String inFilePath) throws FileNotFoundException, IOException {
         
         BufferedReader reader = new BufferedReader(new FileReader(inFilePath));
@@ -224,13 +225,16 @@ public class Table {
             String rowInfo = rows.get(i);
             String[] infoArr = rowInfo.split("\t");
             for(int j = 0; j < infoArr.length; j ++){
-                if(j == 0)
-                    rowIds[i] = infoArr[j];
-                else
+                try{
+                    if(j == 0)
+                        rowIds[i] = infoArr[j];
+                    else
                     matrix[i][j-1] = infoArr[j];
-            }
-            
+                }catch(ArrayIndexOutOfBoundsException err){
+                    System.out.println("rowIndex: " + i + ", colIndex: " + (j-1));
+                    err.printStackTrace();
+                }
+            }            
         }        
-    }
-    
+    }    
 }

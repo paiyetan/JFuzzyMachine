@@ -5,7 +5,6 @@
  */
 package jfuzzymachine;
 
-//import tables.RuleTable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -13,12 +12,8 @@ import java.util.HashMap;
 import org.apache.commons.math3.util.Combinations;
 import tables.Table;
 import utilities.ConfigFileReader;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
-//import jfuzzymachine.ESearch.ESearchResult;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 
@@ -567,14 +562,13 @@ public class JFuzzyMachine {
         //Trouble shoot...
         System.out.println("All Genes#: " + allgenes.length);
         System.out.println("Output Node Genes#: " + outputGenes.length);
-        System.out.println(">Search Result Table: ");
+        System.out.println("> Begin Search Result Table: ");
         
         printer.println("All Genes#: " + allgenes.length);
         printer.println("Output Node Genes#: " + outputGenes.length);
-        printer.println(">Search Result Table: ");
         
-        esearch.printESearchResultFileHeader(printer, config); // printoutput header...
-        
+        printer.println("> Begin Search Result Table ");        
+        esearch.printESearchResultFileHeader(printer, config); // printoutput header...        
         for(String outputGene : outputGenes){
             String[] otherGenes = exprs.removeItem(allgenes, outputGene); // get other genes to get combinations of
             int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
@@ -601,8 +595,10 @@ public class JFuzzyMachine {
                 }
             }
         }
+        printer.println("> End Search Result Table "); 
+        System.out.println("> End Search Result Table "); 
         //results.printESearch(printer, config);       
-        printer.close();
+        //printer.close();
     }
     
     
@@ -641,6 +637,7 @@ public class JFuzzyMachine {
     
     /**
      * @param args the command line arguments
+     * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
         
@@ -659,25 +656,25 @@ public class JFuzzyMachine {
         // Read input file...
         ConfigFileReader cReader = new ConfigFileReader();
         HashMap<String, String> config = cReader.read(args[0]); // configuration file path
-        
+        // instantiate print object...
+        String outFile = config.get("inputFile");
+        outFile = outFile.replace(".txt", "").replace(".tsv", "");
+               
         if(args.length > 1){ // input includes other commandLine parameters; these supercede those specified in the config file....           
             config.replace("iGeneStart", args[1]);
             config.replace("iGeneEnd", args[2]);
+            outFile = outFile + "." + args[1] + "." + args[2];
             if(args.length > 3){ // has more commandline parameters..
                 config.replace("numberOfInputs", args[3]);
+                outFile = outFile + "." + args[3];
                 if(args.length > 4){
                     config.replace("eCutOff", args[4]);
                 }                
             }
         }
-        
-        //Print Parammeters to stderr and 
-        // instantiate print object...
-        String outFile = config.get("inputFile");
-        outFile = outFile.replace("txt", "").replace("tsv", "");
-        outFile = outFile + "jfuz";
-        PrintWriter printer = new PrintWriter(outFile);  //jFuzzyMachine Search     
-        
+        outFile = outFile + ".jfuz";
+        PrintWriter printer = new PrintWriter(outFile);  
+        //Print Parammeters to stderr and        
         System.out.println("> StartTime: " + start.toString());
         System.out.println("> Search Parameters: ");
         System.out.println("          inputFile = " + config.get("inputFile"));
@@ -723,6 +720,8 @@ public class JFuzzyMachine {
         Date end = new Date();
         long end_time = end.getTime();
         
+        printer.println("> Epilogue "); 
+        System.out.println("> Epilogue "); 
         System.out.println("\n   Started: " + start_time + ": " + start.toString());
         System.out.println("     Ended: " + end_time + ": " + end.toString());
         System.out.println("Total time: " + (end_time - start_time) + " milliseconds; " + 
