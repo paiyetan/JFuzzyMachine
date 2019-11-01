@@ -560,12 +560,12 @@ public class JFuzzyMachine {
         }
         
         //Trouble shoot...
-        System.out.println("All Genes#: " + allgenes.length);
-        System.out.println("Output Node Genes#: " + outputGenes.length);
+        System.out.println("              All Genes#: " + allgenes.length);
+        System.out.println("Output Nodes Considered#: " + outputGenes.length);
         System.out.println("> Begin Search Result Table: ");
         
-        printer.println("All Genes#: " + allgenes.length);
-        printer.println("Output Node Genes#: " + outputGenes.length);
+        printer.println("              All Genes#: " + allgenes.length);
+        printer.println("Output Nodes Considered#: " + outputGenes.length);
         
         printer.println("> Begin Search Result Table ");        
         esearch.printESearchResultFileHeader(printer, config); // printoutput header...        
