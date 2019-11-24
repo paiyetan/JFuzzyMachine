@@ -81,6 +81,7 @@ public class JFuzzyMachine {
             deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
         }
         // for each combination of inputs...
+            //make a collection of 
         for (int[] inputsCombination : inputsCombinations) {
             //get input genes...
             String[] inputGenes = new String[inputsCombination.length];            
