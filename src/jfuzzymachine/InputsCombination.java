@@ -5,6 +5,7 @@
  */
 package jfuzzymachine;
 
+import java.io.PrintWriter;
 import tables.Table;
 
 /**
@@ -20,6 +21,52 @@ public class InputsCombination {
     private Table exprs;
     private FuzzySet[][] fMat;
     private Fuzzifier fuzzifier;
+    private String[] otherGenes;
+    private String outputGene;
+    
+    public InputsCombination(int[] inputsCombination, 
+                                double eCutOff, 
+                                double[] outputGeneExpValues, 
+                                double deviationSquaredSum, 
+                                Table exprs, 
+                                FuzzySet[][] fMat,
+                                String[] otherGenes,
+                                String outputGene
+    ) {
+        
+        this.inputsCombination = inputsCombination;
+        this.eCutOff = eCutOff;
+        this.outputGeneExpValues = outputGeneExpValues;
+        this.deviationSquaredSum = deviationSquaredSum;
+        this.exprs = exprs;
+        this.fMat = fMat;
+        fuzzifier = new Fuzzifier();
+        this.otherGenes = otherGenes;
+        this.outputGene = outputGene;
+               
+    }
+
+    public void searchHelper5(PrintWriter printer) {
+        
+    }
+    
+    public void searchHelper4(PrintWriter printer) {
+        
+    }
+    
+    public void searchHelper3(PrintWriter printer) {
+        
+    }
+    
+    public void searchHelper2(PrintWriter printer) {
+        
+    }
+    
+    public void searchHelper1(PrintWriter printer) {
+        
+    }
+    
+    
     
     
     
