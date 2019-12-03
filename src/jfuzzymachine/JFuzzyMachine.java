@@ -26,14 +26,24 @@ public class JFuzzyMachine {
     
     private final HashMap<String, String> config;
     private final Table exprs;
-    private final FuzzySet[][] fMat;
+    private final FuzzySet[][] exprsFMat;
     private final Fuzzifier fuzzifier;
+    private final boolean modelPhenotype; 
+    private Table phenoExprs = null; //
+    private FuzzySet[][] phenoFMat = null;
+    public enum ExpressionType {PHENOTYPE, GENOTYPE};
         
     public JFuzzyMachine(HashMap<String, String> config) throws IOException{
         fuzzifier = new Fuzzifier();
         this.config = config;
         this.exprs = new Table(config.get("inputFile"), Table.TableType.DOUBLE);
-        this.fMat = fuzzifier.getFuzzyMatrix(exprs);        
+        this.exprsFMat = fuzzifier.getFuzzyMatrix(exprs, ExpressionType.GENOTYPE); 
+        this.modelPhenotype = Boolean.parseBoolean(config.get("modelPhenotype"));
+        
+        if(this.modelPhenotype){
+            phenoExprs = new Table(config.get("inputPhenoFile"), Table.TableType.DOUBLE);
+            phenoFMat = fuzzifier.getFuzzyMatrix(phenoExprs, ExpressionType.PHENOTYPE); 
+        }
     }
     
     private void searchHelper5(int numberOfInputs, 
@@ -62,7 +72,7 @@ public class JFuzzyMachine {
                                                                 outputGeneExpValues, 
                                                                 deviationSquaredSum, 
                                                                 exprs, 
-                                                                fMat,
+                                                                exprsFMat,
                                                                 otherGenes,
                                                                 outputGene);
                 ics.add(ic);
@@ -77,7 +87,7 @@ public class JFuzzyMachine {
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
                                              exprs, 
-                                             fMat, 
+                                             exprsFMat, 
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
@@ -112,7 +122,7 @@ public class JFuzzyMachine {
                                                                 outputGeneExpValues, 
                                                                 deviationSquaredSum, 
                                                                 exprs, 
-                                                                fMat,
+                                                                exprsFMat,
                                                                 otherGenes,
                                                                 outputGene);
                 ics.add(ic);
@@ -127,7 +137,7 @@ public class JFuzzyMachine {
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
                                              exprs, 
-                                             fMat, 
+                                             exprsFMat, 
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
@@ -162,7 +172,7 @@ public class JFuzzyMachine {
                                                                 outputGeneExpValues, 
                                                                 deviationSquaredSum, 
                                                                 exprs, 
-                                                                fMat,
+                                                                exprsFMat,
                                                                 otherGenes,
                                                                 outputGene);
                 ics.add(ic);
@@ -177,7 +187,7 @@ public class JFuzzyMachine {
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
                                              exprs, 
-                                             fMat, 
+                                             exprsFMat, 
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
@@ -212,7 +222,7 @@ public class JFuzzyMachine {
                                                                 outputGeneExpValues, 
                                                                 deviationSquaredSum, 
                                                                 exprs, 
-                                                                fMat,
+                                                                exprsFMat,
                                                                 otherGenes,
                                                                 outputGene);
                 ics.add(ic);
@@ -227,7 +237,7 @@ public class JFuzzyMachine {
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
                                              exprs, 
-                                             fMat, 
+                                             exprsFMat, 
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
@@ -262,7 +272,7 @@ public class JFuzzyMachine {
                                                                 outputGeneExpValues, 
                                                                 deviationSquaredSum, 
                                                                 exprs, 
-                                                                fMat,
+                                                                exprsFMat,
                                                                 otherGenes,
                                                                 outputGene);
                 ics.add(ic);
@@ -277,7 +287,7 @@ public class JFuzzyMachine {
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
                                              exprs, 
-                                             fMat, 
+                                             exprsFMat, 
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
@@ -349,62 +359,67 @@ public class JFuzzyMachine {
         //PrintWriter printer = new PrintWriter(config.get("inputFile") + ".jfuz");  //jFuzzyMachine Search     
         
                  
-        // for each outputGene,
-        String[] allgenes = exprs.getRowIds();
+        String[] allgenes;
         String[] outputGenes;
-        if(config.get("useAllGenesAsOutput").equalsIgnoreCase("TRUE")){
-            outputGenes = allgenes;
+        
+        if(modelPhenotype){
+            
         }else{
-            int istart = Integer.parseInt(config.get("iGeneStart"));
-            int iend = Integer.parseInt(config.get("iGeneEnd"));
-            int tot = (iend - istart) + 1; // number of output genes to consider
-            String[] expGenes = exprs.getRowIds();
-            outputGenes = new String[tot];
-            for(int i = 0; i < tot; i++){
-              outputGenes[i] = expGenes[(istart-1)+i];
+            allgenes = exprs.getRowIds();
+            if(config.get("useAllGenesAsOutput").equalsIgnoreCase("TRUE")){
+                outputGenes = allgenes;
+            }else{
+                int istart = Integer.parseInt(config.get("iGeneStart"));
+                int iend = Integer.parseInt(config.get("iGeneEnd"));
+                int tot = (iend - istart) + 1; // number of output genes to consider
+                String[] expGenes = exprs.getRowIds();
+                outputGenes = new String[tot];
+                for(int i = 0; i < tot; i++){
+                  outputGenes[i] = expGenes[(istart-1)+i];
+                }
             }
-        }
-        
-        //Trouble shoot...
-        System.out.println("               All Genes#: " + allgenes.length);
-        System.out.println("Output Nodes Considered#: " + outputGenes.length);
-        System.out.println("> Begin Search Result Table: ");
-        
-        printer.println("              All Genes#: " + allgenes.length);
-        printer.println("Output Nodes Considered#: " + outputGenes.length);
-        
-        printer.println("> Begin Search Result Table ");        
-        esearch.printESearchResultFileHeader(printer, config); // printoutput header...        
-        for(String outputGene : outputGenes){
-            String[] otherGenes = exprs.removeItem(allgenes, outputGene); // get other genes to get combinations of
-            int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
-            if(maxInputs <= 0){ // a flag to simply use the specified "number of inputs"
-                int inputs = Integer.parseInt(config.get("numberOfInputs"));                
-                //results = 
-                this.searchHelper(inputs, 
-                                    outputGene, 
-                                        otherGenes, 
-                                            //esearch,
-                                                printer
-                                        );
-            }else{ // otherwise use the 
-                // for each 1 to max # of inputs
-                for (int i = 0; i < maxInputs; i++ ){
-                    int inputs = i + 1;
+
+            //Trouble shoot...
+            System.out.println("               All Genes#: " + allgenes.length);
+            System.out.println("Output Nodes Considered#: " + outputGenes.length);
+            System.out.println("> Begin Search Result Table: ");
+
+            printer.println("              All Genes#: " + allgenes.length);
+            printer.println("Output Nodes Considered#: " + outputGenes.length);
+
+            printer.println("> Begin Search Result Table ");        
+            esearch.printESearchResultFileHeader(printer, config); // printoutput header...
+            // for each outputGene,
+            for(String outputGene : outputGenes){
+                String[] otherGenes = exprs.removeItem(allgenes, outputGene); // get other genes to get combinations of
+                int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
+                if(maxInputs <= 0){ // a flag to simply use the specified "number of inputs"
+                    int inputs = Integer.parseInt(config.get("numberOfInputs"));                
                     //results = 
                     this.searchHelper(inputs, 
                                         outputGene, 
                                             otherGenes, 
                                                 //esearch,
                                                     printer
-                                        );
+                                            );
+                }else{ // otherwise use the 
+                    // for each 1 to max # of inputs
+                    for (int i = 0; i < maxInputs; i++ ){
+                        int inputs = i + 1;
+                        //results = 
+                        this.searchHelper(inputs, 
+                                            outputGene, 
+                                                otherGenes, 
+                                                    //esearch,
+                                                        printer
+                                            );
+                    }
                 }
             }
         }
         printer.println("> End Search Result Table "); 
         System.out.println("> End Search Result Table "); 
-        //results.printESearch(printer, config);       
-        //printer.close();
+        
     }
     
     
@@ -460,6 +475,7 @@ public class JFuzzyMachine {
         long start_time = start.getTime();
 
         // Read input file...
+        //boolean modelPhenotype = false;
         ConfigFileReader cReader = new ConfigFileReader();
         HashMap<String, String> config = cReader.read(args[0]); // configuration file path
         // instantiate print object...
@@ -470,17 +486,25 @@ public class JFuzzyMachine {
             config.replace("iGeneStart", args[1]);
             config.replace("iGeneEnd", args[2]);
             outFile = outFile + "." + args[1] + "." + args[2];
-            if(args.length > 3){ // has more commandline parameters..
-                config.replace("numberOfInputs", args[3]);
-                outFile = outFile + "." + args[3];
-                if(args.length > 4){
-                    config.replace("eCutOff", args[4]);
-                }
-                if(args.length > 5){
-                    config.replace("useParallel", args[5]);
-                }
+            
+            if(Integer.parseInt(config.get("iGeneStart"))==0){
+                config.replace("modelPhenotype", "TRUE"); // in this case, all other args MUST be provided in configuration file...                                
             }
         }
+        
+        if(args.length > 3){ // has more commandline parameters..
+            config.replace("numberOfInputs", args[3]);
+            outFile = outFile + "." + args[3];
+        }
+        
+        if(args.length > 4){
+            config.replace("eCutOff", args[4]);
+        }
+        
+        if(args.length > 5){
+            config.replace("useParallel", args[5]);
+        }
+                
         outFile = outFile + "." + config.get("useParallel") + ".jfuz";
         PrintWriter printer = new PrintWriter(outFile);  
         //Print Parammeters to stderr and        
@@ -496,6 +520,7 @@ public class JFuzzyMachine {
         System.out.println("           iGeneEnd = " + config.get("iGeneEnd"));
         System.out.println("        useParallel = " + config.get("useParallel"));
         System.out.println("         outputFile = " + outFile);
+        System.out.println("     modelPhenotype = " + config.get("modelPhenotype"));
         System.out.println();
         
         printer.println("> StartTime: " + start.toString());
@@ -510,6 +535,7 @@ public class JFuzzyMachine {
         printer.println("           iGeneEnd = " + config.get("iGeneEnd"));
         printer.println("        useParallel = " + config.get("useParallel"));
         printer.println("         outputFile = " + outFile);
+        printer.println("     modelPhenotype = " + config.get("modelPhenotype"));
         printer.println();
         
         System.out.println("Initiating...");
