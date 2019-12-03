@@ -67,7 +67,7 @@ public class JFuzzyMachine {
                                                                 outputGene);
                 ics.add(ic);
             }
-            ics.parallelStream().forEach(ic -> ic.searchHelper5(printer));
+            ics.parallelStream().forEach(ic -> ic.searchHelper5(printer, config));
             
         }else{
             ESearch esearch = new ESearch();
@@ -117,7 +117,7 @@ public class JFuzzyMachine {
                                                                 outputGene);
                 ics.add(ic);
             }
-            ics.parallelStream().forEach(ic -> ic.searchHelper5(printer));
+            ics.parallelStream().forEach(ic -> ic.searchHelper4(printer, config));
             
         }else{
             ESearch esearch = new ESearch();
@@ -167,7 +167,7 @@ public class JFuzzyMachine {
                                                                 outputGene);
                 ics.add(ic);
             }
-            ics.parallelStream().forEach(ic -> ic.searchHelper5(printer));
+            ics.parallelStream().forEach(ic -> ic.searchHelper3(printer, config));
             
         }else{
             ESearch esearch = new ESearch();
@@ -217,7 +217,7 @@ public class JFuzzyMachine {
                                                                 outputGene);
                 ics.add(ic);
             }
-            ics.parallelStream().forEach(ic -> ic.searchHelper5(printer));
+            ics.parallelStream().forEach(ic -> ic.searchHelper2(printer, config));
             
         }else{
             ESearch esearch = new ESearch();
@@ -267,7 +267,7 @@ public class JFuzzyMachine {
                                                                 outputGene);
                 ics.add(ic);
             }
-            ics.parallelStream().forEach(ic -> ic.searchHelper5(printer));
+            ics.parallelStream().forEach(ic -> ic.searchHelper1(printer, config));
             
         }else{
             ESearch esearch = new ESearch();
@@ -475,10 +475,13 @@ public class JFuzzyMachine {
                 outFile = outFile + "." + args[3];
                 if(args.length > 4){
                     config.replace("eCutOff", args[4]);
-                }                
+                }
+                if(args.length > 5){
+                    config.replace("useParallel", args[5]);
+                }
             }
         }
-        outFile = outFile + ".jfuz";
+        outFile = outFile + "." + config.get("useParallel") + ".jfuz";
         PrintWriter printer = new PrintWriter(outFile);  
         //Print Parammeters to stderr and        
         System.out.println("> StartTime: " + start.toString());
@@ -491,6 +494,7 @@ public class JFuzzyMachine {
         System.out.println("useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
         System.out.println("         iGeneStart = " + config.get("iGeneStart"));
         System.out.println("           iGeneEnd = " + config.get("iGeneEnd"));
+        System.out.println("        useParallel = " + config.get("useParallel"));
         System.out.println("         outputFile = " + outFile);
         System.out.println();
         
@@ -504,6 +508,7 @@ public class JFuzzyMachine {
         printer.println("useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
         printer.println("         iGeneStart = " + config.get("iGeneStart"));
         printer.println("           iGeneEnd = " + config.get("iGeneEnd"));
+        printer.println("        useParallel = " + config.get("useParallel"));
         printer.println("         outputFile = " + outFile);
         printer.println();
         

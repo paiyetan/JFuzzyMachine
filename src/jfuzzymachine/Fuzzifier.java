@@ -33,8 +33,10 @@ public class Fuzzifier {
         return xfArr;
     }
     
+    /*
     public FuzzySet fuzzify(double value){
-         FuzzySet fz;
+        
+        FuzzySet fz;
         double y1 = (value < 0) ? -value : 0 ; 
         double y2 = 1 - Math.abs(value);
         double y3 = (value <= 0) ? 0: value ;
@@ -46,6 +48,30 @@ public class Fuzzifier {
     public double deFuzzify(FuzzySet fz){
         double dfz;
         dfz = (fz.getY3() - fz.getY1())/(fz.getY1() + fz.getY2() + fz.getY3());        
+        return dfz;
+    } 
+    */
+    
+    public FuzzySet fuzzify(double value){
+        value = Math.atan(value); //apply the atan normalization...
+        value = value / (Math.PI/2); // 
+        
+        FuzzySet fz;
+        double y1 = (value < 0) ? -value : 0 ; 
+        double y2 = 1 - Math.abs(value);
+        double y3 = (value <= 0) ? 0: value ;
+        
+        fz = new FuzzySet(y1, y2, y3);
+        return fz;
+    }     
+    
+    public double deFuzzify(FuzzySet fz){
+        double dfz;
+        dfz = (fz.getY3() - fz.getY1())/(fz.getY1() + fz.getY2() + fz.getY3());  
+         
+        dfz = dfz * (Math.PI/2);
+        dfz = Math.tan(dfz);
+        
         return dfz;
     } 
     

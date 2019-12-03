@@ -21,43 +21,9 @@ public class ESearch { //ExhaustiveSearch....
     /**
      * 
      *
-    private LinkedList<ESearchResult> results;
-
-    @SuppressWarnings("NonPublicExported")
-    public ESearch(LinkedList<ESearchResult> results) {
-        this.results = results;
-    }
-
-    public ESearch() {
-        this.results = new LinkedList();
-    }
-    
-    @SuppressWarnings("NonPublicExported")
-    public void add(ESearchResult result){
-        results.add(result);
-    }
-
-    public LinkedList<ESearchResult> getResults() {
-        return results;
-    }
-    
-    public ESearchResult get(int index){
-        return results.get(index);
-    } 
-    *
-    */
-    
-    /*
-    public void printESearch(PrintWriter printer, HashMap<String, String> config) throws FileNotFoundException{
-        //print table header
-        printESearchResultFileHeader(printer, config);
-        for(ESearchResult result : results){
-            printESearchResult(result, printer, config);
-        }        
-        printer.close();
-    }
-    */
-    
+     * @param printer
+     * @param config
+     */
     public void printESearchResultFileHeader(PrintWriter printer, HashMap<String, String> config){
         printer.println("Output\tNumberOfInput(s)\tInput(s)\tRule(s)\tError(E)");
         if(config.get("outputInRealtime").equalsIgnoreCase("TRUE")){

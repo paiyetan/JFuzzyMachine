@@ -6,6 +6,7 @@
 package jfuzzymachine;
 
 import java.io.PrintWriter;
+import java.util.HashMap;
 import tables.Table;
 
 /**
@@ -46,23 +47,73 @@ public class InputsCombination {
                
     }
 
-    public void searchHelper5(PrintWriter printer) {
+    public void searchHelper5(PrintWriter printer, HashMap<String, String> config) {
+        ESearch esearch = new ESearch();
+        esearch.searchWithFiveInputs(inputsCombination, eCutOff, 
+                                             outputGeneExpValues, 
+                                             deviationSquaredSum, 
+                                             exprs, 
+                                             fMat, 
+                                             otherGenes, 
+                                             outputGene, 
+                                             printer, 
+                                             config);
         
     }
     
-    public void searchHelper4(PrintWriter printer) {
+    public void searchHelper4(PrintWriter printer, HashMap<String, String> config) {
+        ESearch esearch = new ESearch();
+        esearch.searchWithFourInputs(inputsCombination, eCutOff, 
+                                             outputGeneExpValues, 
+                                             deviationSquaredSum, 
+                                             exprs, 
+                                             fMat, 
+                                             otherGenes, 
+                                             outputGene, 
+                                             printer, 
+                                             config);
         
     }
     
-    public void searchHelper3(PrintWriter printer) {
+    public void searchHelper3(PrintWriter printer, HashMap<String, String> config) {
+        ESearch esearch = new ESearch();
+        esearch.searchWithThreeInputs(inputsCombination, eCutOff, 
+                                             outputGeneExpValues, 
+                                             deviationSquaredSum, 
+                                             exprs, 
+                                             fMat, 
+                                             otherGenes, 
+                                             outputGene, 
+                                             printer, 
+                                             config);
         
     }
     
-    public void searchHelper2(PrintWriter printer) {
+    public void searchHelper2(PrintWriter printer, HashMap<String, String> config) {
+        ESearch esearch = new ESearch();
+        esearch.searchWithTwoInputs(inputsCombination, eCutOff, 
+                                             outputGeneExpValues, 
+                                             deviationSquaredSum, 
+                                             exprs, 
+                                             fMat, 
+                                             otherGenes, 
+                                             outputGene, 
+                                             printer, 
+                                             config);
         
     }
     
-    public void searchHelper1(PrintWriter printer) {
+    public void searchHelper1(PrintWriter printer, HashMap<String, String> config) {
+        ESearch esearch = new ESearch();
+        esearch.searchWithOneInput(inputsCombination, eCutOff, 
+                                             outputGeneExpValues, 
+                                             deviationSquaredSum, 
+                                             exprs, 
+                                             fMat, 
+                                             otherGenes, 
+                                             outputGene, 
+                                             printer, 
+                                             config);
         
     }
     

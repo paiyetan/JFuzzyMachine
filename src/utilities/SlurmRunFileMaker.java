@@ -79,7 +79,7 @@ public class SlurmRunFileMaker {
         
         SlurmRunFileMaker fileMaker = new SlurmRunFileMaker();
         for(int i = start; i <= end; i++){
-            String outputFile = outputDirectory + File.pathSeparator + 
+            String outputFile = outputDirectory + File.separator + 
                     "runFuzzyMachine." + i + "." + i + "." + numberOfInputs + ".sh";
             fileMaker.makeFile(outputFile, i, i, 
                                numberOfInputs, fitCutOff);
