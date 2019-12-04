@@ -15,15 +15,19 @@ import tables.Table;
  */
 public class InputsCombination {
     
-    private int[] inputsCombination;
-    private double eCutOff;
-    private double[] outputGeneExpValues;
-    private double deviationSquaredSum;    
-    private Table exprs;
-    private FuzzySet[][] fMat;
-    private Fuzzifier fuzzifier;
-    private String[] otherGenes;
-    private String outputGene;
+    private final int[] inputsCombination;
+    private final double eCutOff;
+    private final double[] outputGeneExpValues;
+    private final double deviationSquaredSum;    
+    private final Table exprs;
+    private final FuzzySet[][] fMat;
+    //private final Fuzzifier fuzzifier;
+    private final String[] otherGenes;
+    private final String outputGene;
+    private final Table phenoExprs;
+    private final FuzzySet[][] phenoFMat;
+    private final boolean modelPhenotype;
+     
     
     public InputsCombination(int[] inputsCombination, 
                                 double eCutOff, 
@@ -32,7 +36,10 @@ public class InputsCombination {
                                 Table exprs, 
                                 FuzzySet[][] fMat,
                                 String[] otherGenes,
-                                String outputGene
+                                String outputGene,
+                                Table phenoExprs, 
+                                FuzzySet[][] phenoFMat,
+                                boolean modelPhenotype
     ) {
         
         this.inputsCombination = inputsCombination;
@@ -41,14 +48,16 @@ public class InputsCombination {
         this.deviationSquaredSum = deviationSquaredSum;
         this.exprs = exprs;
         this.fMat = fMat;
-        fuzzifier = new Fuzzifier();
+        //fuzzifier = new Fuzzifier();
         this.otherGenes = otherGenes;
         this.outputGene = outputGene;
-               
+        this.phenoExprs = phenoExprs;
+        this.phenoFMat = phenoFMat;
+        this.modelPhenotype = modelPhenotype;       
     }
 
     public void searchHelper5(PrintWriter printer, HashMap<String, String> config) {
-        ESearch esearch = new ESearch();
+        ESearchEngine esearch = new ESearchEngine();
         esearch.searchWithFiveInputs(inputsCombination, eCutOff, 
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
@@ -57,12 +66,15 @@ public class InputsCombination {
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
-                                             config);
+                                             config,
+                                             phenoExprs, 
+                                             phenoFMat,
+                                             modelPhenotype);
         
     }
     
     public void searchHelper4(PrintWriter printer, HashMap<String, String> config) {
-        ESearch esearch = new ESearch();
+        ESearchEngine esearch = new ESearchEngine();
         esearch.searchWithFourInputs(inputsCombination, eCutOff, 
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
@@ -71,12 +83,15 @@ public class InputsCombination {
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
-                                             config);
+                                             config,
+                                             phenoExprs, 
+                                             phenoFMat,
+                                             modelPhenotype);
         
     }
     
     public void searchHelper3(PrintWriter printer, HashMap<String, String> config) {
-        ESearch esearch = new ESearch();
+        ESearchEngine esearch = new ESearchEngine();
         esearch.searchWithThreeInputs(inputsCombination, eCutOff, 
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
@@ -85,12 +100,15 @@ public class InputsCombination {
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
-                                             config);
+                                             config,
+                                             phenoExprs, 
+                                             phenoFMat,
+                                             modelPhenotype);
         
     }
     
     public void searchHelper2(PrintWriter printer, HashMap<String, String> config) {
-        ESearch esearch = new ESearch();
+        ESearchEngine esearch = new ESearchEngine();
         esearch.searchWithTwoInputs(inputsCombination, eCutOff, 
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
@@ -99,12 +117,15 @@ public class InputsCombination {
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
-                                             config);
+                                             config,
+                                             phenoExprs, 
+                                             phenoFMat,
+                                             modelPhenotype);
         
     }
     
     public void searchHelper1(PrintWriter printer, HashMap<String, String> config) {
-        ESearch esearch = new ESearch();
+        ESearchEngine esearch = new ESearchEngine();
         esearch.searchWithOneInput(inputsCombination, eCutOff, 
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
@@ -113,7 +134,10 @@ public class InputsCombination {
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
-                                             config);
+                                             config,
+                                             phenoExprs, 
+                                             phenoFMat,
+                                             modelPhenotype);
         
     }
     

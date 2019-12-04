@@ -54,63 +54,28 @@ public class JFuzzyMachine {
         // get all possible combinations of inputs (from otherGenes)
         double eCutOff = Double.parseDouble(config.get("eCutOff"));
         Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
-        // get the expression profile of output gene across all samples
-        double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
-        Mean mean = new Mean();
-        double xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
-        double deviationSquaredSum = 0;
-        for(int i = 0; i < outputGeneExpValues.length; i++){
-            deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
-        } 
         
-        if(Boolean.parseBoolean(config.get("useParallel"))){
-            // --- insert [Multithreaded] parallel stream computation here --- 
-            LinkedList<InputsCombination> ics = new LinkedList();
-            for (int[] inputsCombination : inputsCombinations) {
-                InputsCombination ic = new InputsCombination( inputsCombination, 
-                                                                eCutOff, 
-                                                                outputGeneExpValues, 
-                                                                deviationSquaredSum, 
-                                                                exprs, 
-                                                                exprsFMat,
-                                                                otherGenes,
-                                                                outputGene);
-                ics.add(ic);
-            }
-            ics.parallelStream().forEach(ic -> ic.searchHelper5(printer, config));
-            
-        }else{
-            ESearch esearch = new ESearch();
-            for (int[] inputsCombination : inputsCombinations) { // for each combination of inputs...
-                //get input genes...
-                esearch.searchWithFiveInputs(inputsCombination, eCutOff, 
-                                             outputGeneExpValues, 
-                                             deviationSquaredSum, 
-                                             exprs, 
-                                             exprsFMat, 
-                                             otherGenes, 
-                                             outputGene, 
-                                             printer, 
-                                             config);
-            }
-        }    
-    }
-
-    private void searchHelper4(int numberOfInputs, 
-                                 String outputGene, 
-                                    String[] otherGenes,
-                                        //ESearch esearch,
-                                        PrintWriter printer){  
-        // get all possible combinations of inputs (from otherGenes)
-        double eCutOff = Double.parseDouble(config.get("eCutOff"));
-        Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
         // get the expression profile of output gene across all samples
-        double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
+        double[] outputGeneExpValues;
         Mean mean = new Mean();
-        double xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+        double xBar;
         double deviationSquaredSum = 0;
-        for(int i = 0; i < outputGeneExpValues.length; i++){
-            deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+        if(this.modelPhenotype){
+            outputGeneExpValues = 
+                    phenoExprs.getRow(phenoExprs.getRowIndex(outputGene), 
+                                      Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+                 
+        }else{
+            outputGeneExpValues = 
+                    exprs.getRow(exprs.getRowIndex(outputGene), 
+                                 Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+          
         }
         
         if(Boolean.parseBoolean(config.get("useParallel"))){
@@ -124,16 +89,20 @@ public class JFuzzyMachine {
                                                                 exprs, 
                                                                 exprsFMat,
                                                                 otherGenes,
-                                                                outputGene);
+                                                                outputGene,
+                                                                phenoExprs,
+                                                                phenoFMat,
+                                                                modelPhenotype);
                 ics.add(ic);
             }
-            ics.parallelStream().forEach(ic -> ic.searchHelper4(printer, config));
-            
+            ics.parallelStream().forEach(ic -> ic.searchHelper5(printer, config));
+
         }else{
-            ESearch esearch = new ESearch();
+            ESearchEngine esearch = new ESearchEngine();
             for (int[] inputsCombination : inputsCombinations) { // for each combination of inputs...
                 //get input genes...
-                esearch.searchWithFourInputs(inputsCombination, eCutOff, 
+                esearch.searchWithFiveInputs(inputsCombination, 
+                                            eCutOff, 
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
                                              exprs, 
@@ -141,7 +110,82 @@ public class JFuzzyMachine {
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
-                                             config);
+                                             config,
+                                             phenoExprs,
+                                             phenoFMat,
+                                             modelPhenotype);
+            }
+        }   
+    }
+
+    private void searchHelper4(int numberOfInputs, 
+                                 String outputGene, 
+                                    String[] otherGenes,
+                                        //ESearch esearch,
+                                        PrintWriter printer){  
+        // get all possible combinations of inputs (from otherGenes)
+        double eCutOff = Double.parseDouble(config.get("eCutOff"));
+        Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
+        
+        // get the expression profile of output gene across all samples
+        double[] outputGeneExpValues;
+        Mean mean = new Mean();
+        double xBar;
+        double deviationSquaredSum = 0;
+        if(this.modelPhenotype){
+            outputGeneExpValues = 
+                    phenoExprs.getRow(phenoExprs.getRowIndex(outputGene), 
+                                      Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+                 
+        }else{
+            outputGeneExpValues = 
+                    exprs.getRow(exprs.getRowIndex(outputGene), 
+                                 Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+          
+        }
+        
+        if(Boolean.parseBoolean(config.get("useParallel"))){
+            // --- insert [Multithreaded] parallel stream computation here --- 
+            LinkedList<InputsCombination> ics = new LinkedList();
+            for (int[] inputsCombination : inputsCombinations) {
+                InputsCombination ic = new InputsCombination( inputsCombination, 
+                                                                eCutOff, 
+                                                                outputGeneExpValues, 
+                                                                deviationSquaredSum, 
+                                                                exprs, 
+                                                                exprsFMat,
+                                                                otherGenes,
+                                                                outputGene,
+                                                                phenoExprs,
+                                                                phenoFMat,
+                                                                modelPhenotype);
+                ics.add(ic);
+            }
+            ics.parallelStream().forEach(ic -> ic.searchHelper4(printer, config));
+
+        }else{
+            ESearchEngine esearch = new ESearchEngine();
+            for (int[] inputsCombination : inputsCombinations) { // for each combination of inputs...
+                //get input genes...
+                esearch.searchWithFourInputs(inputsCombination, 
+                                            eCutOff, 
+                                             outputGeneExpValues, 
+                                             deviationSquaredSum, 
+                                             exprs, 
+                                             exprsFMat, 
+                                             otherGenes, 
+                                             outputGene, 
+                                             printer, 
+                                             config,
+                                             phenoExprs,
+                                             phenoFMat,
+                                             modelPhenotype);
             }
         }     
     }
@@ -154,13 +198,28 @@ public class JFuzzyMachine {
         // get all possible combinations of inputs (from otherGenes)
         double eCutOff = Double.parseDouble(config.get("eCutOff"));
         Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
+        
         // get the expression profile of output gene across all samples
-        double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
+        double[] outputGeneExpValues;
         Mean mean = new Mean();
-        double xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+        double xBar;
         double deviationSquaredSum = 0;
-        for(int i = 0; i < outputGeneExpValues.length; i++){
-            deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+        if(this.modelPhenotype){
+            outputGeneExpValues = 
+                    phenoExprs.getRow(phenoExprs.getRowIndex(outputGene), 
+                                      Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+                 
+        }else{
+            outputGeneExpValues = 
+                    exprs.getRow(exprs.getRowIndex(outputGene), 
+                                 Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+          
         }
         
         if(Boolean.parseBoolean(config.get("useParallel"))){
@@ -174,16 +233,20 @@ public class JFuzzyMachine {
                                                                 exprs, 
                                                                 exprsFMat,
                                                                 otherGenes,
-                                                                outputGene);
+                                                                outputGene,
+                                                                phenoExprs,
+                                                                phenoFMat,
+                                                                modelPhenotype);
                 ics.add(ic);
             }
             ics.parallelStream().forEach(ic -> ic.searchHelper3(printer, config));
-            
+
         }else{
-            ESearch esearch = new ESearch();
+            ESearchEngine esearch = new ESearchEngine();
             for (int[] inputsCombination : inputsCombinations) { // for each combination of inputs...
                 //get input genes...
-                esearch.searchWithThreeInputs(inputsCombination, eCutOff, 
+                esearch.searchWithThreeInputs(inputsCombination, 
+                                            eCutOff, 
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
                                              exprs, 
@@ -191,7 +254,10 @@ public class JFuzzyMachine {
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
-                                             config);
+                                             config,
+                                             phenoExprs,
+                                             phenoFMat,
+                                             modelPhenotype);
             }
         }     
     }
@@ -204,13 +270,28 @@ public class JFuzzyMachine {
         // get all possible combinations of inputs (from otherGenes)
         double eCutOff = Double.parseDouble(config.get("eCutOff"));
         Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
+        
         // get the expression profile of output gene across all samples
-        double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
+        double[] outputGeneExpValues;
         Mean mean = new Mean();
-        double xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+        double xBar;
         double deviationSquaredSum = 0;
-        for(int i = 0; i < outputGeneExpValues.length; i++){
-            deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+        if(this.modelPhenotype){
+            outputGeneExpValues = 
+                    phenoExprs.getRow(phenoExprs.getRowIndex(outputGene), 
+                                      Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+                 
+        }else{
+            outputGeneExpValues = 
+                    exprs.getRow(exprs.getRowIndex(outputGene), 
+                                 Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+          
         }
         
         if(Boolean.parseBoolean(config.get("useParallel"))){
@@ -224,16 +305,20 @@ public class JFuzzyMachine {
                                                                 exprs, 
                                                                 exprsFMat,
                                                                 otherGenes,
-                                                                outputGene);
+                                                                outputGene,
+                                                                phenoExprs,
+                                                                phenoFMat,
+                                                                modelPhenotype);
                 ics.add(ic);
             }
             ics.parallelStream().forEach(ic -> ic.searchHelper2(printer, config));
-            
+
         }else{
-            ESearch esearch = new ESearch();
+            ESearchEngine esearch = new ESearchEngine();
             for (int[] inputsCombination : inputsCombinations) { // for each combination of inputs...
                 //get input genes...
-                esearch.searchWithTwoInputs(inputsCombination, eCutOff, 
+                esearch.searchWithTwoInputs(inputsCombination, 
+                                            eCutOff, 
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
                                              exprs, 
@@ -241,7 +326,10 @@ public class JFuzzyMachine {
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
-                                             config);
+                                             config,
+                                             phenoExprs,
+                                             phenoFMat,
+                                             modelPhenotype);
             }
         }  
     }
@@ -249,18 +337,32 @@ public class JFuzzyMachine {
     private void searchHelper1(int numberOfInputs, 
                                  String outputGene, 
                                     String[] otherGenes,
-                                        //ESearch esearch,
                                         PrintWriter printer){  
         // get all possible combinations of inputs (from otherGenes)
         double eCutOff = Double.parseDouble(config.get("eCutOff"));
         Combinations inputsCombinations = new Combinations(otherGenes.length, numberOfInputs);
+        
         // get the expression profile of output gene across all samples
-        double[] outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
+        double[] outputGeneExpValues;
         Mean mean = new Mean();
-        double xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+        double xBar;
         double deviationSquaredSum = 0;
-        for(int i = 0; i < outputGeneExpValues.length; i++){
-            deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+        if(this.modelPhenotype){
+            outputGeneExpValues = 
+                    phenoExprs.getRow(phenoExprs.getRowIndex(outputGene), 
+                                      Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+                 
+        }else{
+            outputGeneExpValues = 
+                    exprs.getRow(exprs.getRowIndex(outputGene), 
+                                 Table.TableType.DOUBLE);
+            xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
+            for(int i = 0; i < outputGeneExpValues.length; i++)
+                deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
+          
         }
         
         if(Boolean.parseBoolean(config.get("useParallel"))){
@@ -274,16 +376,20 @@ public class JFuzzyMachine {
                                                                 exprs, 
                                                                 exprsFMat,
                                                                 otherGenes,
-                                                                outputGene);
+                                                                outputGene,
+                                                                phenoExprs,
+                                                                phenoFMat,
+                                                                modelPhenotype);
                 ics.add(ic);
             }
             ics.parallelStream().forEach(ic -> ic.searchHelper1(printer, config));
-            
+
         }else{
-            ESearch esearch = new ESearch();
+            ESearchEngine esearch = new ESearchEngine();
             for (int[] inputsCombination : inputsCombinations) { // for each combination of inputs...
                 //get input genes...
-                esearch.searchWithOneInput(inputsCombination, eCutOff, 
+                esearch.searchWithOneInput(inputsCombination, 
+                                            eCutOff, 
                                              outputGeneExpValues, 
                                              deviationSquaredSum, 
                                              exprs, 
@@ -291,52 +397,45 @@ public class JFuzzyMachine {
                                              otherGenes, 
                                              outputGene, 
                                              printer, 
-                                             config);
+                                             config,
+                                             phenoExprs,
+                                             phenoFMat,
+                                             modelPhenotype);
             }
-        }  
+        }         
     }  
     
     public void searchHelper(int numberOfInputs, 
                                 String outputGene, 
                                     String[] otherGenes,
-                                        //ESearch esearch,
                                         PrintWriter printer){    
-        //ESearch results = new ESearch();        
         switch(numberOfInputs){
             case 5:
-                //results = 
                 searchHelper5(numberOfInputs, 
                                 outputGene, 
                                     otherGenes, 
-                                        //esearch,
                                             printer
                 );
                 break;
             case 4:
-                //results = 
                 searchHelper4(numberOfInputs, 
                                 outputGene, 
                                     otherGenes, 
-                                        //esearch,
                                             printer
                 );
                 break;
             case 3:
-                //results = 
                 searchHelper3(numberOfInputs, 
                                 outputGene, 
                                     otherGenes, 
-                                        //esearch,
-                                    printer
+                                        printer
                 );
                 break;
             case 2:
-                //results = 
                 searchHelper2(numberOfInputs, 
                                 outputGene, 
                                     otherGenes, 
-                                        //esearch,
-                                    printer
+                                        printer
                 );
                 break;
             default:
@@ -344,28 +443,57 @@ public class JFuzzyMachine {
                 searchHelper1(numberOfInputs, 
                                 outputGene, 
                                     otherGenes, 
-                                        //esearch,
-                                    printer
+                                        printer
                 );
                 break;
                 
         }
-        //return results;
     }
      
     public void search(PrintWriter printer) throws FileNotFoundException {
                 
-        ESearch esearch = new ESearch(); // NOTE: to avoid Heap overflow error, use this only for printing...
-        //PrintWriter printer = new PrintWriter(config.get("inputFile") + ".jfuz");  //jFuzzyMachine Search     
-        
-                 
-        String[] allgenes;
-        String[] outputGenes;
+        ESearchEngine esearch = new ESearchEngine(); // NOTE: to avoid Heap overflow error, use this only for printing...
         
         if(modelPhenotype){
+            String outputGene = phenoExprs.getRowIds()[0];
+            String[] otherGenes = exprs.getRowIds();
+                        
+            //Trouble shoot...
+            System.out.println("                 All Genes#: " + otherGenes.length);
+            System.out.println("   Output Nodes Considered#: " + outputGene);
+            System.out.println("> Begin Search Result Table: ");
+            
+            printer.println("              All Genes#: " + otherGenes.length);
+            printer.println("Output Nodes Considered#: " + outputGene);
+            printer.println("> Begin Search Result Table ");   
+            
+            esearch.printESearchResultFileHeader(printer, config); // printoutput header...
+            
+            int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs   
+            if(maxInputs <= 0){ // a flag to simply use the specified "number of inputs"
+                int inputs = Integer.parseInt(config.get("numberOfInputs"));                
+                //results = 
+                this.searchHelper(inputs, 
+                                    outputGene, 
+                                        otherGenes, 
+                                            printer
+                                        );
+            }else{ // otherwise use the 
+                // for each 1 to max # of inputs
+                for (int i = 0; i < maxInputs; i++ ){
+                    int inputs = i + 1;
+                    //results = 
+                    this.searchHelper(inputs, 
+                                        outputGene, 
+                                            otherGenes, 
+                                                printer
+                                        );
+                }
+            }
             
         }else{
-            allgenes = exprs.getRowIds();
+            String[] allgenes = exprs.getRowIds();
+            String[] outputGenes;
             if(config.get("useAllGenesAsOutput").equalsIgnoreCase("TRUE")){
                 outputGenes = allgenes;
             }else{
@@ -380,14 +508,14 @@ public class JFuzzyMachine {
             }
 
             //Trouble shoot...
-            System.out.println("               All Genes#: " + allgenes.length);
-            System.out.println("Output Nodes Considered#: " + outputGenes.length);
+            System.out.println("                 All Genes#: " + allgenes.length);
+            System.out.println("   Output Nodes Considered#: " + outputGenes.length);
             System.out.println("> Begin Search Result Table: ");
 
-            printer.println("              All Genes#: " + allgenes.length);
-            printer.println("Output Nodes Considered#: " + outputGenes.length);
-
-            printer.println("> Begin Search Result Table ");        
+            printer.println("                 All Genes#: " + allgenes.length);
+            printer.println("   Output Nodes Considered#: " + outputGenes.length);
+            printer.println("> Begin Search Result Table: ");   
+            
             esearch.printESearchResultFileHeader(printer, config); // printoutput header...
             // for each outputGene,
             for(String outputGene : outputGenes){

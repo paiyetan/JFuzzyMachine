@@ -5,10 +5,10 @@
  */
 package jfuzzymachine;
 
-import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
+import jfuzzymachine.JFuzzyMachine.ExpressionType;
 import tables.Table;
 
 
@@ -16,7 +16,7 @@ import tables.Table;
  *
  * @author aiyetanpo
  */
-public class ESearch { //ExhaustiveSearch....
+public class ESearchEngine { //ExhaustiveSearch....
 
     /**
      * 
@@ -63,7 +63,11 @@ public class ESearch { //ExhaustiveSearch....
                                      String outputGene,
                                      //ESearch esearch,
                                      PrintWriter printer,
-                                     HashMap<String, String> config){
+                                     HashMap<String, String> config,
+                                     Table phenoExprs, 
+                                     FuzzySet[][] phenoFMat,
+                                     boolean modelPhenotype
+                                    ){
         
         String[] inputGenes = new String[inputsCombination.length];            
         String inputGene1 = otherGenes[inputsCombination[0]];
@@ -111,9 +115,15 @@ public class ESearch { //ExhaustiveSearch....
                                                                         double zx = fz1.get(i) + fz2.get(l) + fz3.get(o) + fz4.get(r) + fz5.get(u);
                                                                         double zy = fz1.get(j) + fz2.get(m) + fz3.get(p) + fz4.get(s) + fz5.get(v);
                                                                         double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t) + fz5.get(w);
+                                                                        
                                                                         //get defuzzified (xCaretValue) value of Z @ position index
-                                                                        //double dfz = this.deFuzzify(new FuzzySet(zx, zy, zz));
-                                                                        double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz));
+                                                                        double dfz;
+                                                                        if(modelPhenotype){
+                                                                            dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                                                        }else{
+                                                                            dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                                                        }
+
                                                                         // compute residual and cummulative residual squared sum...
                                                                         residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                                                     }
@@ -162,7 +172,11 @@ public class ESearch { //ExhaustiveSearch....
                                      String outputGene,
                                      //ESearch esearch,
                                      PrintWriter printer,
-                                     HashMap<String, String> config){
+                                     HashMap<String, String> config,
+                                     Table phenoExprs, 
+                                     FuzzySet[][] phenoFMat,
+                                     boolean modelPhenotype
+                                    ){
         String[] inputGenes = new String[inputsCombination.length];            
         String inputGene1 = otherGenes[inputsCombination[0]];
         String inputGene2 = otherGenes[inputsCombination[1]];
@@ -202,8 +216,15 @@ public class ESearch { //ExhaustiveSearch....
                                                             double zx = fz1.get(i) + fz2.get(l) + fz3.get(o) + fz4.get(r);
                                                             double zy = fz1.get(j) + fz2.get(m) + fz3.get(p) + fz4.get(s);
                                                             double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t);
+                                                            
                                                             //get defuzzified (xCaretValue) value of Z @ position index
-                                                            double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz));
+                                                            double dfz;
+                                                            if(modelPhenotype){
+                                                                dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                                            }else{
+                                                                dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                                            }
+
                                                             // compute residual and cummulative residual squared sum...
                                                             residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                                         }
@@ -249,7 +270,11 @@ public class ESearch { //ExhaustiveSearch....
                                      String outputGene,
                                      //ESearch esearch,
                                      PrintWriter printer,
-                                     HashMap<String, String> config){
+                                     HashMap<String, String> config,
+                                     Table phenoExprs, 
+                                     FuzzySet[][] phenoFMat,
+                                     boolean modelPhenotype
+                                    ){
         String[] inputGenes = new String[inputsCombination.length];            
         String inputGene1 = otherGenes[inputsCombination[0]];
         String inputGene2 = otherGenes[inputsCombination[1]];
@@ -282,8 +307,15 @@ public class ESearch { //ExhaustiveSearch....
                                                 double zx = fz1.get(i) + fz2.get(l) + fz3.get(o);
                                                 double zy = fz1.get(j) + fz2.get(m) + fz3.get(p);
                                                 double zz = fz1.get(k) + fz2.get(n) + fz3.get(q);
+                                                
                                                 //get defuzzified (xCaretValue) value of Z @ position index
-                                                double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz));
+                                                double dfz;
+                                                if(modelPhenotype){
+                                                    dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                                }else{
+                                                    dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                                }
+
                                                 // compute residual and cummulative residual squared sum...
                                                 residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                             }
@@ -324,7 +356,11 @@ public class ESearch { //ExhaustiveSearch....
                                      String outputGene,
                                      //ESearch esearch,
                                      PrintWriter printer,
-                                     HashMap<String, String> config){
+                                     HashMap<String, String> config,
+                                     Table phenoExprs, 
+                                     FuzzySet[][] phenoFMat,
+                                     boolean modelPhenotype
+                                    ){
         String[] inputGenes = new String[inputsCombination.length];            
         String inputGene1 = otherGenes[inputsCombination[0]];
         String inputGene2 = otherGenes[inputsCombination[1]];
@@ -350,8 +386,15 @@ public class ESearch { //ExhaustiveSearch....
                                     double zx = fz1.get(i) + fz2.get(l);
                                     double zy = fz1.get(j) + fz2.get(m);
                                     double zz = fz1.get(k) + fz2.get(n);
+                                    
                                     //get defuzzified (xCaretValue) value of Z @ position index
-                                    double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz));
+                                    double dfz;
+                                    if(modelPhenotype){
+                                        dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                    }else{
+                                        dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                    }
+                        
                                     // compute residual and cummulative residual squared sum...
                                     residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                 }
@@ -386,9 +429,12 @@ public class ESearch { //ExhaustiveSearch....
                                      FuzzySet[][] fMat,
                                      String[] otherGenes,
                                      String outputGene,
-                                     //ESearch esearch,
                                      PrintWriter printer,
-                                     HashMap<String, String> config){
+                                     HashMap<String, String> config,
+                                     Table phenoExprs, 
+                                     FuzzySet[][] phenoFMat,
+                                     boolean modelPhenotype
+                                     ){
         String[] inputGenes = new String[inputsCombination.length];            
         String inputGene1 = otherGenes[inputsCombination[0]];
         inputGenes[0] = inputGene1;
@@ -407,8 +453,15 @@ public class ESearch { //ExhaustiveSearch....
                         double zx = fz1.get(i);
                         double zy = fz1.get(j);
                         double zz = fz1.get(k);
+                        
                         //get defuzzified (xCaretValue) value of Z @ position index
-                        double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz));
+                        double dfz;
+                        if(modelPhenotype){
+                            dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                        }else{
+                            dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                        }
+                        
                         // compute residual and cummulative residual squared sum...
                         residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                     }
