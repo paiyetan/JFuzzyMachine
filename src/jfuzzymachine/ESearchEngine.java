@@ -83,67 +83,64 @@ public class ESearchEngine { //ExhaustiveSearch....
         
         Fuzzifier fuzzifier = new Fuzzifier();
 
-        for(int i = 1; i <= 3; i++){
-            for(int j = 1; j <= 3; j++){
-                for(int k = 1; k <= 3; k++){
+        if(modelPhenotype){
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
 
-                    for(int l = 1; l <= 3; l++){
-                        for(int m = 1; m <= 3; m++){
-                            for(int n = 1; n <= 3; n++){
+                        for(int l = 1; l <= 3; l++){
+                            for(int m = 1; m <= 3; m++){
+                                for(int n = 1; n <= 3; n++){
 
-                                for(int o = 1; o <= 3; o++){
-                                    for(int p = 1; p <= 3; p++){
-                                        for(int q = 1; q <= 3; q++){
+                                    for(int o = 1; o <= 3; o++){
+                                        for(int p = 1; p <= 3; p++){
+                                            for(int q = 1; q <= 3; q++){
 
-                                            for(int r = 1; r <= 3; r++){
-                                                for(int s = 1; s <= 3; s++){
-                                                    for(int t = 1; t <= 3; t++){
+                                                for(int r = 1; r <= 3; r++){
+                                                    for(int s = 1; s <= 3; s++){
+                                                        for(int t = 1; t <= 3; t++){
 
-                                                        for(int u = 1; u <= 3; u++){
-                                                            for(int v = 1; v <= 3; v++){
-                                                                for(int w = 1; w <= 3; w++){
+                                                            for(int u = 1; u <= 3; u++){
+                                                                for(int v = 1; v <= 3; v++){
+                                                                    for(int w = 1; w <= 3; w++){
 
-                                                                    double residualSquaredSum = 0;                                                                        
-                                                                    for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
-                                                                        //get fuzzyValues of input genes, 
-                                                                        FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
-                                                                        FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
-                                                                        FuzzySet fz3 = fMat[exprs.getRowIndex(inputGene3)][index];
-                                                                        FuzzySet fz4 = fMat[exprs.getRowIndex(inputGene4)][index];
-                                                                        FuzzySet fz5 = fMat[exprs.getRowIndex(inputGene5)][index];
-                                                                        //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
-                                                                        double zx = fz1.get(i) + fz2.get(l) + fz3.get(o) + fz4.get(r) + fz5.get(u);
-                                                                        double zy = fz1.get(j) + fz2.get(m) + fz3.get(p) + fz4.get(s) + fz5.get(v);
-                                                                        double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t) + fz5.get(w);
-                                                                        
-                                                                        //get defuzzified (xCaretValue) value of Z @ position index
-                                                                        double dfz;
-                                                                        if(modelPhenotype){
-                                                                            dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                                                                        }else{
-                                                                            dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                                                        double residualSquaredSum = 0;                                                                        
+                                                                        for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                                                                            //get fuzzyValues of input genes, 
+                                                                            FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                                                                            FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
+                                                                            FuzzySet fz3 = fMat[exprs.getRowIndex(inputGene3)][index];
+                                                                            FuzzySet fz4 = fMat[exprs.getRowIndex(inputGene4)][index];
+                                                                            FuzzySet fz5 = fMat[exprs.getRowIndex(inputGene5)][index];
+                                                                            //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                                                                            double zx = fz1.get(i) + fz2.get(l) + fz3.get(o) + fz4.get(r) + fz5.get(u);
+                                                                            double zy = fz1.get(j) + fz2.get(m) + fz3.get(p) + fz4.get(s) + fz5.get(v);
+                                                                            double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t) + fz5.get(w);
+
+                                                                            //get defuzzified (xCaretValue) value of Z @ position index
+                                                                            double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                                                            
+                                                                            // compute residual and cummulative residual squared sum...
+                                                                            residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                                                         }
-
-                                                                        // compute residual and cummulative residual squared sum...
-                                                                        residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
-                                                                    }
-                                                                    // compute error..
-                                                                    double err = 1 - (residualSquaredSum/deviationSquaredSum);
-                                                                    // filter
-                                                                    if(err >= eCutOff){                                                                           
-                                                                        String[] rules = new String[inputsCombination.length];
-                                                                        rules[0] = new Rule(i,j,k).toString();
-                                                                        rules[1] = new Rule(l,m,n).toString();
-                                                                        rules[2] = new Rule(o,p,q).toString();
-                                                                        rules[3] = new Rule(r,s,t).toString();
-                                                                        rules[4] = new Rule(u,v,w).toString();
-                                                                        ESearchResult sResult = new ESearchResult(outputGene, 
-                                                                                                                    inputsCombination.length,
-                                                                                                                        inputGenes,
-                                                                                                                            rules,
-                                                                                                                                err
-                                                                                                                            );
-                                                                        printESearchResult(sResult, printer, config);
+                                                                        // compute error..
+                                                                        double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                                                                        // filter
+                                                                        if(err >= eCutOff){                                                                           
+                                                                            String[] rules = new String[inputsCombination.length];
+                                                                            rules[0] = new Rule(i,j,k).toString();
+                                                                            rules[1] = new Rule(l,m,n).toString();
+                                                                            rules[2] = new Rule(o,p,q).toString();
+                                                                            rules[3] = new Rule(r,s,t).toString();
+                                                                            rules[4] = new Rule(u,v,w).toString();
+                                                                            ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                                                                        inputsCombination.length,
+                                                                                                                            inputGenes,
+                                                                                                                                rules,
+                                                                                                                                    err
+                                                                                                                                );
+                                                                            printESearchResult(sResult, printer, config);
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -158,8 +155,82 @@ public class ESearchEngine { //ExhaustiveSearch....
                         }
                     }
                 }
-            }
-        }       
+            }   
+        }else{
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
+
+                        for(int l = 1; l <= 3; l++){
+                            for(int m = 1; m <= 3; m++){
+                                for(int n = 1; n <= 3; n++){
+
+                                    for(int o = 1; o <= 3; o++){
+                                        for(int p = 1; p <= 3; p++){
+                                            for(int q = 1; q <= 3; q++){
+
+                                                for(int r = 1; r <= 3; r++){
+                                                    for(int s = 1; s <= 3; s++){
+                                                        for(int t = 1; t <= 3; t++){
+
+                                                            for(int u = 1; u <= 3; u++){
+                                                                for(int v = 1; v <= 3; v++){
+                                                                    for(int w = 1; w <= 3; w++){
+
+                                                                        double residualSquaredSum = 0;                                                                        
+                                                                        for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                                                                            //get fuzzyValues of input genes, 
+                                                                            FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                                                                            FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
+                                                                            FuzzySet fz3 = fMat[exprs.getRowIndex(inputGene3)][index];
+                                                                            FuzzySet fz4 = fMat[exprs.getRowIndex(inputGene4)][index];
+                                                                            FuzzySet fz5 = fMat[exprs.getRowIndex(inputGene5)][index];
+                                                                            //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                                                                            double zx = fz1.get(i) + fz2.get(l) + fz3.get(o) + fz4.get(r) + fz5.get(u);
+                                                                            double zy = fz1.get(j) + fz2.get(m) + fz3.get(p) + fz4.get(s) + fz5.get(v);
+                                                                            double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t) + fz5.get(w);
+
+                                                                            //get defuzzified (xCaretValue) value of Z @ position index
+                                                                            double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);                                                                            
+
+                                                                            // compute residual and cummulative residual squared sum...
+                                                                            residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
+                                                                        }
+                                                                        // compute error..
+                                                                        double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                                                                        // filter
+                                                                        if(err >= eCutOff){                                                                           
+                                                                            String[] rules = new String[inputsCombination.length];
+                                                                            rules[0] = new Rule(i,j,k).toString();
+                                                                            rules[1] = new Rule(l,m,n).toString();
+                                                                            rules[2] = new Rule(o,p,q).toString();
+                                                                            rules[3] = new Rule(r,s,t).toString();
+                                                                            rules[4] = new Rule(u,v,w).toString();
+                                                                            ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                                                                        inputsCombination.length,
+                                                                                                                            inputGenes,
+                                                                                                                                rules,
+                                                                                                                                    err
+                                                                                                                                );
+                                                                            printESearchResult(sResult, printer, config);
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } 
+        }    
+            
     }
     
     public void searchWithFourInputs(int[] inputsCombination, 
@@ -189,63 +260,125 @@ public class ESearchEngine { //ExhaustiveSearch....
         
         Fuzzifier fuzzifier = new Fuzzifier();
 
-        for(int i = 1; i <= 3; i++){
-            for(int j = 1; j <= 3; j++){
-                for(int k = 1; k <= 3; k++){
+        if(modelPhenotype){
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
 
-                    for(int l = 1; l <= 3; l++){
-                        for(int m = 1; m <= 3; m++){
-                            for(int n = 1; n <= 3; n++){
+                        for(int l = 1; l <= 3; l++){
+                            for(int m = 1; m <= 3; m++){
+                                for(int n = 1; n <= 3; n++){
 
-                                for(int o = 1; o <= 3; o++){
-                                    for(int p = 1; p <= 3; p++){
-                                        for(int q = 1; q <= 3; q++){
+                                    for(int o = 1; o <= 3; o++){
+                                        for(int p = 1; p <= 3; p++){
+                                            for(int q = 1; q <= 3; q++){
 
-                                            for(int r = 1; r <= 3; r++){
-                                                for(int s = 1; s <= 3; s++){
-                                                    for(int t = 1; t <= 3; t++){
+                                                for(int r = 1; r <= 3; r++){
+                                                    for(int s = 1; s <= 3; s++){
+                                                        for(int t = 1; t <= 3; t++){
 
-                                                        double residualSquaredSum = 0;                                                                        
-                                                        for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
-                                                            //get fuzzyValues of input genes, 
-                                                            FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
-                                                            FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
-                                                            FuzzySet fz3 = fMat[exprs.getRowIndex(inputGene3)][index];
-                                                            FuzzySet fz4 = fMat[exprs.getRowIndex(inputGene4)][index];
-                                                            //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
-                                                            double zx = fz1.get(i) + fz2.get(l) + fz3.get(o) + fz4.get(r);
-                                                            double zy = fz1.get(j) + fz2.get(m) + fz3.get(p) + fz4.get(s);
-                                                            double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t);
-                                                            
-                                                            //get defuzzified (xCaretValue) value of Z @ position index
-                                                            double dfz;
-                                                            if(modelPhenotype){
-                                                                dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                                                            }else{
-                                                                dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                                            double residualSquaredSum = 0;                                                                        
+                                                            for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                                                                //get fuzzyValues of input genes, 
+                                                                FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                                                                FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
+                                                                FuzzySet fz3 = fMat[exprs.getRowIndex(inputGene3)][index];
+                                                                FuzzySet fz4 = fMat[exprs.getRowIndex(inputGene4)][index];
+                                                                //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                                                                double zx = fz1.get(i) + fz2.get(l) + fz3.get(o) + fz4.get(r);
+                                                                double zy = fz1.get(j) + fz2.get(m) + fz3.get(p) + fz4.get(s);
+                                                                double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t);
+
+                                                                //get defuzzified (xCaretValue) value of Z @ position index
+                                                                double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                                                
+                                                                // compute residual and cummulative residual squared sum...
+                                                                residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
+                                                            }
+                                                            // compute error..
+                                                            double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                                                            // filter
+                                                            if(err >= eCutOff){                                                                           
+                                                                String[] rules = new String[inputsCombination.length];
+                                                                rules[0] = new Rule(i,j,k).toString();
+                                                                rules[1] = new Rule(l,m,n).toString();
+                                                                rules[2] = new Rule(o,p,q).toString();
+                                                                rules[3] = new Rule(r,s,t).toString();
+                                                                ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                                                            inputsCombination.length,
+                                                                                                                inputGenes,
+                                                                                                                    rules,
+                                                                                                                        err
+                                                                                                                    );
+                                                                printESearchResult(sResult, printer, config);
                                                             }
 
-                                                            // compute residual and cummulative residual squared sum...
-                                                            residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                                         }
-                                                        // compute error..
-                                                        double err = 1 - (residualSquaredSum/deviationSquaredSum);
-                                                        // filter
-                                                        if(err >= eCutOff){                                                                           
-                                                            String[] rules = new String[inputsCombination.length];
-                                                            rules[0] = new Rule(i,j,k).toString();
-                                                            rules[1] = new Rule(l,m,n).toString();
-                                                            rules[2] = new Rule(o,p,q).toString();
-                                                            rules[3] = new Rule(r,s,t).toString();
-                                                            ESearchResult sResult = new ESearchResult(outputGene, 
-                                                                                                        inputsCombination.length,
-                                                                                                            inputGenes,
-                                                                                                                rules,
-                                                                                                                    err
-                                                                                                                );
-                                                            printESearchResult(sResult, printer, config);
-                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }else{
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
 
+                        for(int l = 1; l <= 3; l++){
+                            for(int m = 1; m <= 3; m++){
+                                for(int n = 1; n <= 3; n++){
+
+                                    for(int o = 1; o <= 3; o++){
+                                        for(int p = 1; p <= 3; p++){
+                                            for(int q = 1; q <= 3; q++){
+
+                                                for(int r = 1; r <= 3; r++){
+                                                    for(int s = 1; s <= 3; s++){
+                                                        for(int t = 1; t <= 3; t++){
+
+                                                            double residualSquaredSum = 0;                                                                        
+                                                            for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                                                                //get fuzzyValues of input genes, 
+                                                                FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                                                                FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
+                                                                FuzzySet fz3 = fMat[exprs.getRowIndex(inputGene3)][index];
+                                                                FuzzySet fz4 = fMat[exprs.getRowIndex(inputGene4)][index];
+                                                                //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                                                                double zx = fz1.get(i) + fz2.get(l) + fz3.get(o) + fz4.get(r);
+                                                                double zy = fz1.get(j) + fz2.get(m) + fz3.get(p) + fz4.get(s);
+                                                                double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t);
+
+                                                                //get defuzzified (xCaretValue) value of Z @ position index
+                                                                double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                                                
+                                                                // compute residual and cummulative residual squared sum...
+                                                                residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
+                                                            }
+                                                            // compute error..
+                                                            double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                                                            // filter
+                                                            if(err >= eCutOff){                                                                           
+                                                                String[] rules = new String[inputsCombination.length];
+                                                                rules[0] = new Rule(i,j,k).toString();
+                                                                rules[1] = new Rule(l,m,n).toString();
+                                                                rules[2] = new Rule(o,p,q).toString();
+                                                                rules[3] = new Rule(r,s,t).toString();
+                                                                ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                                                            inputsCombination.length,
+                                                                                                                inputGenes,
+                                                                                                                    rules,
+                                                                                                                        err
+                                                                                                                    );
+                                                                printESearchResult(sResult, printer, config);
+                                                            }
+
+                                                        }
                                                     }
                                                 }
                                             }
@@ -285,55 +418,107 @@ public class ESearchEngine { //ExhaustiveSearch....
         
         Fuzzifier fuzzifier = new Fuzzifier();
 
-        for(int i = 1; i <= 3; i++){
-            for(int j = 1; j <= 3; j++){
-                for(int k = 1; k <= 3; k++){
+        if(modelPhenotype){
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
 
-                    for(int l = 1; l <= 3; l++){
-                        for(int m = 1; m <= 3; m++){
-                            for(int n = 1; n <= 3; n++){
+                        for(int l = 1; l <= 3; l++){
+                            for(int m = 1; m <= 3; m++){
+                                for(int n = 1; n <= 3; n++){
 
-                                for(int o = 1; o <= 3; o++){
-                                    for(int p = 1; p <= 3; p++){
-                                        for(int q = 1; q <= 3; q++){
+                                    for(int o = 1; o <= 3; o++){
+                                        for(int p = 1; p <= 3; p++){
+                                            for(int q = 1; q <= 3; q++){
 
-                                            double residualSquaredSum = 0;                                                                        
-                                            for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
-                                                //get fuzzyValues of input genes, 
-                                                FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
-                                                FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
-                                                FuzzySet fz3 = fMat[exprs.getRowIndex(inputGene3)][index];
-                                                //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
-                                                double zx = fz1.get(i) + fz2.get(l) + fz3.get(o);
-                                                double zy = fz1.get(j) + fz2.get(m) + fz3.get(p);
-                                                double zz = fz1.get(k) + fz2.get(n) + fz3.get(q);
-                                                
-                                                //get defuzzified (xCaretValue) value of Z @ position index
-                                                double dfz;
-                                                if(modelPhenotype){
-                                                    dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                                                }else{
-                                                    dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                                double residualSquaredSum = 0;                                                                        
+                                                for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                                                    //get fuzzyValues of input genes, 
+                                                    FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                                                    FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
+                                                    FuzzySet fz3 = fMat[exprs.getRowIndex(inputGene3)][index];
+                                                    //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                                                    double zx = fz1.get(i) + fz2.get(l) + fz3.get(o);
+                                                    double zy = fz1.get(j) + fz2.get(m) + fz3.get(p);
+                                                    double zz = fz1.get(k) + fz2.get(n) + fz3.get(q);
+
+                                                    //get defuzzified (xCaretValue) value of Z @ position index
+                                                    double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                                    
+                                                    // compute residual and cummulative residual squared sum...
+                                                    residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                                 }
-
-                                                // compute residual and cummulative residual squared sum...
-                                                residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
+                                                // compute error..
+                                                double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                                                // filter
+                                                if(err >= eCutOff){                                                                           
+                                                    String[] rules = new String[inputsCombination.length];
+                                                    rules[0] = new Rule(i,j,k).toString();
+                                                    rules[1] = new Rule(l,m,n).toString();
+                                                    rules[2] = new Rule(o,p,q).toString();
+                                                    ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                                                inputsCombination.length,
+                                                                                                    inputGenes,
+                                                                                                        rules,
+                                                                                                            err
+                                                                                                        );
+                                                    printESearchResult(sResult, printer, config);
+                                                }
                                             }
-                                            // compute error..
-                                            double err = 1 - (residualSquaredSum/deviationSquaredSum);
-                                            // filter
-                                            if(err >= eCutOff){                                                                           
-                                                String[] rules = new String[inputsCombination.length];
-                                                rules[0] = new Rule(i,j,k).toString();
-                                                rules[1] = new Rule(l,m,n).toString();
-                                                rules[2] = new Rule(o,p,q).toString();
-                                                ESearchResult sResult = new ESearchResult(outputGene, 
-                                                                                            inputsCombination.length,
-                                                                                                inputGenes,
-                                                                                                    rules,
-                                                                                                        err
-                                                                                                    );
-                                                printESearchResult(sResult, printer, config);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }else{
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
+
+                        for(int l = 1; l <= 3; l++){
+                            for(int m = 1; m <= 3; m++){
+                                for(int n = 1; n <= 3; n++){
+
+                                    for(int o = 1; o <= 3; o++){
+                                        for(int p = 1; p <= 3; p++){
+                                            for(int q = 1; q <= 3; q++){
+
+                                                double residualSquaredSum = 0;                                                                        
+                                                for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                                                    //get fuzzyValues of input genes, 
+                                                    FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                                                    FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
+                                                    FuzzySet fz3 = fMat[exprs.getRowIndex(inputGene3)][index];
+                                                    //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                                                    double zx = fz1.get(i) + fz2.get(l) + fz3.get(o);
+                                                    double zy = fz1.get(j) + fz2.get(m) + fz3.get(p);
+                                                    double zz = fz1.get(k) + fz2.get(n) + fz3.get(q);
+
+                                                    //get defuzzified (xCaretValue) value of Z @ position index
+                                                    double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                                    
+                                                    // compute residual and cummulative residual squared sum...
+                                                    residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
+                                                }
+                                                // compute error..
+                                                double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                                                // filter
+                                                if(err >= eCutOff){                                                                           
+                                                    String[] rules = new String[inputsCombination.length];
+                                                    rules[0] = new Rule(i,j,k).toString();
+                                                    rules[1] = new Rule(l,m,n).toString();
+                                                    rules[2] = new Rule(o,p,q).toString();
+                                                    ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                                                inputsCombination.length,
+                                                                                                    inputGenes,
+                                                                                                        rules,
+                                                                                                            err
+                                                                                                        );
+                                                    printESearchResult(sResult, printer, config);
+                                                }
                                             }
                                         }
                                     }
@@ -369,55 +554,98 @@ public class ESearchEngine { //ExhaustiveSearch....
         
         Fuzzifier fuzzifier = new Fuzzifier();
 
-        for(int i = 1; i <= 3; i++){
-            for(int j = 1; j <= 3; j++){
-                for(int k = 1; k <= 3; k++){
+        if(modelPhenotype){
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
 
-                    for(int l = 1; l <= 3; l++){
-                        for(int m = 1; m <= 3; m++){
-                            for(int n = 1; n <= 3; n++){
+                        for(int l = 1; l <= 3; l++){
+                            for(int m = 1; m <= 3; m++){
+                                for(int n = 1; n <= 3; n++){
 
-                                double residualSquaredSum = 0;                                                                        
-                                for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
-                                    //get fuzzyValues of input genes, 
-                                    FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
-                                    FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
-                                    //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
-                                    double zx = fz1.get(i) + fz2.get(l);
-                                    double zy = fz1.get(j) + fz2.get(m);
-                                    double zz = fz1.get(k) + fz2.get(n);
-                                    
-                                    //get defuzzified (xCaretValue) value of Z @ position index
-                                    double dfz;
-                                    if(modelPhenotype){
-                                        dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                                    }else{
-                                        dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                    double residualSquaredSum = 0;                                                                        
+                                    for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                                        //get fuzzyValues of input genes, 
+                                        FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                                        FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
+                                        //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                                        double zx = fz1.get(i) + fz2.get(l);
+                                        double zy = fz1.get(j) + fz2.get(m);
+                                        double zz = fz1.get(k) + fz2.get(n);
+
+                                        //get defuzzified (xCaretValue) value of Z @ position index
+                                        double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                        
+                                        // compute residual and cummulative residual squared sum...
+                                        residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                     }
-                        
-                                    // compute residual and cummulative residual squared sum...
-                                    residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
+                                    // compute error..
+                                    double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                                    // filter
+                                    if(err >= eCutOff){                                                                           
+                                        String[] rules = new String[inputsCombination.length];
+                                        rules[0] = new Rule(i,j,k).toString();
+                                        rules[1] = new Rule(l,m,n).toString();
+                                        ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                                    inputsCombination.length,
+                                                                                        inputGenes,
+                                                                                            rules,
+                                                                                                err
+                                                                                            );
+                                        printESearchResult(sResult, printer, config);
+                                    }                                
                                 }
-                                // compute error..
-                                double err = 1 - (residualSquaredSum/deviationSquaredSum);
-                                // filter
-                                if(err >= eCutOff){                                                                           
-                                    String[] rules = new String[inputsCombination.length];
-                                    rules[0] = new Rule(i,j,k).toString();
-                                    rules[1] = new Rule(l,m,n).toString();
-                                    ESearchResult sResult = new ESearchResult(outputGene, 
-                                                                                inputsCombination.length,
-                                                                                    inputGenes,
-                                                                                        rules,
-                                                                                            err
-                                                                                        );
-                                    printESearchResult(sResult, printer, config);
-                                }                                
                             }
                         }
                     }
                 }
             }
+        }else{
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
+
+                        for(int l = 1; l <= 3; l++){
+                            for(int m = 1; m <= 3; m++){
+                                for(int n = 1; n <= 3; n++){
+
+                                    double residualSquaredSum = 0;                                                                        
+                                    for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                                        //get fuzzyValues of input genes, 
+                                        FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                                        FuzzySet fz2 = fMat[exprs.getRowIndex(inputGene2)][index];
+                                        //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                                        double zx = fz1.get(i) + fz2.get(l);
+                                        double zy = fz1.get(j) + fz2.get(m);
+                                        double zz = fz1.get(k) + fz2.get(n);
+
+                                        //get defuzzified (xCaretValue) value of Z @ position index
+                                        double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                                        
+                                        // compute residual and cummulative residual squared sum...
+                                        residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
+                                    }
+                                    // compute error..
+                                    double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                                    // filter
+                                    if(err >= eCutOff){                                                                           
+                                        String[] rules = new String[inputsCombination.length];
+                                        rules[0] = new Rule(i,j,k).toString();
+                                        rules[1] = new Rule(l,m,n).toString();
+                                        ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                                    inputsCombination.length,
+                                                                                        inputGenes,
+                                                                                            rules,
+                                                                                                err
+                                                                                            );
+                                        printESearchResult(sResult, printer, config);
+                                    }                                
+                                }
+                            }
+                        }
+                    }
+                }
+            }            
         }
     }
     
@@ -441,44 +669,78 @@ public class ESearchEngine { //ExhaustiveSearch....
         
         Fuzzifier fuzzifier = new Fuzzifier();
 
-        for(int i = 1; i <= 3; i++){
-            for(int j = 1; j <= 3; j++){
-                for(int k = 1; k <= 3; k++){
+        if(modelPhenotype){ 
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
 
-                    double residualSquaredSum = 0;                                                                        
-                    for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
-                        //get fuzzyValues of input genes, 
-                        FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
-                        //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
-                        double zx = fz1.get(i);
-                        double zy = fz1.get(j);
-                        double zz = fz1.get(k);
-                        
-                        //get defuzzified (xCaretValue) value of Z @ position index
-                        double dfz;
-                        if(modelPhenotype){
-                            dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                        }else{
-                            dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                        double residualSquaredSum = 0;                                                                        
+                        for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                            //get fuzzyValues of input genes, 
+                            FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                            //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                            double zx = fz1.get(i);
+                            double zy = fz1.get(j);
+                            double zz = fz1.get(k);
+
+                            //get defuzzified (xCaretValue) value of Z @ position index
+                            double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                            
+                            // compute residual and cummulative residual squared sum...
+                            residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                         }
-                        
-                        // compute residual and cummulative residual squared sum...
-                        residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
+                        // compute error..
+                        double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                        // filter
+                        if(err >= eCutOff){                                                                           
+                            String[] rules = new String[inputsCombination.length];
+                            rules[0] = new Rule(i,j,k).toString();
+                            ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                        inputsCombination.length,
+                                                                            inputGenes,
+                                                                                rules,
+                                                                                    err
+                                                                                );
+                            printESearchResult(sResult, printer, config);
+                        }                                       
                     }
-                    // compute error..
-                    double err = 1 - (residualSquaredSum/deviationSquaredSum);
-                    // filter
-                    if(err >= eCutOff){                                                                           
-                        String[] rules = new String[inputsCombination.length];
-                        rules[0] = new Rule(i,j,k).toString();
-                        ESearchResult sResult = new ESearchResult(outputGene, 
-                                                                    inputsCombination.length,
-                                                                        inputGenes,
-                                                                            rules,
-                                                                                err
-                                                                            );
-                        printESearchResult(sResult, printer, config);
-                    }                                       
+                }
+            }
+        }else{
+            for(int i = 1; i <= 3; i++){
+                for(int j = 1; j <= 3; j++){
+                    for(int k = 1; k <= 3; k++){
+
+                        double residualSquaredSum = 0;                                                                        
+                        for(int index = 0; index < outputGeneExpValues.length; index++){                                                                                                                                                        
+                            //get fuzzyValues of input genes, 
+                            FuzzySet fz1 = fMat[exprs.getRowIndex(inputGene1)][index];
+                            //get Zx,y,or z values using the Union Rule Configuration (URC) on rule combination
+                            double zx = fz1.get(i);
+                            double zy = fz1.get(j);
+                            double zz = fz1.get(k);
+
+                            //get defuzzified (xCaretValue) value of Z @ position index
+                            double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.GENOTYPE);
+                            
+                            // compute residual and cummulative residual squared sum...
+                            residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
+                        }
+                        // compute error..
+                        double err = 1 - (residualSquaredSum/deviationSquaredSum);
+                        // filter
+                        if(err >= eCutOff){                                                                           
+                            String[] rules = new String[inputsCombination.length];
+                            rules[0] = new Rule(i,j,k).toString();
+                            ESearchResult sResult = new ESearchResult(outputGene, 
+                                                                        inputsCombination.length,
+                                                                            inputGenes,
+                                                                                rules,
+                                                                                    err
+                                                                                );
+                            printESearchResult(sResult, printer, config);
+                        }                                       
+                    }
                 }
             }
         }
