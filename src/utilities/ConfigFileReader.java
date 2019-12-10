@@ -34,9 +34,11 @@ public class ConfigFileReader {
         BufferedReader reader = new BufferedReader(new FileReader(configFilePath));
         String line;
         while((line = reader.readLine())!=null){
-            String optionValue = line.split("#")[0]; //ignore everything after the config comment character
-            String[] lineArr = optionValue.split("=");
-            config.put(lineArr[0], lineArr[1]);
+            if(line.charAt(0)!='#'){ // not a comment line...
+                String optionValue = line.split("#")[0]; //ignore everything after the config comment character
+                String[] lineArr = optionValue.split("=");
+                config.put(lineArr[0].trim(), lineArr[1].trim());
+            }
         }
         return config;
     }

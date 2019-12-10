@@ -7,7 +7,9 @@ package utilities;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 
 /**
  *
@@ -21,19 +23,24 @@ public class SlurmRunFileMaker {
                          int start, // start gene or feature...
                          int end, // end gene or feature...
                          int numberOfInputs,
-                         double fitCutOff
+                         double fitCutOff,
+                         HashMap<String, String> params
                         ) throws FileNotFoundException{
         
         PrintWriter printer = new PrintWriter(outputFileName);
         printer.println("#!/bin/bash");
         printer.println();
-        //printer.println("#SBATCH --partition=unlimited");
-        printer.println("#SBATCH --job-name=runJFuzzyMachine."+start+"."+end+"."+numberOfInputs+"                        # Job name");
-        printer.println("#SBATCH --mail-type=ALL                                           # Mail events (NONE, BEGIN, END, FAIL, ALL)");
-        printer.println("#SBATCH --mail-user=paul.aiyetan@nih.gov                          # Where to send mail	");
-        printer.println("#SBATCH --output=/home/aiyetanpo/Slurm/Logs/runJFuzz."+start+"."+end+"."+numberOfInputs+".log   # Standard output and error log");
-        printer.println("#SBATCH --mem=16000						   # memory per compute node in MB");
-        printer.println("#SBATCH --nodes=16-32						   # nodes per compute node in MB");
+        printer.println("#SBATCH --partition=" + params.get("partition"));
+        printer.println("#SBATCH --job-name=" + params.get("jobNamePrepend") + 
+                "." + start + "." + end + "." + numberOfInputs + "  # Job name");
+        printer.println("#SBATCH --mail-type=" + params.get("mailType") + "                                           # Mail events (NONE, BEGIN, END, FAIL, ALL)");
+        printer.println("#SBATCH --mail-user=" + params.get("mailUser") + "                          # Where to send mail	");
+        printer.println("#SBATCH --output=" + params.get("slurmLogOuputDir") + 
+                "/" + params.get("jobNamePrepend")+"."+start+"."+end+"."+numberOfInputs+".log   # Standard output and error log");
+        //printer.println("#SBATCH --mem=16000						   # memory per compute node in MB");
+        //printer.println("#SBATCH --nodes=16-32						   # nodes per compute node in MB");
+        printer.println("#SBATCH --cpus-per-task=" + params.get("cPUsPerTask"));
+        printer.println("#SBATCH --mem-per-cpu=" + params.get("memPerCPU"));
         printer.println();        
         printer.println("pwd; hostname; date");
         printer.println();
@@ -42,7 +49,8 @@ public class SlurmRunFileMaker {
         printer.println("# ======================== #");
         printer.println("# Start  Executables...");
         printer.println("# ======================== #");
-        printer.println("export WORKDIR=\"/scratch/cluster_tmp/aiyetanpo/Applications/Personal/JFuzzyMachine/20191031/\"");
+        //printer.println("export WORKDIR=\"/scratch/cluster_tmp/aiyetanpo/Applications/Personal/JFuzzyMachine/20191203/\"");
+        printer.println("export WORKDIR=\"" + params.get("slurmWorkingDir") + "/\"");
         printer.println("echo \"Program Output begins: \"");
         printer.println("cd $WORKDIR ## cd into working directory...");
         printer.println();
@@ -56,7 +64,8 @@ public class SlurmRunFileMaker {
         printer.println("# ======================== #");
         printer.println("# define needed program(s) locations");
         printer.println();
-        printer.println("java -Xmx8G -cp ./JFuzzyMachine.jar jfuzzymachine.JFuzzyMachine ./JFuzzyMachine.config "+start+" "+end+" "+numberOfInputs+" "+fitCutOff);
+        printer.println("java -Xmx8G -cp ./JFuzzyMachine.jar jfuzzymachine.JFuzzyMachine ./JFuzzyMachine.config " + 
+                        start + " " + end + " " + numberOfInputs + " " + fitCutOff);
         printer.println();
         printer.println("# ======================== #");
         printer.println("# tidy up when done here...");
@@ -69,21 +78,26 @@ public class SlurmRunFileMaker {
         
     }
     
-    public static void main(String[] args) throws FileNotFoundException{
+    public static void main(String[] args) throws FileNotFoundException, IOException{
         
-        String outputDirectory = args[0]; //args[0], output directory
-        int start = Integer.parseInt(args[1]);// start gene or feature...
-        int end = Integer.parseInt(args[2]); // end gene or feature...
-        int numberOfInputs = Integer.parseInt(args[3]);
-        double fitCutOff = Double.parseDouble(args[4]);
+        HashMap<String, String> params = new ConfigFileReader().read(args[0]);
+        
+        String outputDirectory = params.get("outputDir"); //args[0], output directory
+        int start = Integer.parseInt(params.get("start"));// start gene or feature...
+        int end = Integer.parseInt(params.get("end")); // end gene or feature...
+        int numberOfInputs = Integer.parseInt(params.get("numberOfInputs"));
+        double fitCutOff = Double.parseDouble(params.get("fitCutOff"));
         
         SlurmRunFileMaker fileMaker = new SlurmRunFileMaker();
+               
         for(int i = start; i <= end; i++){
             String outputFile = outputDirectory + File.separator + 
                     "runFuzzyMachine." + i + "." + i + "." + numberOfInputs + ".sh";
             fileMaker.makeFile(outputFile, i, i, 
-                               numberOfInputs, fitCutOff);
+                               numberOfInputs, fitCutOff, params);
         }
+        
+        System.out.println("...Done!");
     }
     
 }
