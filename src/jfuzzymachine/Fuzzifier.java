@@ -101,10 +101,12 @@ public class Fuzzifier {
                 
         switch(expressionType){           
             case PHENOTYPE:
+                //dfz = dfz * (Math.PI/2);//
+                //dfz = Math.tan(dfz);   // 
                 dfz = 1/( 1 + Math.pow(Math.E, ( -6 * ((2*dfz)-1)) ));
                 break;
                 
-            default: // GENOTYPE
+            default: // GENOTYPE               
                 dfz = dfz * (Math.PI/2);
                 dfz = Math.tan(dfz);        
                 break;        
