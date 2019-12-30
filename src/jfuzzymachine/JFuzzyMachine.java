@@ -5,6 +5,7 @@
  */
 package jfuzzymachine;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -607,8 +608,10 @@ public class JFuzzyMachine {
         ConfigFileReader cReader = new ConfigFileReader();
         HashMap<String, String> config = cReader.read(args[0]); // configuration file path
         // instantiate print object...
-        String outFile = config.get("inputFile");
+        String outFile = config.get("inputFile"); //expression matrix file....
         outFile = outFile.replace(".txt", "").replace(".tsv", "");
+        String outputDir = config.get("outputDir");
+        outFile = outputDir + File.separator + new File(outFile).getName();        
                
         if(args.length > 1){ // input includes other commandLine parameters; these supercede those specified in the config file....           
             config.replace("iGeneStart", args[1]);
@@ -616,7 +619,8 @@ public class JFuzzyMachine {
             outFile = outFile + "." + args[1] + "." + args[2];
             
             if(Integer.parseInt(config.get("iGeneStart"))==0){
-                config.replace("modelPhenotype", "TRUE"); // in this case, all other args MUST be provided in configuration file...                                
+                config.replace("modelPhenotype", "TRUE"); 
+// in this case, all other args MUST be provided in configuration file...                                
             }
         }
         
