@@ -28,7 +28,7 @@ public class PhenoPredictionSimulator {
     
     public void run(Table expMat, int iterations, String outputDir) throws FileNotFoundException{
         
-        PrintWriter printer = new PrintWriter(outputDir + File.separator + "phenoOutSimulation.out");
+        PrintWriter printer = new PrintWriter(outputDir + File.separator + "phenoOutSimulation.tsv");
         //printHeader...
         printer.println("numberOfInputs\t" +
                         "inputsExpValueColumn\t" +
@@ -64,8 +64,16 @@ public class PhenoPredictionSimulator {
             }            
             //randomly perturbation (column) to use to select values for inputs... 
             int inputsExpValuesColumn = r.nextInt(columnIds.length);
-            double[] expValues = expMat.getColumn(inputsExpValuesColumn, Table.TableType.DOUBLE);
-            
+            double[] expValues = null;
+            try{
+                expValues = expMat.getColumn(inputsExpValuesColumn, Table.TableType.DOUBLE);
+            }catch(NullPointerException e){
+                e.printStackTrace();
+                System.out.println("\ninputsExpValuesColumn: " + inputsExpValuesColumn +
+                                   "\nexpMatColumnLength: " + columnIds.length + 
+                                   "\nnumberOfInputs: " + numberOfInputs + 
+                                   "\ncount: " + count);
+            }
             //get expression value of input features..
             double[] inputsExpValues = new double[features.size()];
             for(int i = 0; i < inputsExpValues.length; i++)
@@ -123,7 +131,7 @@ public class PhenoPredictionSimulator {
         
         System.out.println("Running...");
         PhenoPredictionSimulator simulator = new PhenoPredictionSimulator();
-        simulator.run(new Table(expMatFilePath), iterations, outputDir);
+        simulator.run(new Table(expMatFilePath, Table.TableType.DOUBLE), iterations, outputDir);
         
         System.out.println("...Done!!!");
         
