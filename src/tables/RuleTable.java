@@ -5,6 +5,8 @@
  */
 package tables;
 
+import java.util.Arrays;
+
 /**
  *
  * @author paiyetan
@@ -45,6 +47,17 @@ public class RuleTable {
         return ruleTable;
     }
     
+    public int[] getRule(int rowIndex){
+        int[] rule = ruleTable[rowIndex];
+        return rule;
+    }
     
-    
+    /*
+    public static void main(String[] args){
+        RuleTable rT = new RuleTable();
+        for(int i = 0; i < 5; i++){
+            System.out.println(Arrays.toString(rT.getRule(i)));
+        }
+    }
+    */
 }

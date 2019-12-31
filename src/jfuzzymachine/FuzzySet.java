@@ -37,8 +37,7 @@ public class FuzzySet {
         double[] arr = new double[3];
         arr[0] = y1;
         arr[1] = y2;
-        arr[2] = y3;
-        
+        arr[2] = y3;        
         return arr;
     }
     
@@ -54,5 +53,23 @@ public class FuzzySet {
             default:
                 return 0;
         }
+    }
+    
+    public void add2Y1(double value){
+        y1 = y1 + value;
+    }
+    
+    public void add2Y2(double value){
+        y2 = y2 + value;
+    }
+    
+    public void add2Y3(double value){
+        y3 = y3 + value;
+    }
+    
+    public void add(FuzzySet fz){
+        y1 = y1 + fz.getY1();
+        y2 = y2 + fz.getY2();
+        y3 = y3 + fz.getY3();
     }
 }

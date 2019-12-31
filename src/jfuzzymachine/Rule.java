@@ -6,6 +6,7 @@
 package jfuzzymachine;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 
 /**
  *
@@ -30,6 +31,13 @@ public class Rule {
         this.arr[1] = mid;
         this.arr[2] = high;
     }
+    
+    public Rule(int[] arr){
+        this.arr = arr;
+        this.low = arr[0];
+        this.mid = arr[1];
+        this.high = arr[2];
+    }
 
     public int getLow() {
         return low;
@@ -47,6 +55,12 @@ public class Rule {
         return Arrays.toString(arr);
     }
     
-    
+    public static String[] rulesArray(LinkedList<Rule> rules){
+        String[] rArr = new String[rules.size()];
+        for(int i = 0; i < rArr.length; i++){
+            rArr[i] = rules.get(i).toString();
+        }
+        return rArr;
+    }
     
 }
