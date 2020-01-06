@@ -84,6 +84,9 @@ public class ESearchEngine { //ExhaustiveSearch....
         Fuzzifier fuzzifier = new Fuzzifier();
 
         if(modelPhenotype){
+            boolean tanTransform = Boolean.parseBoolean(config.get("tanTransform"));
+            boolean logitTransform = Boolean.parseBoolean(config.get("logitTransform"));
+            double kValue = Double.parseDouble(config.get("kValue"));
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -118,8 +121,8 @@ public class ESearchEngine { //ExhaustiveSearch....
                                                                             double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t) + fz5.get(w);
 
                                                                             //get defuzzified (xCaretValue) value of Z @ position index
-                                                                            double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                                                                            
+                                                                            //double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                                                            double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), tanTransform, logitTransform, kValue);
                                                                             // compute residual and cummulative residual squared sum...
                                                                             residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                                                         }
@@ -261,6 +264,9 @@ public class ESearchEngine { //ExhaustiveSearch....
         Fuzzifier fuzzifier = new Fuzzifier();
 
         if(modelPhenotype){
+            boolean tanTransform = Boolean.parseBoolean(config.get("tanTransform"));
+            boolean logitTransform = Boolean.parseBoolean(config.get("logitTransform"));
+            double kValue = Double.parseDouble(config.get("kValue"));
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -290,8 +296,9 @@ public class ESearchEngine { //ExhaustiveSearch....
                                                                 double zz = fz1.get(k) + fz2.get(n) + fz3.get(q) + fz4.get(t);
 
                                                                 //get defuzzified (xCaretValue) value of Z @ position index
-                                                                double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                                                                
+                                                                //double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                                                double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), tanTransform, logitTransform, kValue);
+                                                                            
                                                                 // compute residual and cummulative residual squared sum...
                                                                 residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                                             }
@@ -419,6 +426,9 @@ public class ESearchEngine { //ExhaustiveSearch....
         Fuzzifier fuzzifier = new Fuzzifier();
 
         if(modelPhenotype){
+            boolean tanTransform = Boolean.parseBoolean(config.get("tanTransform"));
+            boolean logitTransform = Boolean.parseBoolean(config.get("logitTransform"));
+            double kValue = Double.parseDouble(config.get("kValue"));
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -443,8 +453,9 @@ public class ESearchEngine { //ExhaustiveSearch....
                                                     double zz = fz1.get(k) + fz2.get(n) + fz3.get(q);
 
                                                     //get defuzzified (xCaretValue) value of Z @ position index
-                                                    double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                                                    
+                                                    //double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                                    double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), tanTransform, logitTransform, kValue);
+                                                                            
                                                     // compute residual and cummulative residual squared sum...
                                                     residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                                 }
@@ -555,6 +566,9 @@ public class ESearchEngine { //ExhaustiveSearch....
         Fuzzifier fuzzifier = new Fuzzifier();
 
         if(modelPhenotype){
+            boolean tanTransform = Boolean.parseBoolean(config.get("tanTransform"));
+            boolean logitTransform = Boolean.parseBoolean(config.get("logitTransform"));
+            double kValue = Double.parseDouble(config.get("kValue"));
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -574,8 +588,9 @@ public class ESearchEngine { //ExhaustiveSearch....
                                         double zz = fz1.get(k) + fz2.get(n);
 
                                         //get defuzzified (xCaretValue) value of Z @ position index
-                                        double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                                        
+                                        //double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                                        double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), tanTransform, logitTransform, kValue);
+                                                                            
                                         // compute residual and cummulative residual squared sum...
                                         residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                                     }
@@ -670,6 +685,9 @@ public class ESearchEngine { //ExhaustiveSearch....
         Fuzzifier fuzzifier = new Fuzzifier();
 
         if(modelPhenotype){ 
+            boolean tanTransform = Boolean.parseBoolean(config.get("tanTransform"));
+            boolean logitTransform = Boolean.parseBoolean(config.get("logitTransform"));
+            double kValue = Double.parseDouble(config.get("kValue"));
             for(int i = 1; i <= 3; i++){
                 for(int j = 1; j <= 3; j++){
                     for(int k = 1; k <= 3; k++){
@@ -684,8 +702,9 @@ public class ESearchEngine { //ExhaustiveSearch....
                             double zz = fz1.get(k);
 
                             //get defuzzified (xCaretValue) value of Z @ position index
-                            double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                            
+                            //double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
+                            double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), tanTransform, logitTransform, kValue);
+                                                                            
                             // compute residual and cummulative residual squared sum...
                             residualSquaredSum = residualSquaredSum + Math.pow((outputGeneExpValues[index] - dfz), 2);                                        
                         }
