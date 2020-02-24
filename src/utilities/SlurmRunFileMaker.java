@@ -64,8 +64,16 @@ public class SlurmRunFileMaker {
         printer.println("# ======================== #");
         printer.println("# define needed program(s) locations");
         printer.println();
-        printer.println("java -Xmx16G -cp ./JFuzzyMachine.jar jfuzzymachine.JFuzzyMachine ./JFuzzy.config " + 
-                        start + " " + end + " " + numberOfInputs + " " + fitCutOff);
+        //printer.println("java -Xmx16G -cp ./JFuzzyMachine.jar jfuzzymachine.JFuzzyMachine ./JFuzzy.config " + 
+        //                start + " " + end + " " + numberOfInputs + " " + fitCutOff);
+        printer.println("java -Xmx" + 
+                        params.get("Xmx") + 
+                        " -cp ./JFuzzyMachine.jar jfuzzymachine.JFuzzyMachine " + 
+                        params.get("slurmRunConfigFilePath") + " " + 
+                        start + " " + 
+                        end + " " + 
+                        numberOfInputs + " " + 
+                        fitCutOff);
         printer.println();
         printer.println("# ======================== #");
         printer.println("# tidy up when done here...");
