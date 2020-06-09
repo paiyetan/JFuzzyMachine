@@ -3,19 +3,10 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-<<<<<<< HEAD
             <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/utilities/SlurmRunFileMaker.java</file>
-            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/Fuzzifier.java</file>
-=======
-            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/utilities/PhenoPredictionSimulator.java</file>
-            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/FuzzySet.java</file>
-            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/ESearchEngine.java</file>
-            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/JFuzzyMachine.java</file>
-            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/tables/RuleTable.java</file>
-            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/Rule.java</file>
-            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/Fuzzifier.java</file>
-            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/tables/Table.java</file>
->>>>>>> b287f83364c2de7800cb1fc215a836fb75074c73
+            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/utilities/ConfigFileReader.java</file>
+            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/tables/Table.java</file>
+            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/JFuzzyMachine.java</file>
         </group>
     </open-files>
 </project-private>
