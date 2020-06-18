@@ -225,7 +225,8 @@ public class SlurmRunFileMaker {
         }
         
         //make parent SLURM run file...
-        String slurmRunParentFile = System.getProperty("user.dir") + File.separator + "slurmRuns.sh";
+        String slurmRunParentFile = System.getProperty("user.dir") + // the directory from which program was initiated
+                                          File.separator + "slurmRuns.sh";
         PrintWriter pr = new PrintWriter(slurmRunParentFile);
         slurmRunFiles.forEach((slurmRunFile) -> {
             pr.println("sbatch " + slurmRunFile);
@@ -239,22 +240,7 @@ public class SlurmRunFileMaker {
         SlurmRunFileMaker maker = new SlurmRunFileMaker();
         maker.makeFiles(params);
         
-        /*
-        String outputDirectory = params.get("outputDir"); // output directory
-        int start = Integer.parseInt(params.get("start"));// start gene or feature...
-        int end = Integer.parseInt(params.get("end")); // end gene or feature...
-        int numberOfInputs = Integer.parseInt(params.get("numberOfInputs"));
-        double fitCutOff = Double.parseDouble(params.get("fitCutOff"));
         
-        SlurmRunFileMaker fileMaker = new SlurmRunFileMaker();
-               
-        for(int i = start; i <= end; i++){
-            String outputFile = outputDirectory + File.separator + 
-                    "runFuzzyMachine." + i + "." + i + "." + numberOfInputs + ".sh";
-            fileMaker.makeSlurmRunFile(outputFile, i, i, 
-                               numberOfInputs, fitCutOff, params);
-        }
-        */
        
         System.out.println("...Done!");
     }
