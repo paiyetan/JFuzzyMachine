@@ -15,21 +15,11 @@ import java.util.HashMap;
  *
  * @author aiyetanpo
  * 
- * current configuration file parameters (20191024 update):
- * 
- * inputFile=./etc/proj_diss/rnaseqExpMat_35.txt
-   maxNumberOfInputs=4
-   numberOfInputs=2
-   outputInRealtime=TRUE
-   eCutOff=0.500
-   useAllGenesAsOutput=FALSE
-   iGeneStart=1
-   iGeneEnd=5
  * 
  */
 public class ConfigFileReader {
     
-    public HashMap<String, String> read(String configFilePath) throws FileNotFoundException, IOException{
+    public static HashMap<String, String> read(String configFilePath) throws FileNotFoundException, IOException{
         HashMap<String, String> config = new HashMap();
         BufferedReader reader = new BufferedReader(new FileReader(configFilePath));
         String line;
