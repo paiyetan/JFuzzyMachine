@@ -349,17 +349,13 @@ public class JFuzzyMachine {
         double xBar;
         double deviationSquaredSum = 0;
         if(this.modelPhenotype){
-            outputGeneExpValues = 
-                    phenoExprs.getRow(phenoExprs.getRowIndex(outputGene), 
-                                      Table.TableType.DOUBLE);
+            outputGeneExpValues = phenoExprs.getRow(phenoExprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
             xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
             for(int i = 0; i < outputGeneExpValues.length; i++)
                 deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);
                  
         }else{
-            outputGeneExpValues = 
-                    exprs.getRow(exprs.getRowIndex(outputGene), 
-                                 Table.TableType.DOUBLE);
+            outputGeneExpValues = exprs.getRow(exprs.getRowIndex(outputGene), Table.TableType.DOUBLE);
             xBar = mean.evaluate(outputGeneExpValues); // average expression value for output outputGene
             for(int i = 0; i < outputGeneExpValues.length; i++)
                 deviationSquaredSum = deviationSquaredSum + Math.pow((outputGeneExpValues[i] - xBar), 2);

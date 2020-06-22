@@ -21,6 +21,11 @@ import tables.Table;
  */
 public class SlurmRunFileMaker {
     
+    private enum filesToGenerate { BOTH, PHENO, EXPRS };
+    // list of slurm run files... (for creating the batch run file)...
+    LinkedList<String> slurmRunFiles;
+        
+    
     private void makeJConfigFile(String jconfigFilePath, 
                                     String inputFileAbsolutePath, 
                                     String runJFuzzyDir, 
@@ -64,6 +69,12 @@ public class SlurmRunFileMaker {
         printer.println("modelPhenotype=" + params.get("modelPhenotype"));
         printer.println("inputPhenoFile=" + params.get("inputPhenoFile"));
         
+        if(Boolean.parseBoolean(params.get("modelPhenotype"))){
+            printer.println("tanTransform=" + params.get("tanTransform"));
+            printer.println("logitTransform=" + params.get("logitTransform"));
+            printer.println("kValue=" + params.get("kValue"));
+        }
+        
         printer.close();
         
     }
@@ -92,8 +103,12 @@ public class SlurmRunFileMaker {
                         start + "." + end + "." + numberOfInputs + ".log   # Standard output and error log");
         //printer.println("#SBATCH --mem=16000						   # memory per compute node in MB");
         //printer.println("#SBATCH --nodes=16-32						   # nodes per compute node in MB");
-        printer.println("#SBATCH --cpus-per-task=" + params.get("cPUsPerTask"));
+        //printer.println("#SBATCH --cpus-per-task=" + params.get("cPUsPerTask"));
+        printer.println("#SBATCH -N " + params.get("N"));
+        printer.println("#SBATCH -n " + params.get("n"));
         printer.println("#SBATCH --mem-per-cpu=" + params.get("memPerCPU"));
+        printer.println("#SBATCH --time=" + params.get("time"));
+        
         printer.println();        
         printer.println("pwd; hostname; date");
         printer.println();
@@ -134,7 +149,8 @@ public class SlurmRunFileMaker {
         
     }
     
-    private void makeFiles(HashMap<String, String> params) throws IOException {
+    private void makeFilesHelper(HashMap<String, String> params) throws FileNotFoundException, IOException{
+        
         // throw new UnsupportedOperationException("Not supported yet."); 
         //To change body of generated methods, choose Tools | Templates.
         String outputDir = params.get("outputDir"); // output directory for current project task
@@ -152,62 +168,52 @@ public class SlurmRunFileMaker {
         double fitCutOff = Double.parseDouble(params.get("fitCutOff"));
         long startTime = new Date().getTime();
         
-        // list of slurm run files... (for creating the batch run file)...
-        LinkedList<String> slurmRunFiles = new LinkedList();
         
         
         for (File inputFile : inputFiles) {
             //create an output subdirectory to be associated with this file in the outputDir
             String inputFilename = inputFile.getName().replace(".txt", "");
             String outputFilesDir = outputDir + File.separator + inputFilename;
-            new File(outputFilesDir).mkdir(); // make subdirectory...
-            //create subsubdirectories: /runJFuzzy and /slurmscripts...
+            if(!new File(outputFilesDir).exists()){
+                new File(outputFilesDir).mkdir(); // make subdirectory...
+            }//create subsubdirectories: /runJFuzzy and /slurmscripts...
+            
             String runJFuzzyDir = outputFilesDir + File.separator + "runJFuzzy";
             String slurmscriptsDir = outputFilesDir + File.separator + "slurmscripts";
-            new File(runJFuzzyDir).mkdir(); 
-            new File(slurmscriptsDir).mkdir(); 
+            
+            if(!new File(runJFuzzyDir).exists()){
+                new File(runJFuzzyDir).mkdir(); 
+            }
+            
+            if(!new File(slurmscriptsDir).exists()){
+                new File(slurmscriptsDir).mkdir(); 
+            }
             //extract exprs matrix related information...
             Table exprs = new Table(inputFile.getAbsolutePath());
             int numberOfFeatures = exprs.getRowIds().length;
             
-            //get number of inputs from params
+            // Let the number of features determine the num the "number of nodes" -N and "number of cores" -n SLURM parameters..
+            int n = numberOfFeatures * 2;
+            int N = n/24 ; // used 28 to ensure cores "desired" per node do not exceed that "available" per node...
+            params.put("n", String.valueOf(n));
+            params.put("N", String.valueOf(N));
             
-            for(int j = 1; j <= numberOfInputs; j++){
-                if(j > 2){
-                    for( int k = 1; k <= numberOfFeatures; k++ ){
-                        start = k;
-                        end = k;
-                        // create a slurm output log file unique prepend identifier
-                        // create a single slurmscript and config file for these (j = {1, 2})...
-                        // create a .jconfig file path
-                        // create a .jconfig file...
-                        String jobNamePrependId = startTime + "." + inputFilename + ".runFuzzy";
-                        params.put("jobNamePrepend", jobNamePrependId);
-                        slurmscriptFilePath = slurmscriptsDir + File.separator + 
-                                startTime + "." + inputFilename + "." + 
-                                start + "." + end + "." + j + ".sh";
-                        jconfigFilePath = slurmscriptsDir + File.separator + 
-                                startTime + "." + inputFilename + "." + 
-                                start + "." + end + "." + j + ".jconfig";
-                        makeJConfigFile(jconfigFilePath, inputFile.getPath(),
-                                runJFuzzyDir, j, fitCutOff,
-                                start, end, params);
-                        makeSlurmRunFile(slurmscriptFilePath, start, end, j, fitCutOff, jconfigFilePath, params);
-
-                        String currDir = System.getProperty("user.dir");
-                        slurmRunFiles.add(slurmscriptFilePath.replace(currDir, "."));
-                    }
-                    
-                }else{
-                    start = 1;
-                    end = numberOfFeatures;
+            // get number of inputs from params
+            // NOTE: the input configuration would depend on weather a pheno or an expression
+            //    run is being configured...
+            if(Boolean.parseBoolean(params.get("modelPhenotype"))){
+                // create phenotype model runs...
+                for(int j = 1; j <= numberOfInputs; j++){
+                                            
+                    start = 0;
+                    end = 0;
                     // create a slurm output log file unique prepend identifier
                     // create a single slurmscript and config file for these (j = {1, 2})...
                     // create a .jconfig file path
                     // create a .jconfig file...
                     String jobNamePrependId = startTime + "." + inputFilename + ".runFuzzy";
                     params.put("jobNamePrepend", jobNamePrependId);
-                    slurmscriptFilePath = slurmscriptsDir + File.separator +  
+                    slurmscriptFilePath = slurmscriptsDir + File.separator + 
                             startTime + "." + inputFilename + "." + 
                             start + "." + end + "." + j + ".sh";
                     jconfigFilePath = slurmscriptsDir + File.separator + 
@@ -217,13 +223,95 @@ public class SlurmRunFileMaker {
                             runJFuzzyDir, j, fitCutOff,
                             start, end, params);
                     makeSlurmRunFile(slurmscriptFilePath, start, end, j, fitCutOff, jconfigFilePath, params);
-                    
+
                     String currDir = System.getProperty("user.dir");
                     slurmRunFiles.add(slurmscriptFilePath.replace(currDir, "."));
+                    
+                }
+            }else{
+            
+                for(int j = 1; j <= numberOfInputs; j++){
+                    if(j > 2){
+                        for( int k = 1; k <= numberOfFeatures; k++ ){
+                            start = k;
+                            end = k;
+                            // create a slurm output log file unique prepend identifier
+                            // create a single slurmscript and config file for these (j = {1, 2})...
+                            // create a .jconfig file path
+                            // create a .jconfig file...
+                            String jobNamePrependId = startTime + "." + inputFilename + ".runFuzzy";
+                            params.put("jobNamePrepend", jobNamePrependId);
+                            slurmscriptFilePath = slurmscriptsDir + File.separator + 
+                                    startTime + "." + inputFilename + "." + 
+                                    start + "." + end + "." + j + ".sh";
+                            jconfigFilePath = slurmscriptsDir + File.separator + 
+                                    startTime + "." + inputFilename + "." + 
+                                    start + "." + end + "." + j + ".jconfig";
+                            makeJConfigFile(jconfigFilePath, inputFile.getPath(),
+                                    runJFuzzyDir, j, fitCutOff,
+                                    start, end, params);
+                            makeSlurmRunFile(slurmscriptFilePath, start, end, j, fitCutOff, jconfigFilePath, params);
+
+                            String currDir = System.getProperty("user.dir");
+                            slurmRunFiles.add(slurmscriptFilePath.replace(currDir, "."));
+                        }
+
+                    }else{
+                        start = 1;
+                        end = numberOfFeatures;
+                        // create a slurm output log file unique prepend identifier
+                        // create a single slurmscript and config file for these (j = {1, 2})...
+                        // create a .jconfig file path
+                        // create a .jconfig file...
+                        String jobNamePrependId = startTime + "." + inputFilename + ".runFuzzy";
+                        params.put("jobNamePrepend", jobNamePrependId);
+                        slurmscriptFilePath = slurmscriptsDir + File.separator +  startTime + "." + inputFilename + "." + start + "." + end + "." + j + ".sh";
+                        jconfigFilePath = slurmscriptsDir + File.separator + startTime + "." + inputFilename + "." + start + "." + end + "." + j + ".jconfig";
+                        makeJConfigFile(jconfigFilePath, inputFile.getPath(), runJFuzzyDir, j, fitCutOff, start, end, params);
+                        makeSlurmRunFile(slurmscriptFilePath, start, end, j, fitCutOff, jconfigFilePath, params);
+
+                        String currDir = System.getProperty("user.dir");
+                        slurmRunFiles.add(slurmscriptFilePath.replace(currDir, "."));
+                    }
                 }
             }
         }
         
+        
+        
+        
+    }
+    
+    private void makeFiles(HashMap<String, String> params) throws IOException {
+        
+        // list of slurm run files... (for creating the batch run file)...
+        slurmRunFiles = new LinkedList();
+        
+        
+        String filesToGenerate = params.get("filesToGenerate");
+        //SlurmRunFileMaker.filesToGenerate fileTypes; 
+        if(filesToGenerate.equalsIgnoreCase("BOTH")){
+            params.remove("modelPhenotype");
+            params.put("modelPhenotype", "FALSE");
+            makeFilesHelper(params);
+            // --- wait ---
+            params.remove("modelPhenotype");
+            params.put("modelPhenotype", "TRUE");
+            makeFilesHelper(params);
+        } 
+        
+        if(filesToGenerate.equalsIgnoreCase("PHENO")){
+            params.remove("modelPhenotype");
+            params.put("modelPhenotype", "TRUE");
+            makeFilesHelper(params);
+        }
+            
+        if(filesToGenerate.equalsIgnoreCase("EXPRS")){
+            params.remove("modelPhenotype");
+            params.put("modelPhenotype", "FALSE");
+            makeFilesHelper(params);
+        }
+            
         //make parent SLURM run file...
         String slurmRunParentFile = System.getProperty("user.dir") + // the directory from which program was initiated
                                           File.separator + "slurmRuns.sh";
@@ -232,16 +320,18 @@ public class SlurmRunFileMaker {
             pr.println("sbatch " + slurmRunFile);
         });
         pr.close();
+        
     }
     
     public static void main(String[] args) throws FileNotFoundException, IOException{
         
+        System.out.println("Starting...");
+        System.out.println("Reading configurations..."); 
         HashMap<String, String> params = new ConfigFileReader().read(args[0]);
+        System.out.println("Making slurm run config files...");
         SlurmRunFileMaker maker = new SlurmRunFileMaker();
         maker.makeFiles(params);
-        
-        
-       
+                      
         System.out.println("...Done!");
     }
 
