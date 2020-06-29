@@ -154,6 +154,8 @@ public class Graph {
         String fittedModelFile = null;
         String ruleFrequenciesFile = null;
         
+        int topFittedModelsToOutput = 0;
+        
         
         //include reading from a .config file..
         /**
@@ -179,7 +181,9 @@ public class Graph {
         
         useAnnotatedGraphModel = Boolean.parseBoolean(config.get("useAnnotatedGraphModel"));
         outputEdges = Boolean.parseBoolean(config.get("outputEdges"));
-        //includesPheno = Boolean.parseBoolean(config.get("includesPheno"));                       
+        //includesPheno = Boolean.parseBoolean(config.get("includesPheno"));   
+        
+        topFittedModelsToOutput = Integer.parseInt(config.get("topFittedModelsToOutput"));
         
         File inputFile = new File(input);
         File[] inputFiles;
@@ -219,7 +223,7 @@ public class Graph {
             }
             //print fitted models
             graph.printBestFitModels(fittedModelFile); // best fit models...
-            graph.printAllFittedModels(fittedModelFile); // all fitted models...
+            graph.printAllFittedModels(fittedModelFile, topFittedModelsToOutput); // all fitted models...
             //print rule frequencies...
             graph.printRuleFrequencies(ruleFrequenciesFile);
             

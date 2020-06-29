@@ -302,7 +302,7 @@ public class AnnotatedGraph {
         printer.close();       
     }
     
-    public void printAllFittedModels(String outputFile) throws FileNotFoundException{
+    public void printAllFittedModels(String outputFile, int topFittedModelsToOutput) throws FileNotFoundException{
         // how is this different from an edge(s) table....we could describe with filename _OutputFile.fit2
         PrintWriter printer = new PrintWriter(outputFile+2);
         printer.println("Output\tInputNodes\tRules\tFits");
@@ -316,7 +316,8 @@ public class AnnotatedGraph {
             //                this.getInputNodesString(mappedModels) + "\t" +
             //                this.getRulesString(mappedModels) + "\t" +
             //                this.getFitsString(mappedModels));
-            for(int i = mappedModels.size()-1; i >= 0; i--){
+            //for(int i = mappedModels.size()-1; i >= 0; i--){
+            for(int i = mappedModels.size()-1; i >= (mappedModels.size() - topFittedModelsToOutput); i--){
                 Model fittedModel = mappedModels.get(i);
                 printer.println(output.getId() + "\t" +
                                 fittedModel.getInputNodesString() + "\t" +
