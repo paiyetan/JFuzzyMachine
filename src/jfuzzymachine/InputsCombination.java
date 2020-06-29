@@ -7,7 +7,7 @@ package jfuzzymachine;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
-import tables.Table;
+import jfuzzymachine.tables.Table;
 
 /**
  *

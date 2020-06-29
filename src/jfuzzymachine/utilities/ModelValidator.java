@@ -3,14 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utilities;
+package jfuzzymachine.utilities;
 
-import utilities.graph.Model;
-import utilities.graph.Vertex;
-import utilities.simulation.Fuzzifier;
-import utilities.simulation.FuzzySet;
-import utilities.simulation.Table;
-import utilities.simulation.TableBindingException;
+import jfuzzymachine.utilities.graph.Model;
+import jfuzzymachine.utilities.graph.Vertex;
+import jfuzzymachine.utilities.simulation.Fuzzifier;
+import jfuzzymachine.utilities.simulation.FuzzySet;
+import jfuzzymachine.utilities.simulation.Table;
+import jfuzzymachine.utilities.simulation.TableBindingException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;

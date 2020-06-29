@@ -9,7 +9,7 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import jfuzzymachine.JFuzzyMachine.ExpressionType;
-import tables.Table;
+import jfuzzymachine.tables.Table;
 
 
 /**

@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utilities.simulation;
+package jfuzzymachine.utilities.simulation;
 
-import utilities.graph.Model;
-import utilities.graph.Vertex;
+import jfuzzymachine.utilities.graph.Model;
+import jfuzzymachine.utilities.graph.Vertex;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;

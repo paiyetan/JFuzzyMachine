@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utilities.graph;
+package jfuzzymachine.utilities.graph;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import utilities.ConfigFileReader;
+import jfuzzymachine.utilities.ConfigFileReader;
 
 /**
  *

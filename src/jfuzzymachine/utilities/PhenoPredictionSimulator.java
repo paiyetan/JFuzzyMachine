@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utilities;
+package jfuzzymachine.utilities;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,8 +17,8 @@ import jfuzzymachine.Fuzzifier;
 import jfuzzymachine.FuzzySet;
 import jfuzzymachine.JFuzzyMachine;
 import jfuzzymachine.Rule;
-import tables.RuleTable;
-import tables.Table;
+import jfuzzymachine.tables.RuleTable;
+import jfuzzymachine.tables.Table;
 
 /**
  *

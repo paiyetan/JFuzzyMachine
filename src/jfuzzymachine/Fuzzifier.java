@@ -5,7 +5,7 @@
  */
 package jfuzzymachine;
 import java.util.LinkedList;
-import tables.Table;
+import jfuzzymachine.tables.Table;
 
 /**
  *

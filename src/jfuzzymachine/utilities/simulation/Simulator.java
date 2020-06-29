@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package utilities.simulation;
+package jfuzzymachine.utilities.simulation;
 
-import utilities.graph.Model;
-import utilities.graph.Vertex;
+import jfuzzymachine.utilities.graph.Model;
+import jfuzzymachine.utilities.graph.Vertex;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,8 +15,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import utilities.ConfigFileReader;
-import utilities.ModelFitFileReader;
+import jfuzzymachine.utilities.ConfigFileReader;
+import jfuzzymachine.utilities.ModelFitFileReader;
 
 /**
  *
