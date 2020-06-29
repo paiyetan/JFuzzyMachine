@@ -5,6 +5,7 @@
  */
 package jfuzzymachine.utilities.simulation;
 
+import java.io.File;
 import jfuzzymachine.utilities.graph.Model;
 import jfuzzymachine.utilities.graph.Vertex;
 import java.io.FileNotFoundException;
@@ -30,6 +31,7 @@ public class Simulator {
     
     @SuppressWarnings("FieldMayBeFinal")
     private LinkedList<Simulation> simulations;
+    private HashMap<String, LinkedList<Simulation>> KOGeneToSimulationsMap;
     //private HashMap<Vertex, LinkedList<Vertex>> outputToInputNodes;
     //private HashMap<Integer, LinkedList<Edge>> edgeIdToMappedEdges;
     private HashMap<Vertex, LinkedList<Model>> outputsToModelsMap;
@@ -43,6 +45,8 @@ public class Simulator {
     private boolean logitTransform; 
     private double k;
     
+    private boolean simulateKnockout;
+    
     private Simulator(String fitFile, // use _GraphOutput.fit - best fit...
                         String exprsMatFile, 
                             double fitCutOff, 
@@ -54,7 +58,8 @@ public class Simulator {
                                                     INIT initType,
                                                         boolean tanTransform,
                                                             boolean logitTransform, 
-                                                                double k) throws IOException, TableBindingException 
+                                                                double k,
+                                                                    boolean simulateKnockout) throws IOException, TableBindingException 
     {
         this.maxIteration = maxIterations;
         this.eCutOff = eCutOff;
@@ -64,6 +69,9 @@ public class Simulator {
         this.logitTransform = logitTransform;
         this.tanTransform = tanTransform;
         this.k = k;
+        this.simulateKnockout = simulateKnockout;
+        
+        //knockoutType === current implementation is singly
         
         System.out.println("In Simulator: #outputsToModelsMap: " + outputsToModelsMap.keySet().size());
         if(includesPheno){            
@@ -71,43 +79,77 @@ public class Simulator {
             exprs = exprs.bind(phenoExprs, Table.BindType.ROW);
         }
         
-        this.alpha = alpha;                    
-        this.simulations = new LinkedList();
+        this.alpha = alpha; 
         
-        switch(initType){
-            case ALL:
-                for(int col = 0; col < exprs.getNumberOfColumns(); col++){
-                    double[] initialValues = exprs.getColumn(col, Table.TableType.DOUBLE); //this assumes a single sample/perturbation provides the initial outputs values              
-                    this.simulations.add( new Simulation(outputsToModelsMap,
-                                                            initialValues,
-                                                            exprs,
-                                                            alpha,
-                                                            maxIterations,
-                                                            eCutOff,
-                                                            includesPheno,
-                                                            phenotypeId,
-                                                            tanTransform,
-                                                            logitTransform, 
-                                                            k));
-                   
-                }                
-                break;
+        
+        if(simulateKnockout){
+            KOGeneToSimulationsMap = new HashMap();
+            //get the genes to knockout... these would be the rowNames of expression matrix....
+            String[] genesToKnockout = exprs.getRowIds();
+            for(String geneToKnockout : genesToKnockout){
+                if(!geneToKnockout.equalsIgnoreCase(phenotypeId)){
+                    double[] initialValues = getInitialValues(exprs, INIT.RANDOM); //defaults to random initial values...
+                    LinkedList<Simulation> mappedSimulations = new LinkedList();
+                    Simulation mappedsims = new Simulation(outputsToModelsMap,
+                                                                    initialValues,
+                                                                    exprs,
+                                                                    alpha,
+                                                                    maxIterations,
+                                                                    eCutOff,
+                                                                    includesPheno,
+                                                                    phenotypeId,
+                                                                    tanTransform,
+                                                                    logitTransform, 
+                                                                    k);
+                    mappedsims.setSimulateKnockout(simulateKnockout);// set the actual value....
+                    mappedsims.setGeneToKnockOut(geneToKnockout);
+                    mappedSimulations.add(mappedsims);
+                    
+                    KOGeneToSimulationsMap.put(geneToKnockout, mappedSimulations);
+                }
                 
-            default: //all others...(RANDOM, FIRST, AVERAGE)
-                //String[] vertexIds = exprs.getRowIds();
-                double[] initialValues = getInitialValues(exprs, INIT.RANDOM); //this assumes a single sample/perturbation provides the initial outputs values              
-                this.simulations.add( new Simulation(outputsToModelsMap,
-                                                            initialValues,
-                                                            exprs,
-                                                            alpha,
-                                                            maxIterations,
-                                                            eCutOff,
-                                                            includesPheno,
-                                                            phenotypeId,
-                                                            tanTransform,
-                                                            logitTransform, 
-                                                            k));
-              
+            }
+            
+            
+        }else{        
+        
+            this.simulations = new LinkedList();
+            switch(initType){
+                case ALL:
+                    for(int col = 0; col < exprs.getNumberOfColumns(); col++){
+                        double[] initialValues = exprs.getColumn(col, Table.TableType.DOUBLE); //this assumes a single sample/perturbation provides the initial outputs values              
+                        this.simulations.add( new Simulation(outputsToModelsMap,
+                                                                initialValues,
+                                                                exprs,
+                                                                alpha,
+                                                                maxIterations,
+                                                                eCutOff,
+                                                                includesPheno,
+                                                                phenotypeId,
+                                                                tanTransform,
+                                                                logitTransform, 
+                                                                k));
+
+                    }                
+                    break;
+
+                default: //all others...(RANDOM, FIRST, AVERAGE)
+                    //String[] vertexIds = exprs.getRowIds();
+                    double[] initialValues = getInitialValues(exprs, INIT.RANDOM); //this assumes a single sample/perturbation provides the initial outputs values              
+                    this.simulations.add( new Simulation(outputsToModelsMap,
+                                                                initialValues,
+                                                                exprs,
+                                                                alpha,
+                                                                maxIterations,
+                                                                eCutOff,
+                                                                includesPheno,
+                                                                phenotypeId,
+                                                                tanTransform,
+                                                                logitTransform, 
+                                                                k));
+
+            }
+
         }
             
     }  
@@ -134,55 +176,7 @@ public class Simulator {
         return initValues;
     }
     
-    /*
-    private void getOutputToInputNodes(String edgesFile, double fitCutOff) throws FileNotFoundException, 
-            IOException{
-        this.outputToInputNodes = new HashMap();
-        this.edgeIdToMappedEdges = new HashMap();
-        BufferedReader reader = new BufferedReader(new FileReader(edgesFile));
-        String line;
-        int lineIndex = 0;
-        while((line = reader.readLine())!=null){
-            lineIndex++;
-            if(lineIndex > 1){//skip the header line....
-                String[] lineArr = line.split("\t");
-                double fit = Double.parseDouble(lineArr[4]);               
-                if(fit >= fitCutOff){// only use nodes above specified fit value...
-                    Vertex inputNode = new Vertex(lineArr[0].trim());//inputNode (origin)
-                    Vertex outputNode = new Vertex(lineArr[1].trim());//outputNode (destination)
-                    if(outputToInputNodes.containsKey(outputNode)){                           
-                        LinkedList<Vertex> mappedInputNodes = outputToInputNodes.remove(outputNode);                
-                        if(!mappedInputNodes.contains(inputNode)){
-                            mappedInputNodes.add(inputNode);
-                        }
-                        outputToInputNodes.put(outputNode, mappedInputNodes);
-                    }else{
-                        LinkedList<Vertex> mappedInputNodes = new LinkedList();
-                        mappedInputNodes.add(inputNode);
-                        outputToInputNodes.put(outputNode, mappedInputNodes);
-                    }
-                    
-                    String rule = lineArr[2]; 
-                    
-                    Edge edge = new Edge(inputNode, outputNode, rule, fit);
-                    int edgeId = edge.hashCode();
-                    if(edgeIdToMappedEdges.containsKey(edgeId)){
-                        LinkedList<Edge> mappedEdges = edgeIdToMappedEdges.remove(edgeId);
-                        mappedEdges.add(edge);
-                        edgeIdToMappedEdges.put(edgeId, mappedEdges);
-                    }else{
-                        LinkedList<Edge> mappedEdges = new LinkedList();
-                        mappedEdges.add(edge);
-                        edgeIdToMappedEdges.put(edgeId, mappedEdges);
-                    }                   
-                }
-            }
-        }
-        System.out.println("Found outputNodes#: " + outputToInputNodes.keySet().size());
-        printOutputNodes();
-        
-    }
-    */
+    
     
     public void printOutputNodes(String outFile) throws FileNotFoundException{
         PrintWriter printer = new PrintWriter(outFile + ".out");
@@ -198,169 +192,155 @@ public class Simulator {
     
     public void runSimulations(){
         // implement a parallel running of simulations here...
-        simulations.parallelStream().forEach((simulation) -> {
-            simulation.run();
-        });
+        if(simulateKnockout){
+            Set<String> KOGenes = KOGeneToSimulationsMap.keySet();
+            for(String KOGene : KOGenes){
+                LinkedList<Simulation> mappedsims = KOGeneToSimulationsMap.remove(KOGene);
+                mappedsims.parallelStream().forEach((simulation) -> {
+                                                simulation.run();
+                                            });
+                KOGeneToSimulationsMap.put(KOGene, mappedsims);
+            }                
+        }else{
+            
+            simulations.parallelStream().forEach((simulation) -> {
+                simulation.run();
+            });
+            
+        }
     } 
     
-    /*
-    public void printSimulations(String outFile) throws FileNotFoundException{
-        //printDeltas(outFile + ".dta"); //deltas
-        //printTValues(outFile + ".sim"); //simulated values...
-        printDeltas(outFile); //deltas
-        printTValues(outFile); //simulated values...
-    }
-    */
-    public void printSimulations(String outFile) throws FileNotFoundException{
-        printDeltas(outFile); //deltas
-        printSimulatedValues(outFile); //simulated values...
+    
+    public void printSimulations(String simulationsDirPath, String outFileBasename) throws FileNotFoundException{
+        printDeltas(simulationsDirPath, outFileBasename); //deltas
+        printSimulatedValues(simulationsDirPath, outFileBasename); //simulated values...
     }
     
-    public void printDeltas(String outFile) throws FileNotFoundException{
-        /*
-        for(int i = 0; i < simulations.size(); i++){
-            PrintWriter printer = new PrintWriter(outFile + "." + i + ".dta");
-            Simulation sim = simulations.get(i);
-            LinkedList<double[]> deltaValuesList = sim.getSimulatedValues();
-            // print table_header...
-            for(int itr = 0; itr < deltaValuesList.size(); itr++){
-                printer.print("\t" + "itr_" + itr);
-            }
-            printer.print("\n");
-            // print table_body...
-            for(int j = 0; j < exprs.getRowIds().length; j++){
-                printer.print(exprs.getRowIds()[j]); //print rowId
-                for(int k = 0; k < deltaValuesList.size(); k++){
-                    double delta;
-                    if(k == 0){
-                        delta = deltaValuesList.get(k)[j];
-                    }else{
-                        delta = deltaValuesList.get(k)[j] - deltaValuesList.get(k-1)[j];
-                    }
-                    printer.print("\t" + delta);
-                }
-                printer.print("\n");
-            }//end table
-            printer.close();
-        }
-        */
-        for(int i = 0; i < simulations.size(); i++){
-            PrintWriter printer = new PrintWriter(outFile + "." + i + ".dta");
-            Simulation sim = simulations.get(i);
-            LinkedList<double[]> deltaValuesList = sim.getDeltaValuesList();
-            // print table_header...
-            for(int itr = 0; itr < deltaValuesList.size(); itr++){
-                printer.print("\t" + "itr_" + itr);
-            }
-            printer.print("\n");
-            // print table_body...
-            for(int j = 0; j < exprs.getRowIds().length; j++){
-                printer.print(exprs.getRowIds()[j]); //print rowId
-                for(int k = 0; k < deltaValuesList.size(); k++){
-                    
-                    printer.print("\t" + deltaValuesList.get(k)[j]);
-                    
-                }
-                printer.print("\n");
-            }// end table
-            printer.close();
-        }
-    }
-    
-    public void printSimulatedValues(String outFile) throws FileNotFoundException{
-        for(int i = 0; i < simulations.size(); i++){
-            PrintWriter printer = new PrintWriter(outFile + "." + i + ".sim");
-            Simulation sim = simulations.get(i);
-            LinkedList<double[]> simValues = sim.getSimulatedValues();
-            // print table_header...
-            for(int itr = 0; itr < simValues.size(); itr++){
-                printer.print("\t" + "itr_" + itr);
-            }
-            printer.print("\n");
-            // print table_body...
-            for(int j = 0; j < exprs.getRowIds().length; j++){
-                printer.print(exprs.getRowIds()[j]); //print rowId
-                for(int k = 0; k < simValues.size(); k++){
-                    
-                    printer.print("\t" + simValues.get(k)[j]);
-                    
-                }
-                printer.print("\n");
-            }// end table
-            printer.close();
-        }
-    }
-   
-   
-    /*
-    private void printDeltas(String outFile) throws FileNotFoundException {
-        PrintWriter printer;
-        switch(initType){
-            case ALL:
-                int simIndex = 0;
-                int colIndex = 0;
-                printer = new PrintWriter(outFile + "." + colIndex + ".dta");
-                for(Simulation sim : simulations){
-                    printer.print(sim.getId());           
-                    for(double delta : sim.getDeltas())
-                        printer.print("\t" + delta);
-                    printer.print("\n");
-                    simIndex++;
-                    if(simIndex%exprs.getNumberOfRows() == 0){
-                        printer.close();
-                        colIndex++;
-                        printer = new PrintWriter(outFile + "." + colIndex + ".dta");
-                    }
-                } 
-                break;
-            default: // all others.....
-                printer = new PrintWriter(outFile + ".dta");
-                for(Simulation sim : simulations){
-                    printer.print(sim.getId());           
-                    for(double delta : sim.getDeltas())
-                        printer.print("\t" + delta);
-                    printer.print("\n");
-                }        
-                printer.close();
-        }
+    public void printDeltas(String simulationsDirPath, String outFile) throws FileNotFoundException{
         
-    }
+        if(this.simulateKnockout){
+            Set<String> KOGenes = KOGeneToSimulationsMap.keySet();
+            for(String KOGene : KOGenes){
+                //create a directory to hold knockedout gene's simulation....
+                String kOGeneSimulationsDirPath = simulationsDirPath + File.separator + KOGene;
+                if(!new File(kOGeneSimulationsDirPath).exists()){
+                    new File(kOGeneSimulationsDirPath).mkdir();
+                }
+                outFile = simulationsDirPath + File.separator + outFile;
+                LinkedList<Simulation> mappedsimulations = KOGeneToSimulationsMap.get(KOGene);
+                for(int i = 0; i < mappedsimulations.size(); i++){
+                    PrintWriter printer = new PrintWriter(outFile + "." + i + ".dta");
+                    Simulation sim = mappedsimulations.get(i);
+                    LinkedList<double[]> deltaValuesList = sim.getDeltaValuesList();
+                    // print table_header...
+                    for(int itr = 0; itr < deltaValuesList.size(); itr++){
+                        printer.print("\t" + "itr_" + itr);
+                    }
+                    printer.print("\n");
+                    // print table_body...
+                    for(int j = 0; j < exprs.getRowIds().length; j++){
+                        printer.print(exprs.getRowIds()[j]); //print rowId
+                        for(int k = 0; k < deltaValuesList.size(); k++){
 
-    private void printTValues(String outFile) throws FileNotFoundException {
-        PrintWriter printer;
-        switch(initType){
-            
-            case ALL:
-                int simIndex = 0;
-                int colIndex = 0;
-                printer = new PrintWriter(outFile + "." + colIndex + ".sim");
-                for(Simulation sim : simulations){
-                    printer.print(sim.getId());           
-                    for(double value : sim.getSimulatedValues())
-                        printer.print("\t" + value);
-                    printer.print("\n");
-                    simIndex++;
-                    if(simIndex%exprs.getNumberOfRows() == 0){
-                        printer.close();
-                        colIndex++;
-                        printer = new PrintWriter(outFile + "." + colIndex + ".sim");
+                            printer.print("\t" + deltaValuesList.get(k)[j]);
+
+                        }
+                        printer.print("\n");
+                    }// end table
+                    printer.close();
+                }               
+            }
+        }else{
+            outFile = simulationsDirPath + File.separator + outFile;
+            for(int i = 0; i < simulations.size(); i++){
+                PrintWriter printer = new PrintWriter(outFile + "." + i + ".dta");
+                Simulation sim = simulations.get(i);
+                LinkedList<double[]> deltaValuesList = sim.getDeltaValuesList();
+                // print table_header...
+                for(int itr = 0; itr < deltaValuesList.size(); itr++){
+                    printer.print("\t" + "itr_" + itr);
+                }
+                printer.print("\n");
+                // print table_body...
+                for(int j = 0; j < exprs.getRowIds().length; j++){
+                    printer.print(exprs.getRowIds()[j]); //print rowId
+                    for(int k = 0; k < deltaValuesList.size(); k++){
+
+                        printer.print("\t" + deltaValuesList.get(k)[j]);
+
                     }
-                } 
-                break;
-            default: // all others...
-                printer = new PrintWriter(outFile + ".sim");
-                for(Simulation sim : simulations){
-                    printer.print(sim.getId());           
-                    for(double value : sim.getSimulatedValues())
-                        printer.print("\t" + value);
                     printer.print("\n");
-                }  
+                }// end table
                 printer.close();
+            }
         }
-        
     }
-    */
+    
+    public void printSimulatedValues(String simulationsDirPath, String outFile) throws FileNotFoundException{
+        
+        if(this.simulateKnockout){
+            Set<String> KOGenes = KOGeneToSimulationsMap.keySet();
+            for(String KOGene : KOGenes){
+                //create a directory to hold knockedout gene's simulation....
+                String kOGeneSimulationsDirPath = simulationsDirPath + File.separator + KOGene;
+                if(!new File(kOGeneSimulationsDirPath).exists()){
+                    new File(kOGeneSimulationsDirPath).mkdir();
+                }
+                outFile = simulationsDirPath + File.separator + outFile;
+                LinkedList<Simulation> mappedsimulations = KOGeneToSimulationsMap.get(KOGene);
+                
+                for(int i = 0; i < mappedsimulations.size(); i++){
+                    PrintWriter printer = new PrintWriter(outFile + "." + i + ".sim");
+                    Simulation sim = mappedsimulations.get(i);
+                    LinkedList<double[]> simValues = sim.getSimulatedValues();
+                    // print table_header...
+                    for(int itr = 0; itr < simValues.size(); itr++){
+                        printer.print("\t" + "itr_" + itr);
+                    }
+                    printer.print("\n");
+                    // print table_body...
+                    for(int j = 0; j < exprs.getRowIds().length; j++){
+                        printer.print(exprs.getRowIds()[j]); //print rowId
+                        for(int k = 0; k < simValues.size(); k++){
+
+                            printer.print("\t" + simValues.get(k)[j]);
+
+                        }
+                        printer.print("\n");
+                    }// end table
+                    printer.close();
+                }
+            }
+                
+        }else{
+            
+            outFile = simulationsDirPath + File.separator + outFile;
+            for(int i = 0; i < simulations.size(); i++){
+                PrintWriter printer = new PrintWriter(outFile + "." + i + ".sim");
+                Simulation sim = simulations.get(i);
+                LinkedList<double[]> simValues = sim.getSimulatedValues();
+                // print table_header...
+                for(int itr = 0; itr < simValues.size(); itr++){
+                    printer.print("\t" + "itr_" + itr);
+                }
+                printer.print("\n");
+                // print table_body...
+                for(int j = 0; j < exprs.getRowIds().length; j++){
+                    printer.print(exprs.getRowIds()[j]); //print rowId
+                    for(int k = 0; k < simValues.size(); k++){
+
+                        printer.print("\t" + simValues.get(k)[j]);
+
+                    }
+                    printer.print("\n");
+                }// end table
+                printer.close();
+            }
+        }
+    }
    
+    
+    
     public static void main(String[] args) throws IOException, TableBindingException{
                 
         System.out.println("Starting...");       
@@ -382,6 +362,7 @@ public class Simulator {
         boolean tanTransform;
         boolean logitTransform;
         double k;
+        boolean simulateKnockout;
         
         
         String outputFile; // a common-name to use for output file(s)
@@ -434,9 +415,21 @@ public class Simulator {
         logitTransform = Boolean.parseBoolean(config.get("logitTransform"));
         k = Double.parseDouble(config.get("kValue"));
         
+        simulateKnockout = Boolean.parseBoolean(config.get("simulateKnockout"));  
+        
+        //create a simulation directory...
+        File fitFileJFile = new File(fitFile);
+        String dirPath = fitFileJFile.getParent();
+        String simulationsDirPath = dirPath + File.separator + "simulations";
+        
+        //make simulations directory...
+        if(!new File(simulationsDirPath).exists()){
+            new File(simulationsDirPath).mkdir();
+        }
                        
-        //outputFile = edgesFile.replace(".txt", "").replace(".tsv", "").replace(".edg", "");        
-        outputFile = fitFile.replace(".fit", "").replace(".fit2", "").replace(".txt", "");        
+        //outputFile = edgesFile.replace(".txt", "").replace(".tsv", "").replace(".edg", ""); 
+        outputFile = fitFileJFile.getName();
+        outputFile = outputFile.replace(".fit", "").replace(".fit2", "").replace(".txt", "");        
         
         //Simulator sim = new Simulator(edgesFile, exprsMatFile, fitCutOff, alpha,
         //                                includesPheno, phenotypeId, phenoExprsMatFile, 
@@ -450,14 +443,15 @@ public class Simulator {
                                         includesPheno, phenotypeId, 
                                             phenoExprsMatFile, 
                                                 maxIterations, eCutOff, initType,
-                                                tanTransform, logitTransform,  k);
+                                                tanTransform, logitTransform,  k,
+                                                    simulateKnockout);
         
         
         System.out.println("Running simulations...");
         sim.runSimulations();
         
         System.out.println("Printing simulations results...");
-        sim.printSimulations(outputFile);
+        sim.printSimulations(simulationsDirPath, outputFile);
         
         
         System.out.println("\n...Done!");        

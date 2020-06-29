@@ -42,6 +42,7 @@ public class Simulation {
     private double k;
     
     private boolean simulateKnockout;
+    private String geneToKnockout;
     
     public Simulation(HashMap<Vertex, LinkedList<Model>> outputToModelsMap,
                       double[] initialValues,
@@ -72,6 +73,17 @@ public class Simulation {
         this.tanTransform = tanTransform;
         this.logitTransform = logitTransform;
         this.k = k;
+        
+        this.simulateKnockout = false;//to initiate as not to return nullValuePointer Exception in downstream call
+        
+    }
+    
+    public void setSimulateKnockout(boolean simulateKnockout){
+        this.simulateKnockout = simulateKnockout;
+    }
+
+    public void setGeneToKnockOut(String geneToKnockout){
+        this.geneToKnockout = geneToKnockout;
     }
 
     public void run(){
@@ -102,10 +114,16 @@ public class Simulation {
         //System.out.println("# of nodes in outputsToModelsMap: " + outputsToModelsMap.keySet().size());
         //for(Vertex outputNode : outputNodes){
         //    System.out.printf("  output node found: %s", outputNode.getId());
-        //}        
-        
-        
+        //} 
+        int knockedOutGeneIndex; // 
         while (iteration < maxIterations){
+            
+            if(this.simulateKnockout){           
+                knockedOutGeneIndex = exprs.getRowIndex(geneToKnockout); //get index of knockedout get
+                Minimum min = new Minimum(currentValues);
+                currentValues[knockedOutGeneIndex] = min.minimum();
+            }
+            
             //infer new values from current values...
             inferredValues = new double[currentValues.length];
             nextValues = new double[inferredValues.length];
@@ -187,5 +205,24 @@ public class Simulation {
     
     public LinkedList<double[]> getDeltaValuesList(){
         return this.deltaValuesList;
+    }
+    
+    
+    
+    
+    class Minimum{
+        double[] arr;
+        
+        Minimum(double[] arr){
+            this.arr = arr;
+        }
+        
+        double minimum(){
+            double min = arr[0];
+            for(int i = 1; i < arr.length; i++)
+                if(arr[i] < min)
+                    min = arr[i];               
+            return(min);
+        }
     }
 }
