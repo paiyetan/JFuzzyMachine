@@ -5,6 +5,7 @@
  */
 package jfuzzymachine.utilities.simulation;
 
+import jfuzzymachine.exceptions.TableBindingException;
 import java.io.File;
 import jfuzzymachine.utilities.graph.Model;
 import jfuzzymachine.utilities.graph.Vertex;
@@ -44,10 +45,13 @@ public class Simulator {
     private boolean tanTransform;
     private boolean logitTransform; 
     private double k;
+    private String phenotypeId;
     
     private boolean simulateKnockout;
     
-    private Simulator(String fitFile, // use _GraphOutput.fit - best fit...
+    
+    
+    public Simulator(String fitFile, // use _GraphOutput.fit - best fit...
                         String exprsMatFile, 
                             double fitCutOff, 
                                 double alpha, 
@@ -69,6 +73,7 @@ public class Simulator {
         this.logitTransform = logitTransform;
         this.tanTransform = tanTransform;
         this.k = k;
+        this.phenotypeId = phenotypeId;
         this.simulateKnockout = simulateKnockout;
         
         //knockoutType === current implementation is singly
@@ -86,11 +91,12 @@ public class Simulator {
             KOGeneToSimulationsMap = new HashMap();
             //get the genes to knockout... these would be the rowNames of expression matrix....
             String[] genesToKnockout = exprs.getRowIds();
+            System.out.println("Number of Genes Knockouts: " + genesToKnockout.length);
             for(String geneToKnockout : genesToKnockout){
                 if(!geneToKnockout.equalsIgnoreCase(phenotypeId)){
                     double[] initialValues = getInitialValues(exprs, INIT.RANDOM); //defaults to random initial values...
-                    LinkedList<Simulation> mappedSimulations = new LinkedList();
-                    Simulation mappedsims = new Simulation(outputsToModelsMap,
+                    LinkedList<Simulation> mappedsimulations = new LinkedList();
+                    Simulation sims = new Simulation(outputsToModelsMap,
                                                                     initialValues,
                                                                     exprs,
                                                                     alpha,
@@ -101,11 +107,11 @@ public class Simulator {
                                                                     tanTransform,
                                                                     logitTransform, 
                                                                     k);
-                    mappedsims.setSimulateKnockout(simulateKnockout);// set the actual value....
-                    mappedsims.setGeneToKnockOut(geneToKnockout);
-                    mappedSimulations.add(mappedsims);
+                    sims.setSimulateKnockout(simulateKnockout);// set the actual value....
+                    sims.setGeneToKnockOut(geneToKnockout);
+                    mappedsimulations.add(sims);
                     
-                    KOGeneToSimulationsMap.put(geneToKnockout, mappedSimulations);
+                    KOGeneToSimulationsMap.put(geneToKnockout, mappedsimulations);
                 }
                 
             }
@@ -194,13 +200,59 @@ public class Simulator {
         // implement a parallel running of simulations here...
         if(simulateKnockout){
             Set<String> KOGenes = KOGeneToSimulationsMap.keySet();
+            System.out.println("[RUNSIMS] Number of knockedout genes: " + KOGenes.size());
+            
+            /*
+            //KOGenes.forEach((KOGene) -> {
             for(String KOGene : KOGenes){
-                LinkedList<Simulation> mappedsims = KOGeneToSimulationsMap.remove(KOGene);
-                mappedsims.parallelStream().forEach((simulation) -> {
-                                                simulation.run();
-                                            });
-                KOGeneToSimulationsMap.put(KOGene, mappedsims);
-            }                
+                System.out.println("Running simulations for knockedout gene: " + KOGene);
+                LinkedList<Simulation> mappedsimulations = KOGeneToSimulationsMap.remove(KOGene);
+                System.out.println("  [" + KOGene + "] mapped simulation objects: " + mappedsimulations.size());
+                //mappedsimulations.parallelStream().forEach((simulation) -> {
+                //mappedsimulations.forEach((simulation) -> {
+                for(Simulation mappedsimulation : mappedsimulations){
+                    //simulation.run();
+                    mappedsimulation.run();
+                //});
+                }
+                KOGeneToSimulationsMap.put(KOGene, mappedsimulations);
+            //});
+            }
+            */
+            
+            /*
+            // using the iterator method to possibly avert a java.util.ConcurrentModificationException exception...
+            Iterator<String> iterator = KOGenes.iterator();
+            while(iterator.hasNext()){
+                String KOGene = iterator.next();
+                LinkedList<Simulation> mappedsimulations = KOGeneToSimulationsMap.remove(KOGene);
+                System.out.println("  [" + KOGene + "] mapped simulation objects: " + mappedsimulations.size());
+                //mappedsimulations.parallelStream().forEach((simulation) -> {
+                //mappedsimulations.forEach((simulation) -> {
+                for(Simulation mappedsimulation : mappedsimulations){
+                    //simulation.run();
+                    mappedsimulation.run();
+                //});
+                }
+                KOGeneToSimulationsMap.put(KOGene, mappedsimulations);
+            }
+            */
+            String[] genesToKnockout = exprs.getRowIds();
+            for(String geneToKnockout : genesToKnockout){
+                if(!geneToKnockout.equalsIgnoreCase(phenotypeId)){
+                    LinkedList<Simulation> mappedsimulations = KOGeneToSimulationsMap.remove(geneToKnockout);
+                    System.out.println("  [" + geneToKnockout + "] mapped simulation objects: " + mappedsimulations.size());
+                    //mappedsimulations.parallelStream().forEach((simulation) -> {
+                    //mappedsimulations.forEach((simulation) -> {
+                    for(Simulation mappedsimulation : mappedsimulations){
+                        //simulation.run();
+                        mappedsimulation.run();
+                    //});
+                    }
+                    KOGeneToSimulationsMap.put(geneToKnockout, mappedsimulations);
+                }
+            }
+            
         }else{
             
             simulations.parallelStream().forEach((simulation) -> {
@@ -226,10 +278,10 @@ public class Simulator {
                 if(!new File(kOGeneSimulationsDirPath).exists()){
                     new File(kOGeneSimulationsDirPath).mkdir();
                 }
-                outFile = simulationsDirPath + File.separator + outFile;
+                String KOGeneOutFile = kOGeneSimulationsDirPath + File.separator + outFile;
                 LinkedList<Simulation> mappedsimulations = KOGeneToSimulationsMap.get(KOGene);
                 for(int i = 0; i < mappedsimulations.size(); i++){
-                    PrintWriter printer = new PrintWriter(outFile + "." + i + ".dta");
+                    PrintWriter printer = new PrintWriter(KOGeneOutFile + "." + i + ".dta");
                     Simulation sim = mappedsimulations.get(i);
                     LinkedList<double[]> deltaValuesList = sim.getDeltaValuesList();
                     // print table_header...
@@ -286,11 +338,11 @@ public class Simulator {
                 if(!new File(kOGeneSimulationsDirPath).exists()){
                     new File(kOGeneSimulationsDirPath).mkdir();
                 }
-                outFile = simulationsDirPath + File.separator + outFile;
+                String KOGeneOutFile  = kOGeneSimulationsDirPath + File.separator + outFile;
                 LinkedList<Simulation> mappedsimulations = KOGeneToSimulationsMap.get(KOGene);
                 
                 for(int i = 0; i < mappedsimulations.size(); i++){
-                    PrintWriter printer = new PrintWriter(outFile + "." + i + ".sim");
+                    PrintWriter printer = new PrintWriter(KOGeneOutFile + "." + i + ".sim");
                     Simulation sim = mappedsimulations.get(i);
                     LinkedList<double[]> simValues = sim.getSimulatedValues();
                     // print table_header...

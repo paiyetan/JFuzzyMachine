@@ -10,7 +10,7 @@ import jfuzzymachine.utilities.graph.Vertex;
 import jfuzzymachine.utilities.simulation.Fuzzifier;
 import jfuzzymachine.utilities.simulation.FuzzySet;
 import jfuzzymachine.utilities.simulation.Table;
-import jfuzzymachine.utilities.simulation.TableBindingException;
+import jfuzzymachine.exceptions.TableBindingException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,8 +29,8 @@ import org.apache.commons.math3.stat.descriptive.moment.Mean;
  */
 public class ModelValidator {
     
-    private Table validationTable = null; // a table showing the estimated value of rowIds in respective perturbation
-                                         // given the [best] fitted models for the output 
+    private Table validationTable = null; 
+    // a table showing the estimated value of rowIds in respective perturbation given the [best] fitted models for the output 
     private HashMap<String, Double> outputToRecomputedFitMap = null;
     
     public void validate(Table exprs, 
@@ -39,8 +39,7 @@ public class ModelValidator {
                                     String phenotypeId,
                                         boolean tanTransform, boolean logitTransform,
                                             double k){
-        
-       
+               
         // get elements of validation Table (rowIds, colIds, and matrix/table data...  
         Set<Vertex> vertices = outputsToModelsMap.keySet();
         String[] rowIds = new String[vertices.size()];
@@ -51,15 +50,28 @@ public class ModelValidator {
         FuzzySet[][] fMat = fzr.getFuzzyMatrix(exprs);
         
         int rowIndex = 0; 
-        for(Vertex vertex : vertices){
-            rowIds[rowIndex] = vertex.getId(); // populate table rowIds...
-            LinkedList<Model> mappedModels = outputsToModelsMap.get(vertex);
+        for(Vertex outputNode : vertices){
+            rowIds[rowIndex] = outputNode.getId(); // populate table rowIds...
+            LinkedList<Model> mappedModels = outputsToModelsMap.get(outputNode);
+            
+            // troubleshooting...
+            System.out.println(outputNode.getId() + " mapped models: " + mappedModels.size());
+            if(mappedModels.size()==1){
+                System.out.println("   " + mappedModels.getLast().getInputNodesString() +
+                        ", " + mappedModels.getLast().getRulesString());
+            }
+            
             Collections.sort(mappedModels);
             Model bestFitModel = mappedModels.getLast();
             LinkedList<Vertex> inputNodes = bestFitModel.getInputNodes();
             LinkedList<String> rules = bestFitModel.getRules();
             
-            //String output = vertex.getId();
+            //for troubleshooting...
+            System.out.println("Found best model: OutputNode, " + bestFitModel.getOutputNode().getId() +
+                                       "; InputNodes: " + bestFitModel.getInputNodesString() +
+                                       "; Rules: " + bestFitModel.getRulesString());
+            
+            //String output = outputNode.getId();
             for(int j = 0; j < colIds.length; j++){
                 
                 double zy1 = 0;
@@ -70,8 +82,22 @@ public class ModelValidator {
                     
                     String inputNodeId = inputNode.getId(); //get input fuzzySet Value, but first get input node id
                     int inputIndex = exprs.getRowIndex(inputNodeId); // then, get the row index for input node
-                    FuzzySet fzSet = fMat[inputIndex][j]; // get input fuzzySet...
-                    String rule = rules.get(ruleIndex);// get rule associated with input...
+                    FuzzySet fzSet = null; // get input fuzzySet...
+                    String rule = null;                    
+                    try{
+                        fzSet = fMat[inputIndex][j];
+                        rule = rules.get(ruleIndex);// get rule associated with input...
+                    }catch(ArrayIndexOutOfBoundsException e){
+                        //throw new ArrayIndexBoundsException(ruleIndex, inputIndex, inputNode, outputNode);
+                        System.out.println("Caught Exception: ArrayIndexOutOfBoundsException");
+                        System.out.println("       ruleIndex: " + ruleIndex);
+                        System.out.println("      inputIndex: " + inputIndex);
+                        System.out.println("       inputNode: " + inputNode.getId());
+                        System.out.println("      outputNode: " + outputNode.getId());
+                        System.out.println("               j: " + j);
+                        e.printStackTrace();
+                        System.exit(1);
+                    }
                     
                     FuzzySet fzSet_i = fzr.applyRule(fzSet, rule); //apply rule
                     zy1 = zy1 + fzSet_i.getY1();
@@ -83,7 +109,7 @@ public class ModelValidator {
                 
                 FuzzySet fzz = new FuzzySet(zy1, zy2, zy3);
                 double inferredValue;// = fzr.deFuzzify(fzz); // I_n
-                if(includesPheno && vertex.getId().equalsIgnoreCase(phenotypeId)){
+                if(includesPheno && outputNode.getId().equalsIgnoreCase(phenotypeId)){
                     inferredValue = fzr.deFuzzify(fzz, tanTransform, logitTransform, k);
                 }else{
                     inferredValue = fzr.deFuzzify(fzz); 

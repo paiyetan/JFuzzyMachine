@@ -5,6 +5,7 @@
  */
 package jfuzzymachine.utilities.simulation;
 
+import jfuzzymachine.exceptions.TableBindingException;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;

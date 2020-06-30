@@ -87,6 +87,8 @@ public class Simulation {
     }
 
     public void run(){
+        
+        //System.out.println(Thread.currentThread().getName());
         /**
          * Calculate the next value, I_1 of each node by the initial condition and 
            the fuzzy relations inferred from the data; 
