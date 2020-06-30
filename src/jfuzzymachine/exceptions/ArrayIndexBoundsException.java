@@ -13,7 +13,10 @@ import jfuzzymachine.utilities.graph.Vertex;
  */
 public class ArrayIndexBoundsException extends Exception {
 
-    public ArrayIndexBoundsException(int ruleIndex, int inputIndex, Vertex inputNode, Vertex outputNode) {
+    public ArrayIndexBoundsException(int ruleIndex, 
+            int inputIndex, 
+            Vertex inputNode, 
+            Vertex outputNode) {
     }
     
 }

@@ -317,12 +317,23 @@ public class AnnotatedGraph {
             //                this.getRulesString(mappedModels) + "\t" +
             //                this.getFitsString(mappedModels));
             //for(int i = mappedModels.size()-1; i >= 0; i--){
-            for(int i = mappedModels.size()-1; i >= (mappedModels.size() - topFittedModelsToOutput); i--){
-                Model fittedModel = mappedModels.get(i);
-                printer.println(output.getId() + "\t" +
-                                fittedModel.getInputNodesString() + "\t" +
-                                fittedModel.getRulesString() + "\t" +
-                                fittedModel.getFit());
+            if(mappedModels.size() <= topFittedModelsToOutput){
+                for(int i = mappedModels.size()-1; i >= 0; i--){
+                    Model fittedModel = mappedModels.get(i);
+                    printer.println(output.getId() + "\t" +
+                                    fittedModel.getInputNodesString() + "\t" +
+                                    fittedModel.getRulesString() + "\t" +
+                                    fittedModel.getFit());
+                }
+                
+            }else{
+                for(int i = mappedModels.size()-1; i >= (mappedModels.size() - topFittedModelsToOutput); i--){
+                    Model fittedModel = mappedModels.get(i);
+                    printer.println(output.getId() + "\t" +
+                                    fittedModel.getInputNodesString() + "\t" +
+                                    fittedModel.getRulesString() + "\t" +
+                                    fittedModel.getFit());
+                }
             }
         }
         printer.close();  
