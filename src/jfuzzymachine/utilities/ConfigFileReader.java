@@ -30,6 +30,8 @@ public class ConfigFileReader {
                 config.put(lineArr[0].trim(), lineArr[1].trim());
             }
         }
+        
+        reader.close();
         return config;
     }
     

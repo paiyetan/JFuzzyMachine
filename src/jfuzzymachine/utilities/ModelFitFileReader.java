@@ -61,6 +61,8 @@ public class ModelFitFileReader {
             }
             lineIndex++;
         }
+        
+        reader.close();
         //System.out.println("ModelFitFileReader: #outputsToModelsMap: " + outputsToModelsMap.keySet().size());
         return outputsToModelsMap;
     }

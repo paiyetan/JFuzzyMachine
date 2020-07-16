@@ -104,8 +104,20 @@ public class SlurmRunFileMaker {
         //printer.println("#SBATCH --mem=16000						   # memory per compute node in MB");
         //printer.println("#SBATCH --nodes=16-32						   # nodes per compute node in MB");
         //printer.println("#SBATCH --cpus-per-task=" + params.get("cPUsPerTask"));
-        printer.println("#SBATCH -N " + params.get("N"));
-        printer.println("#SBATCH -n " + params.get("n"));
+        //get original numberOfFeatures...
+        boolean useMultipleNodes = Boolean.parseBoolean(params.get("useMultipleNodes"));
+        if(useMultipleNodes){
+            int numberOfFeatures = Integer.parseInt(params.get("n"))/ 2; 
+            if(numberOfFeatures > 45){
+                printer.println("#SBATCH -N " + params.get("N"));
+                printer.println("#SBATCH -n " + params.get("n"));
+            }else{
+                printer.println("#SBATCH --cpus-per-task=" + params.get("cPUsPerTask"));
+            }
+        }else{
+            printer.println("#SBATCH --cpus-per-task=" + params.get("cPUsPerTask"));
+        }
+        
         printer.println("#SBATCH --mem-per-cpu=" + params.get("memPerCPU"));
         printer.println("#SBATCH --time=" + params.get("time"));
         

@@ -16,6 +16,7 @@ import jfuzzymachine.utilities.ConfigFileReader;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
+import jfuzzymachine.utilities.ProbableRegulonsMapFileReader;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 
@@ -33,6 +34,8 @@ public class JFuzzyMachine {
     private Table phenoExprs = null; //
     private FuzzySet[][] phenoFMat = null;
     public enum ExpressionType {PHENOTYPE, GENOTYPE};
+    
+    private boolean useProbableRegulonsMap; //a less exhaustive but guided search approach...
         
     public JFuzzyMachine(HashMap<String, String> config) throws IOException{
         fuzzifier = new Fuzzifier();
@@ -40,6 +43,7 @@ public class JFuzzyMachine {
         this.exprs = new Table(config.get("inputFile"), Table.TableType.DOUBLE);
         this.exprsFMat = fuzzifier.getFuzzyMatrix(exprs, ExpressionType.GENOTYPE); 
         this.modelPhenotype = Boolean.parseBoolean(config.get("modelPhenotype"));
+        this.useProbableRegulonsMap = Boolean.parseBoolean(config.get("useProbableRegulonsMap"));
         
         if(this.modelPhenotype){
             phenoExprs = new Table(config.get("inputPhenoFile"), Table.TableType.DOUBLE);
@@ -447,14 +451,26 @@ public class JFuzzyMachine {
         }
     }
      
-    public void search(PrintWriter printer) throws FileNotFoundException {
+    public void search(PrintWriter printer) throws FileNotFoundException, IOException {
                 
         ESearchEngine esearch = new ESearchEngine(); // NOTE: to avoid Heap overflow error, use this only for printing...
+        HashMap<String, String[]> regulonsMap = new HashMap();
+        // at this stage, check if the search should be exhaustive or streamlined around a set of input genes
+        if(useProbableRegulonsMap){
+            String regulonsMapFile = config.get("regulonsMapFile");
+            ProbableRegulonsMapFileReader regReader = new ProbableRegulonsMapFileReader();
+            regulonsMap = regReader.read(regulonsMapFile);
+        }
+        
         
         if(modelPhenotype){
             String outputGene = phenoExprs.getRowIds()[0];
-            String[] otherGenes = exprs.getRowIds();
-                        
+            String[] otherGenes; // null;
+            if(useProbableRegulonsMap){
+                otherGenes = regulonsMap.get(outputGene);
+            }else{
+                otherGenes = exprs.getRowIds();
+            }           
             //Trouble shoot...
             System.out.println("                 All Genes#: " + otherGenes.length);
             System.out.println("   Output Nodes Considered#: " + outputGene);
@@ -578,6 +594,11 @@ public class JFuzzyMachine {
         String outputDir = config.get("outputDir");
         outFile = outputDir + File.separator + new File(outFile).getName();        
                
+        outFile = outFile + "." + 
+                    config.get("iGeneStart") + "." + 
+                        config.get("iGeneEnd");
+        /**
+         *          
         if(args.length > 1){ // input includes other commandLine parameters; these supercede those specified in the config file....           
             config.replace("iGeneStart", args[1]);
             config.replace("iGeneEnd", args[2]);
@@ -585,7 +606,7 @@ public class JFuzzyMachine {
             
             if(Integer.parseInt(config.get("iGeneStart"))==0){
                 config.replace("modelPhenotype", "TRUE"); 
-// in this case, all other args MUST be provided in configuration file...                                
+                 // in this case, all other args MUST be provided in configuration file...                                
             }
         }
         
@@ -601,7 +622,9 @@ public class JFuzzyMachine {
         if(args.length > 5){
             config.replace("useParallel", args[5]);
         }
-                
+       
+        */     
+        
         outFile = outFile + "." + config.get("useParallel") + ".jfuz";
         PrintWriter printer = new PrintWriter(outFile);  
         //Print Parammeters to stderr and        
