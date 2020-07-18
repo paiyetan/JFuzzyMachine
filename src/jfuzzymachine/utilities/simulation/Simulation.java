@@ -77,6 +77,7 @@ public class Simulation {
         this.k = k;
         
         this.simulateKnockout = false;//to initiate as not to return nullValuePointer Exception in downstream call
+        this.knockouts = null;
         
     }
     
@@ -131,8 +132,7 @@ public class Simulation {
             if(this.simulateKnockout){           
                 Minimum min = new Minimum(currentValues);
                 //knockedOutGeneIndex = exprs.getRowIndex(geneToKnockout); //get index of knockedout get                                
-                //currentValues[knockedOutGeneIndex] = min.minimum();
-                
+                //currentValues[knockedOutGeneIndex] = min.minimum();                
                 for(String knockout : knockouts){
                     int knockoutGeneIndex = exprs.getRowIndex(knockout); //get row index of a knockedout gene...
                     currentValues[knockoutGeneIndex] = min.minimum();

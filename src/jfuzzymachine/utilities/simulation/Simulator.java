@@ -95,27 +95,33 @@ public class Simulator {
             switch (knockOutType){
                 
                 case DOUBLE:
-                    
-                    switch(initType){
-                        
-                        default:
-                            LinkedList<String[]> geneKnockoutsPairs = new LinkedList();//get pairs from list....
-                            for(int i = 0; i < genesToKnockout.length; i++){
-                                for(int j = i+1; j < genesToKnockout.length; j++){
-                                    String geneA = genesToKnockout[i];
-                                    String geneB = genesToKnockout[j];
+                    LinkedList<String[]> geneKnockoutsPairs = new LinkedList();//
+                    geneKnockoutsPairs = new LinkedList();//get pairs from list....
+                    for(int i = 0; i < genesToKnockout.length; i++){
+                        String geneA = genesToKnockout[i];
+                        if(!geneA.equalsIgnoreCase(phenotypeId)){
+                            for(int j = i+1; j < genesToKnockout.length; j++){
+                                String geneB = genesToKnockout[j];
+                                if(!geneB.equalsIgnoreCase(phenotypeId)){
                                     String[] knockouts = new String[2];
                                     knockouts[0] = geneA;
                                     knockouts[1] = geneB;
                                     geneKnockoutsPairs.add(knockouts);
                                 }
-                            }                    
-                            System.out.println("Number of Genes Knockouts Pairs: " + geneKnockoutsPairs.size());
-
-                            for(String[] geneKnockoutsPair: geneKnockoutsPairs){
-                                //if(!geneToKnockout.equalsIgnoreCase(phenotypeId)){
-                                    double[] initialValues = getInitialValues(exprs, INIT.RANDOM); //defaults to random initial values...
-                                    LinkedList<Simulation> mappedsimulations = new LinkedList();
+                            }
+                        }
+                    }                    
+                    System.out.println("Number of Genes Knockouts Pairs: " + geneKnockoutsPairs.size()); 
+                    
+                    switch(initType){
+                        
+                        case ALL: // using all samples' expression values as initial values for the simulation....
+                            
+                            for(String[] geneKnockoutsPair: geneKnockoutsPairs){                                
+                                String mappedSimulationsKey = geneKnockoutsPair[0] + "_" + geneKnockoutsPair[1];
+                                LinkedList<Simulation> mappedsimulations = new LinkedList();
+                                for(int col = 0; col < exprs.getNumberOfColumns(); col++){
+                                    double[] initialValues = exprs.getColumn(col, Table.TableType.DOUBLE);                                    
                                     Simulation sims = new Simulation(outputsToModelsMap,
                                                                         initialValues,
                                                                         exprs,
@@ -129,21 +135,42 @@ public class Simulator {
                                                                         k);
                                     sims.setSimulateKnockout(simulateKnockout); // set the actual value....
                                     sims.setKnockOuts(geneKnockoutsPair);
-                                    mappedsimulations.add(sims);
-                                    String mappedSimulationsKey = geneKnockoutsPair[0] + "_" + geneKnockoutsPair[1];
-                                    KOToSimulationsMap.put(mappedSimulationsKey, mappedsimulations);
-                                //}
+                                    mappedsimulations.add(sims);                                                                        
+                                }
+                                KOToSimulationsMap.put(mappedSimulationsKey, mappedsimulations);
                             }
                             break;
                         
-                        
+                        default: //all other types of initial values -- RANDOM, FIRST, etc...
+                            
+                            for(String[] geneKnockoutsPair: geneKnockoutsPairs){
+                                String mappedSimulationsKey = geneKnockoutsPair[0] + "_" + geneKnockoutsPair[1];
+                                LinkedList<Simulation> mappedsimulations = new LinkedList();
+                                double[] initialValues = getInitialValues(exprs, initType); //defaults to random initial values...
+                                Simulation sims = new Simulation(outputsToModelsMap,
+                                                                    initialValues,
+                                                                    exprs,
+                                                                    alpha,
+                                                                    maxIterations,
+                                                                    eCutOff,
+                                                                    includesPheno,
+                                                                    phenotypeId,
+                                                                    tanTransform,
+                                                                    logitTransform, 
+                                                                    k);
+                                sims.setSimulateKnockout(simulateKnockout); // set the actual value....
+                                sims.setKnockOuts(geneKnockoutsPair);
+                                mappedsimulations.add(sims);                                
+                                KOToSimulationsMap.put(mappedSimulationsKey, mappedsimulations);
+                            }
+                            break;
+                                                
                     }   
                     break;
                     
                 default: //SINGLE                    
-                    // get the genes to knockout... these would be the rowNames of expression matrix....
-                    // String[] genesToKnockout = exprs.getRowIds();
-                    System.out.println("Number of Genes Knockouts: " + genesToKnockout.length);
+                    
+                    System.out.println("Number of Gene Knockouts: " + genesToKnockout.length);
                     
                     switch(initType){
                         
@@ -151,9 +178,9 @@ public class Simulator {
                             
                             for(String geneToKnockout : genesToKnockout){
                                 if(!geneToKnockout.equalsIgnoreCase(phenotypeId)){
+                                    LinkedList<Simulation> mappedsimulations = new LinkedList();
                                     for(int col = 0; col < exprs.getNumberOfColumns(); col++){
-                                        double[] initialValues = exprs.getColumn(col, Table.TableType.DOUBLE); //this assumes a single sample/perturbation provides the initial outputs values              
-                                        LinkedList<Simulation> mappedsimulations = new LinkedList();
+                                        double[] initialValues = exprs.getColumn(col, Table.TableType.DOUBLE); //                                        
                                         Simulation sims = new Simulation(outputsToModelsMap,
                                                                             initialValues,
                                                                             exprs,
@@ -167,9 +194,9 @@ public class Simulator {
                                                                             k);
                                         sims.setSimulateKnockout(simulateKnockout);// set the actual value....
                                         sims.setGeneToKnockOut(geneToKnockout);
-                                        mappedsimulations.add(sims);
-                                        KOToSimulationsMap.put(geneToKnockout, mappedsimulations);
-                                    } 
+                                        mappedsimulations.add(sims);                                        
+                                    }
+                                    KOToSimulationsMap.put(geneToKnockout, mappedsimulations);
                                 }
                             }
                             break;
@@ -228,7 +255,7 @@ public class Simulator {
 
                 default: //all others...(RANDOM, FIRST, AVERAGE)
                     //String[] vertexIds = exprs.getRowIds();
-                    double[] initialValues = getInitialValues(exprs, INIT.RANDOM); //this assumes a single sample/perturbation provides the initial outputs values              
+                    double[] initialValues = getInitialValues(exprs, initType); //this assumes a single sample/perturbation provides the initial outputs values              
                     this.simulations.add( new Simulation(outputsToModelsMap,
                                                                 initialValues,
                                                                 exprs,
@@ -246,15 +273,6 @@ public class Simulator {
         }
             
     }  
-    
-    /*
-    private void getOutputToModelsMap(String fitFile, double fitCutOff) {
-        //throw new UnsupportedOperationException("Not supported yet."); 
-        //To change body of generated methods, choose Tools | Templates.
-        
-    }
-    */
-
     
     private double[] getInitialValues(Table exprs, INIT init) {
         double[] initValues = null;
@@ -287,8 +305,7 @@ public class Simulator {
         // implement a parallel running of simulations here...
         if(simulateKnockout){
             Set<String> KOGenes = KOToSimulationsMap.keySet();
-            System.out.println("[RUNSIMS] Number of knockedout genes: " + KOGenes.size());
-            
+            System.out.println("[RUNSIMS] Number of knockedout keys: " + KOGenes.size());            
             /*
             //KOGenes.forEach((KOGene) -> {
             for(String KOGene : KOGenes){
@@ -324,6 +341,7 @@ public class Simulator {
                 KOToSimulationsMap.put(KOGene, mappedsimulations);
             }
             */
+            /*
             String[] genesToKnockout = exprs.getRowIds();
             for(String geneToKnockout : genesToKnockout){
                 if(!geneToKnockout.equalsIgnoreCase(phenotypeId)){
@@ -338,6 +356,12 @@ public class Simulator {
                     }
                     KOToSimulationsMap.put(geneToKnockout, mappedsimulations);
                 }
+            }
+            */
+            for(String KO : KOGenes){
+                KOToSimulationsMap.get(KO).parallelStream().forEach((simulation) ->{
+                    simulation.run();
+                });
             }
             
         }else{
@@ -583,15 +607,7 @@ public class Simulator {
         outputFile = fitFileJFile.getName();
         outputFile = outputFile.replace(".fit", "").replace(".fit2", "").replace(".txt", "");        
         
-        //Simulator sim = new Simulator(edgesFile, exprsMatFile, fitCutOff, alpha,
-        //                                includesPheno, phenotypeId, phenoExprsMatFile, 
-        //                                    maxIterations, eCutOff, initType);
-        
-        //Simulator sim = new Simulator(edgesFile, exprsMatFile, fitCutOff, alpha,
-        //                                includesPheno, //phenotypeId, 
-        //                                    phenoExprsMatFile, 
-        //                                        maxIterations, eCutOff, initType);
-        Simulator sim = new Simulator(fitFile, exprsMatFile, fitCutOff, alpha,
+         Simulator sim = new Simulator(fitFile, exprsMatFile, fitCutOff, alpha,
                                         includesPheno, phenotypeId, 
                                             phenoExprsMatFile, 
                                                 maxIterations, eCutOff, initType,
