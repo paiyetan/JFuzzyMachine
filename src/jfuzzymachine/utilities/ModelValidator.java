@@ -55,11 +55,11 @@ public class ModelValidator {
             LinkedList<Model> mappedModels = outputsToModelsMap.get(outputNode);
             
             // troubleshooting...
-            System.out.println(outputNode.getId() + " mapped models: " + mappedModels.size());
-            if(mappedModels.size()==1){
-                System.out.println("   " + mappedModels.getLast().getInputNodesString() +
-                        ", " + mappedModels.getLast().getRulesString());
-            }
+            //System.out.println(outputNode.getId() + " mapped models: " + mappedModels.size());
+            //if(mappedModels.size()==1){
+            //    System.out.println("   " + mappedModels.getLast().getInputNodesString() +
+            //            ", " + mappedModels.getLast().getRulesString());
+            //}
             
             Collections.sort(mappedModels);
             Model bestFitModel = mappedModels.getLast();
@@ -67,9 +67,9 @@ public class ModelValidator {
             LinkedList<String> rules = bestFitModel.getRules();
             
             //for troubleshooting...
-            System.out.println("Found best model: OutputNode, " + bestFitModel.getOutputNode().getId() +
-                                       "; InputNodes: " + bestFitModel.getInputNodesString() +
-                                       "; Rules: " + bestFitModel.getRulesString());
+            //System.out.println("Found best model: OutputNode, " + bestFitModel.getOutputNode().getId() +
+            //                           "; InputNodes: " + bestFitModel.getInputNodesString() +
+            //                           "; Rules: " + bestFitModel.getRulesString());
             
             //String output = outputNode.getId();
             for(int j = 0; j < colIds.length; j++){
@@ -198,6 +198,9 @@ public class ModelValidator {
         // recomputeFit=TRUE
         boolean recomputeFit; // to quantitatively determine how well the model fits an independent dataset or re-validate/verify computed fit for training data
         
+        String validationType;
+        
+        
         
         System.out.println("Reading configs...");  
         HashMap<String, String> config = ConfigFileReader.read(args[0]);
@@ -214,6 +217,9 @@ public class ModelValidator {
         k = Double.parseDouble(config.get("kValue"));
         
         recomputeFit = Boolean.parseBoolean(config.get("recomputeFit"));
+        
+        
+        validationType = config.get("validationType");
                 
         
         exprs = new Table(exprsToValidate, Table.TableType.DOUBLE);
@@ -236,18 +242,20 @@ public class ModelValidator {
                                             k);        
         
         System.out.println("Printing validations...");
-        String validationOutputFile = fittedModelsFile.replace(".fit", "").replace(".fit2", "") + ".val";
-        validator.printValidationTable(validationOutputFile, Table.TableType.DOUBLE);
+        
+        
+        String validationOutputFile = fittedModelsFile.replace(".fit", "").replace(".fit2", "") + "." + validationType + ".val";
+        validator.printValidationTable(validationOutputFile, Table.TableType.DOUBLE);       
         
         if(recomputeFit){ //
             System.out.println("Recomputing fit (errors)...");
             validator.recomputeFit(exprs);
             
             System.out.println("Printing Recomputed fit (errors...");
-            String vFitFile = fittedModelsFile.replace(".fit", "").replace(".fit2", "") + ".vfit";
+            String vFitFile = fittedModelsFile.replace(".fit", "").replace(".fit2", "") + "." + validationType + ".vfit";
             validator.printRecomputedFit(vFitFile);
         }
-    
+            
         
         System.out.println("\n...Done!");        
         Date end = new Date();

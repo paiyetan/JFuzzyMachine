@@ -42,7 +42,9 @@ public class Simulation {
     private double k;
     
     private boolean simulateKnockout;
-    private String geneToKnockout;
+    //private String geneToKnockout;
+    
+    private String[] knockouts;
     
     public Simulation(HashMap<Vertex, LinkedList<Model>> outputToModelsMap,
                       double[] initialValues,
@@ -83,7 +85,13 @@ public class Simulation {
     }
 
     public void setGeneToKnockOut(String geneToKnockout){
-        this.geneToKnockout = geneToKnockout;
+        //this.geneToKnockout = geneToKnockout;
+        this.knockouts = new String[1];
+        knockouts[0] = geneToKnockout;
+    }
+    
+    public void setKnockOuts(String[] geneKnockouts){
+        this.knockouts = geneKnockouts;
     }
 
     public void run(){
@@ -117,13 +125,18 @@ public class Simulation {
         //for(Vertex outputNode : outputNodes){
         //    System.out.printf("  output node found: %s", outputNode.getId());
         //} 
-        int knockedOutGeneIndex; // 
+        //int knockedOutGeneIndex; // 
         while (iteration < maxIterations){
             
             if(this.simulateKnockout){           
-                knockedOutGeneIndex = exprs.getRowIndex(geneToKnockout); //get index of knockedout get
                 Minimum min = new Minimum(currentValues);
-                currentValues[knockedOutGeneIndex] = min.minimum();
+                //knockedOutGeneIndex = exprs.getRowIndex(geneToKnockout); //get index of knockedout get                                
+                //currentValues[knockedOutGeneIndex] = min.minimum();
+                
+                for(String knockout : knockouts){
+                    int knockoutGeneIndex = exprs.getRowIndex(knockout); //get row index of a knockedout gene...
+                    currentValues[knockoutGeneIndex] = min.minimum();
+                }
             }
             
             //infer new values from current values...

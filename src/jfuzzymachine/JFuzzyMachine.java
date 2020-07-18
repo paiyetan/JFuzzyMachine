@@ -596,9 +596,9 @@ public class JFuzzyMachine {
                
         outFile = outFile + "." + 
                     config.get("iGeneStart") + "." + 
-                        config.get("iGeneEnd");
-        /**
-         *          
+                        config.get("iGeneEnd") + "." +
+                            config.get("numberOfInputs");        
+        /*                    
         if(args.length > 1){ // input includes other commandLine parameters; these supercede those specified in the config file....           
             config.replace("iGeneStart", args[1]);
             config.replace("iGeneEnd", args[2]);
@@ -621,8 +621,7 @@ public class JFuzzyMachine {
         
         if(args.length > 5){
             config.replace("useParallel", args[5]);
-        }
-       
+        }f       
         */     
         
         outFile = outFile + "." + config.get("useParallel") + ".jfuz";
