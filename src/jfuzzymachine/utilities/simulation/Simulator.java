@@ -12,6 +12,7 @@ import jfuzzymachine.utilities.graph.Vertex;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -278,14 +279,41 @@ public class Simulator {
     } 
     
     private String[] getGenesToKnockout() {
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //throw new UnsupportedOperationException("Not supported yet."); 
+        //To change body of generated methods, choose Tools | Templates.
         String[] feats = new String[this.outputsToModelsMap.keySet().size()];
-        Set<Vertex> vertices = this.outputsToModelsMap.keySet();
+        LinkedList<String> nodesInNetwork = new LinkedList();
+        Set<Vertex> outputVertices = this.outputsToModelsMap.keySet();
         int index = 0;
-        for(Vertex vertex : vertices){
-           feats[index] = vertex.getId();
-           index++;
-        }       
+        for(Vertex outputVertex : outputVertices){
+            Collections.sort(outputsToModelsMap.get(outputVertex));
+        }
+        for(Vertex outputVertex : outputVertices){
+           //feats[index] = outputVertex.getId();
+           //index++;           
+            String outputNode = outputVertex.getId();
+            if(!nodesInNetwork.contains(outputNode))
+               nodesInNetwork.add(outputNode);
+            Model bestFitModel = null;
+            try{
+                //LinkedList<Model> inputModels = outputsToModelsMap.get(outputNode);
+                //Collections.sort(inputModels); // to get the best model used in the network
+                bestFitModel = outputsToModelsMap.get(outputVertex).getLast();
+            }catch(NullPointerException e){
+               System.out.println("OutputNode : " + outputNode);
+               e.printStackTrace();
+               System.exit(1);
+            }
+            LinkedList<Vertex> inputVertices = bestFitModel.getInputNodes();
+           
+            for(Vertex inputVertex : inputVertices){
+                String inputNode = inputVertex.getId();
+                if(!nodesInNetwork.contains(inputNode))
+                    nodesInNetwork.add(inputNode);
+            }           
+        }
+        
+        feats = nodesInNetwork.toArray(new String[nodesInNetwork.size()]);;        
         return(feats);
     }
 
