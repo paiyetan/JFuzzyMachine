@@ -31,19 +31,97 @@ import org.apache.commons.math3.stat.descriptive.moment.Mean;
  *
  * @author aiyetanpo
  */
-public class ModelValidator {
+public class Evaluator {
     
     private Table validationTable = null; 
     // a table showing the estimated value of rowIds in respective perturbation given the [best] fitted models for the output 
     private HashMap<String, Double> outputToRecomputedFitMap = null;
     
+    
+    public Evaluator(HashMap<String, String> config) throws IOException, TableBindingException{
+                
+        
+        String exprsToValidate;
+        String fittedModelsFile;
+        double fitCutOff;
+        HashMap<Vertex, LinkedList<Model>> outputsToModelsMap;
+        Table exprs;
+        
+        boolean includesPheno;
+        String phenotypeId;
+        String phenoExprsMatFile;
+        boolean tanTransform; 
+        boolean logitTransform;
+        double k;
+        
+        // recomputeFit=TRUE
+        boolean recomputeFit; // to quantitatively determine how well the model fits an independent dataset or re-validate/verify computed fit for training data
+        
+        String validationType;
+        
+        
+        
+        System.out.println("Reading configs...");  
+        exprsToValidate = config.get("exprsToValidate");
+        fittedModelsFile = config.get("fitFile");
+        fitCutOff = Double.parseDouble(config.get("fitCutOff"));
+        
+        includesPheno = Boolean.parseBoolean(config.get("includesPheno"));
+        phenotypeId = config.get("phenotypeId"); 
+        phenoExprsMatFile = config.get("phenoExprsMatFile");
+        
+        tanTransform = Boolean.parseBoolean(config.get("tanTransform"));
+        logitTransform = Boolean.parseBoolean(config.get("logitTransform"));
+        k = Double.parseDouble(config.get("kValue"));
+        
+        recomputeFit = Boolean.parseBoolean(config.get("recomputeFit"));
+        
+        
+        validationType = config.get("validationType");
+                
+        
+        exprs = new Table(exprsToValidate, Table.TableType.DOUBLE);
+        if(includesPheno){            
+            Table phenoExprs = new Table(phenoExprsMatFile, Table.TableType.DOUBLE); //merge pheno and exprs Table into a single table
+            exprs = exprs.bind(phenoExprs, Table.BindType.ROW);
+        }
+        
+        
+        System.out.println("Loading models...");  
+        outputsToModelsMap = ModelFitFileReader.read(fittedModelsFile, fitCutOff);
+        
+        System.out.println("Validating models...");  
+        
+        this.validate(exprs, 
+                            outputsToModelsMap, 
+                                includesPheno,
+                                    phenotypeId,
+                                        tanTransform, logitTransform,
+                                            k);        
+        
+        System.out.println("Printing validations...");
+        
+        
+        String validationOutputFile = fittedModelsFile.replace(".fit", "").replace(".fit2", "") + "." + validationType + ".val";
+        this.printValidationTable(validationOutputFile, Table.TableType.DOUBLE);       
+        
+        if(recomputeFit){ //
+            System.out.println("Recomputing fit (errors)...");
+            this.recomputeFit(exprs);
+            
+            System.out.println("Printing Recomputed fit (errors...");
+            String vFitFile = fittedModelsFile.replace(".fit", "").replace(".fit2", "") + "." + validationType + ".vfit";
+            this.printRecomputedFit(vFitFile);
+        }
+                   
+    }
+        
     public void validate(Table exprs, 
                             HashMap<Vertex, LinkedList<Model>> outputsToModelsMap,
                                 boolean includesPheno,
                                     String phenotypeId,
                                         boolean tanTransform, boolean logitTransform,
-                                            double k){
-               
+                                            double k){               
         // get elements of validation Table (rowIds, colIds, and matrix/table data...  
         Set<Vertex> vertices = outputsToModelsMap.keySet();
         String[] rowIds = new String[vertices.size()];
@@ -180,86 +258,12 @@ public class ModelValidator {
     
     public static void main(String[] args) throws IOException, TableBindingException{
         
-        
-                
         System.out.println("Starting...");       
         Date start = new Date();
         long start_time = start.getTime();
         
-        String exprsToValidate;
-        String fittedModelsFile;
-        double fitCutOff;
-        HashMap<Vertex, LinkedList<Model>> outputsToModelsMap;
-        Table exprs;
-        
-        boolean includesPheno;
-        String phenotypeId;
-        String phenoExprsMatFile;
-        boolean tanTransform; 
-        boolean logitTransform;
-        double k;
-        
-        // recomputeFit=TRUE
-        boolean recomputeFit; // to quantitatively determine how well the model fits an independent dataset or re-validate/verify computed fit for training data
-        
-        String validationType;
-        
-        
-        
-        System.out.println("Reading configs...");  
         HashMap<String, String> config = ConfigFileReader.read(args[0]);
-        exprsToValidate = config.get("exprsToValidate");
-        fittedModelsFile = config.get("fitFile");
-        fitCutOff = Double.parseDouble(config.get("fitCutOff"));
-        
-        includesPheno = Boolean.parseBoolean(config.get("includesPheno"));
-        phenotypeId = config.get("phenotypeId"); 
-        phenoExprsMatFile = config.get("phenoExprsMatFile");
-        
-        tanTransform = Boolean.parseBoolean(config.get("tanTransform"));
-        logitTransform = Boolean.parseBoolean(config.get("logitTransform"));
-        k = Double.parseDouble(config.get("kValue"));
-        
-        recomputeFit = Boolean.parseBoolean(config.get("recomputeFit"));
-        
-        
-        validationType = config.get("validationType");
-                
-        
-        exprs = new Table(exprsToValidate, Table.TableType.DOUBLE);
-        if(includesPheno){            
-            Table phenoExprs = new Table(phenoExprsMatFile, Table.TableType.DOUBLE); //merge pheno and exprs Table into a single table
-            exprs = exprs.bind(phenoExprs, Table.BindType.ROW);
-        }
-        
-        
-        System.out.println("Loading models...");  
-        outputsToModelsMap = ModelFitFileReader.read(fittedModelsFile, fitCutOff);
-        
-        System.out.println("Validating models...");  
-        ModelValidator validator = new ModelValidator();
-        validator.validate(exprs, 
-                            outputsToModelsMap, 
-                                includesPheno,
-                                    phenotypeId,
-                                        tanTransform, logitTransform,
-                                            k);        
-        
-        System.out.println("Printing validations...");
-        
-        
-        String validationOutputFile = fittedModelsFile.replace(".fit", "").replace(".fit2", "") + "." + validationType + ".val";
-        validator.printValidationTable(validationOutputFile, Table.TableType.DOUBLE);       
-        
-        if(recomputeFit){ //
-            System.out.println("Recomputing fit (errors)...");
-            validator.recomputeFit(exprs);
-            
-            System.out.println("Printing Recomputed fit (errors...");
-            String vFitFile = fittedModelsFile.replace(".fit", "").replace(".fit2", "") + "." + validationType + ".vfit";
-            validator.printRecomputedFit(vFitFile);
-        }
-            
+        Evaluator validator = new Evaluator(config);
         
         System.out.println("\n...Done!");        
         Date end = new Date();
@@ -273,6 +277,5 @@ public class ModelValidator {
                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(end_time - start_time))) + 
                                                       " seconds.");
     }
-
     
 }

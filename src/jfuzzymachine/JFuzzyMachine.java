@@ -39,9 +39,63 @@ public class JFuzzyMachine {
     private FuzzySet[][] phenoFMat = null;
     public enum ExpressionType {PHENOTYPE, GENOTYPE};
     
-    private boolean useProbableRegulonsMap; //a less exhaustive but guided search approach...
+    private final boolean useProbableRegulonsMap; //a less exhaustive but guided search approach...
         
+    
     public JFuzzyMachine(HashMap<String, String> config) throws IOException{
+        
+        System.out.println("Starting JFuzzyMachine...");
+        Date start = new Date();
+        long start_time = start.getTime();
+        
+        String outFile = config.get("inputFile"); //expression matrix file....
+        outFile = outFile.replace(".txt", "").replace(".tsv", "");
+        String outputDir = config.get("outputDir");
+        outFile = outputDir + File.separator + new File(outFile).getName();        
+               
+        outFile = outFile + "." + 
+                    config.get("iGeneStart") + "." + 
+                        config.get("iGeneEnd") + "." +
+                            config.get("numberOfInputs");        
+         
+        
+        outFile = outFile + "." + config.get("useParallel") + ".jfuz";
+        PrintWriter printer = new PrintWriter(outFile);  
+        //Print Parammeters to stderr and        
+        System.out.println("> StartTime: " + start.toString());
+        System.out.println("> Search Parameters: ");
+        System.out.println("          inputFile = " + config.get("inputFile"));
+        System.out.println("  maxNumberOfInputs = " + config.get("maxNumberOfInputs"));
+        System.out.println("     numberOfInputs = " + config.get("numberOfInputs"));
+        System.out.println("   outputInRealtime = " + config.get("outputInRealtime"));
+        System.out.println("            eCutOff = " + config.get("eCutOff"));
+        System.out.println("useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
+        System.out.println("         iGeneStart = " + config.get("iGeneStart"));
+        System.out.println("           iGeneEnd = " + config.get("iGeneEnd"));
+        System.out.println("        useParallel = " + config.get("useParallel"));
+        System.out.println("         outputFile = " + outFile);
+        System.out.println("     modelPhenotype = " + config.get("modelPhenotype"));
+        System.out.println();
+        
+        printer.println("> StartTime: " + start.toString());
+        printer.println("> Search Parameters: ");
+        printer.println("          inputFile = " + config.get("inputFile"));
+        printer.println("  maxNumberOfInputs = " + config.get("maxNumberOfInputs"));
+        printer.println("     numberOfInputs = " + config.get("numberOfInputs"));
+        printer.println("   outputInRealtime = " + config.get("outputInRealtime"));
+        printer.println("            eCutOff = " + config.get("eCutOff"));
+        printer.println("useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
+        printer.println("         iGeneStart = " + config.get("iGeneStart"));
+        printer.println("           iGeneEnd = " + config.get("iGeneEnd"));
+        printer.println("        useParallel = " + config.get("useParallel"));
+        printer.println("         outputFile = " + outFile);
+        printer.println("     modelPhenotype = " + config.get("modelPhenotype"));
+        printer.println();
+        
+        System.out.println("Initiating...");
+        printer.println("Initiating...");
+        
+        //JFuzzyMachine jfuzz = new JFuzzyMachine(config);        
         fuzzifier = new Fuzzifier();
         this.config = config;
         this.exprs = new Table(config.get("inputFile"), Table.TableType.DOUBLE);
@@ -53,8 +107,43 @@ public class JFuzzyMachine {
             phenoExprs = new Table(config.get("inputPhenoFile"), Table.TableType.DOUBLE);
             phenoFMat = fuzzifier.getFuzzyMatrix(phenoExprs, ExpressionType.PHENOTYPE); 
         }
+               
+        
+        System.out.println("Searching (Exhaustive Search)...");
+        printer.println("Searching (Exhaustive Search)...");
+        
+        // -------------------- //
+        
+        this.search(printer);
+        
+        // -------------------- //
+        
+        System.out.println("\n...Done!");
+        printer.println("\n...Done!");
+       
+        Date end = new Date();
+        long end_time = end.getTime();
+        
+        printer.println("> Epilogue "); 
+        System.out.println("> Epilogue "); 
+        System.out.println("\n   Started: " + start_time + ": " + start.toString());
+        System.out.println("     Ended: " + end_time + ": " + end.toString());
+        System.out.println("Total time: " + (end_time - start_time) + " milliseconds; " + 
+                        TimeUnit.MILLISECONDS.toMinutes(end_time - start_time) + " min(s), "
+                        + (TimeUnit.MILLISECONDS.toSeconds(end_time - start_time) - 
+                           TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(end_time - start_time))) + " seconds.");
+        
+        printer.println("\n   Started: " + start_time + ": " + start.toString());
+        printer.println("     Ended: " + end_time + ": " + end.toString());
+        printer.println("Total time: " + (end_time - start_time) + " milliseconds; " + 
+                        TimeUnit.MILLISECONDS.toMinutes(end_time - start_time) + " min(s), "
+                        + (TimeUnit.MILLISECONDS.toSeconds(end_time - start_time) - 
+                           TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(end_time - start_time))) + " seconds.");
+        
+        printer.close();
     }
     
+       
     private void searchHelper5(int numberOfInputs, 
                                  String outputGene, 
                                     String[] otherGenes,
@@ -567,14 +656,15 @@ public class JFuzzyMachine {
         
     }
     
-    
- 
-    
+    public void done() throws Throwable{       
+                
+    }
+     
     /**
      * @param args the command line arguments
      * @throws java.io.IOException
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, Throwable {
         
         // check args are well specified on commandline
         if(args.length < 1){
@@ -583,121 +673,11 @@ public class JFuzzyMachine {
             Runtime.getRuntime().exit(-1);
         }
         
+        //ConfigFileReader cReader = new ConfigFileReader();
+        HashMap<String, String> config = ConfigFileReader.read(args[0]); // configuration file path
+        JFuzzyMachine jfuzzy = new JFuzzyMachine(config);
+        //jfuzzy.finalize();
         
-        System.out.println("Starting...");
-        Date start = new Date();
-        long start_time = start.getTime();
-
-        // Read input file...
-        //boolean modelPhenotype = false;
-        ConfigFileReader cReader = new ConfigFileReader();
-        HashMap<String, String> config = cReader.read(args[0]); // configuration file path
-        // instantiate print object...
-        String outFile = config.get("inputFile"); //expression matrix file....
-        outFile = outFile.replace(".txt", "").replace(".tsv", "");
-        String outputDir = config.get("outputDir");
-        outFile = outputDir + File.separator + new File(outFile).getName();        
-               
-        outFile = outFile + "." + 
-                    config.get("iGeneStart") + "." + 
-                        config.get("iGeneEnd") + "." +
-                            config.get("numberOfInputs");        
-        /*                    
-        if(args.length > 1){ // input includes other commandLine parameters; these supercede those specified in the config file....           
-            config.replace("iGeneStart", args[1]);
-            config.replace("iGeneEnd", args[2]);
-            outFile = outFile + "." + args[1] + "." + args[2];
-            
-            if(Integer.parseInt(config.get("iGeneStart"))==0){
-                config.replace("modelPhenotype", "TRUE"); 
-                 // in this case, all other args MUST be provided in configuration file...                                
-            }
-        }
-        
-        if(args.length > 3){ // has more commandline parameters..
-            config.replace("numberOfInputs", args[3]);
-            outFile = outFile + "." + args[3];
-        }
-        
-        if(args.length > 4){
-            config.replace("eCutOff", args[4]);
-        }
-        
-        if(args.length > 5){
-            config.replace("useParallel", args[5]);
-        }f       
-        */     
-        
-        outFile = outFile + "." + config.get("useParallel") + ".jfuz";
-        PrintWriter printer = new PrintWriter(outFile);  
-        //Print Parammeters to stderr and        
-        System.out.println("> StartTime: " + start.toString());
-        System.out.println("> Search Parameters: ");
-        System.out.println("          inputFile = " + config.get("inputFile"));
-        System.out.println("  maxNumberOfInputs = " + config.get("maxNumberOfInputs"));
-        System.out.println("     numberOfInputs = " + config.get("numberOfInputs"));
-        System.out.println("   outputInRealtime = " + config.get("outputInRealtime"));
-        System.out.println("            eCutOff = " + config.get("eCutOff"));
-        System.out.println("useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
-        System.out.println("         iGeneStart = " + config.get("iGeneStart"));
-        System.out.println("           iGeneEnd = " + config.get("iGeneEnd"));
-        System.out.println("        useParallel = " + config.get("useParallel"));
-        System.out.println("         outputFile = " + outFile);
-        System.out.println("     modelPhenotype = " + config.get("modelPhenotype"));
-        System.out.println();
-        
-        printer.println("> StartTime: " + start.toString());
-        printer.println("> Search Parameters: ");
-        printer.println("          inputFile = " + config.get("inputFile"));
-        printer.println("  maxNumberOfInputs = " + config.get("maxNumberOfInputs"));
-        printer.println("     numberOfInputs = " + config.get("numberOfInputs"));
-        printer.println("   outputInRealtime = " + config.get("outputInRealtime"));
-        printer.println("            eCutOff = " + config.get("eCutOff"));
-        printer.println("useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
-        printer.println("         iGeneStart = " + config.get("iGeneStart"));
-        printer.println("           iGeneEnd = " + config.get("iGeneEnd"));
-        printer.println("        useParallel = " + config.get("useParallel"));
-        printer.println("         outputFile = " + outFile);
-        printer.println("     modelPhenotype = " + config.get("modelPhenotype"));
-        printer.println();
-        
-        System.out.println("Initiating...");
-        printer.println("Initiating...");
-        JFuzzyMachine jfuzz = new JFuzzyMachine(config);
-        
-        System.out.println("Searching (Exhaustive Search)...");
-        printer.println("Searching (Exhaustive Search)...");
-        
-        // -------------------- //
-        
-        jfuzz.search(printer);
-        
-        // -------------------- //
-        
-        System.out.println("\n...Done!");
-        printer.println("\n...Done!");
-        
-        Date end = new Date();
-        long end_time = end.getTime();
-        
-        printer.println("> Epilogue "); 
-        System.out.println("> Epilogue "); 
-        System.out.println("\n   Started: " + start_time + ": " + start.toString());
-        System.out.println("     Ended: " + end_time + ": " + end.toString());
-        System.out.println("Total time: " + (end_time - start_time) + " milliseconds; " + 
-                        TimeUnit.MILLISECONDS.toMinutes(end_time - start_time) + " min(s), "
-                        + (TimeUnit.MILLISECONDS.toSeconds(end_time - start_time) - 
-                           TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(end_time - start_time))) + " seconds.");
-        
-        printer.println("\n   Started: " + start_time + ": " + start.toString());
-        printer.println("     Ended: " + end_time + ": " + end.toString());
-        printer.println("Total time: " + (end_time - start_time) + " milliseconds; " + 
-                        TimeUnit.MILLISECONDS.toMinutes(end_time - start_time) + " min(s), "
-                        + (TimeUnit.MILLISECONDS.toSeconds(end_time - start_time) - 
-                           TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(end_time - start_time))) + " seconds.");
-        
-        printer.close();
     }
    
-
 }

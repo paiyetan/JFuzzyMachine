@@ -30,9 +30,12 @@ public class Graph {
     private HashMap<String, LinkedList<String>> nodeToInputNodes;
     private LinkedList<String> nodes;
     private int[][] directedAdjMatrix;
-    private final File[] jfuzzFiles;
-    private final double fitCutoff;
+    private File[] jfuzzFiles;
+    private double fitCutoff;
     
+    private String outputsDir;
+    
+     
     public Graph(File[] jfuzzFiles, double fitCutOff) throws IOException{
         this.jfuzzFiles = jfuzzFiles;
         this.fitCutoff = fitCutOff;
@@ -41,7 +44,104 @@ public class Graph {
         updateNodeToInputNodesMap();
         extractDirectedAdjMatrix();
     }
-
+    
+    //public Graph(String configFilePath) throws IOException{
+    public Graph(HashMap<String, String> config) throws IOException{
+        
+        String runId;
+        String input;
+        double fitCutOff;       
+        boolean useAnnotatedGraphModel;
+        boolean outputEdges;                    
+        
+        String adjMatOutputFile;
+        String edgesOutputFile = null;  
+        String fittedModelFile = null;
+        String ruleFrequenciesFile = null;
+        
+        int topFittedModelsToOutput = 0;
+        
+        
+        //include reading from a .config file..
+        /**
+         * 
+         * runId="xxxix" //user specified id prepended to outputted filenames. 
+         * input="./inputFile-or-directory-path/"
+         * fitCutOff=0.0000  // fit cutOff for which an observed edge is considered
+         * useAnnotatedGraphModel=FALSE //[default=FALSE] if TRUE, outputted adjacency matrix is a directed graph
+         * outputEdges=FALSE //by default, program outputs only an adjacency matrix file (.adj or .mat file)
+         * 
+         * 
+         * 
+         * 
+         * 
+         */
+        //ConfigFileReader cReader = new ConfigFileReader();
+        //HashMap<String, String> config = cReader.read(configFilePath); // configuration file path
+        
+        // initialize run variables/configuration...
+        runId = config.get("runId");
+        input = config.get("input");
+        fitCutOff = Double.parseDouble(config.get("fitCutOff"));
+        
+        useAnnotatedGraphModel = Boolean.parseBoolean(config.get("useAnnotatedGraphModel"));
+        outputEdges = Boolean.parseBoolean(config.get("outputEdges"));
+        //includesPheno = Boolean.parseBoolean(config.get("includesPheno"));   
+        
+        topFittedModelsToOutput = Integer.parseInt(config.get("topFittedModelsToOutput"));
+        
+        File inputFile = new File(input);
+        File[] inputFiles;
+        //String outputsDir;
+        if(inputFile.isDirectory()){
+            inputFiles = inputFile.listFiles();
+            //place output(s) in a subdirectory called "runJFuzzUtils/"
+            outputsDir = inputFile.getPath() + File.separator + "runJFuzzUtils";
+            new File(outputsDir).mkdirs();
+            adjMatOutputFile = outputsDir + File.separator + runId + "_runJFuzzUtils.adj";           
+            if(outputEdges){
+                edgesOutputFile = outputsDir + File.separator + runId + "_runJFuzzUtils.edg"; 
+                
+            }
+            fittedModelFile = outputsDir + File.separator + runId + "_runJFuzzUtils.fit";
+            ruleFrequenciesFile = outputsDir + File.separator + runId + "_runJFuzzUtils.fre";
+                        
+        }else{
+            inputFiles = new File[1];
+            inputFiles[0] = inputFile;            
+            adjMatOutputFile = inputFile.getParent() + File.separator + runId + "_runJFuzzUtils.adj";
+            if(outputEdges){
+                edgesOutputFile = inputFile.getParent() + File.separator + runId + "_runJFuzzUtils.edg";              
+            }
+            fittedModelFile = inputFile.getParent()  + File.separator + runId + "_runJFuzzUtils.fit";
+            ruleFrequenciesFile = inputFile.getParent()  + File.separator + runId + "_runJFuzzUtils.fre";
+        }
+        
+        if(useAnnotatedGraphModel){
+            System.out.println("Using the 'Annotated (Directed) Graph' model...");
+            AnnotatedGraph graph = new AnnotatedGraph(inputFiles, fitCutOff);           
+            System.out.println("Printing output(s)...");
+            graph.getAdjMatrix().print(adjMatOutputFile);
+            if(outputEdges){
+                graph.printEdges(edgesOutputFile);
+                graph.printEdges2(edgesOutputFile);
+            }
+            //print fitted models
+            graph.printBestFitModels(fittedModelFile); // best fit models...
+            graph.printAllFittedModels(fittedModelFile, topFittedModelsToOutput); // all fitted models...
+            //print rule frequencies...
+            graph.printRuleFrequencies(ruleFrequenciesFile);
+            
+        }else{
+            System.out.println("Using the 'Undirected Graph' model...");
+            Graph graph = new Graph(inputFiles, fitCutOff); 
+            
+            System.out.println("Printing output(s)...");
+            graph.getAdjMatrix().print(adjMatOutputFile);
+        }
+        
+    }
+    
     private void getNodeToInputNodes() throws FileNotFoundException, IOException {
         nodeToInputNodes = new HashMap();
         for(File jfuzzFile : jfuzzFiles){
@@ -138,8 +238,10 @@ public class Graph {
         String[] nodesArr = nodes.toArray(new String[nodes.size()]);
         return new Matrix(nodesArr, nodesArr, directedAdjMatrix);
     }
-    
-    
+
+    public String getOutputsDir() {
+        return outputsDir;
+    }    
     
     public static void main(String[] args) throws IOException{
         
@@ -147,97 +249,8 @@ public class Graph {
         Date start = new Date();
         long start_time = start.getTime();              
         
-        String runId;
-        String input;
-        double fitCutOff;       
-        boolean useAnnotatedGraphModel;
-        boolean outputEdges;                    
-        
-        String adjMatOutputFile;
-        String edgesOutputFile = null;  
-        String fittedModelFile = null;
-        String ruleFrequenciesFile = null;
-        
-        int topFittedModelsToOutput = 0;
-        
-        
-        //include reading from a .config file..
-        /**
-         * 
-         * runId="xxxix" //user specified id prepended to outputted filenames. 
-         * input="./inputFile-or-directory-path/"
-         * fitCutOff=0.0000  // fit cutOff for which an observed edge is considered
-         * useAnnotatedGraphModel=FALSE //[default=FALSE] if TRUE, outputted adjacency matrix is a directed graph
-         * outputEdges=FALSE //by default, program outputs only an adjacency matrix file (.adj or .mat file)
-         * 
-         * 
-         * 
-         * 
-         * 
-         */
-        ConfigFileReader cReader = new ConfigFileReader();
-        HashMap<String, String> config = cReader.read(args[0]); // configuration file path
-        
-        // initialize run variables/configuration...
-        runId = config.get("runId");
-        input = config.get("input");
-        fitCutOff = Double.parseDouble(config.get("fitCutOff"));
-        
-        useAnnotatedGraphModel = Boolean.parseBoolean(config.get("useAnnotatedGraphModel"));
-        outputEdges = Boolean.parseBoolean(config.get("outputEdges"));
-        //includesPheno = Boolean.parseBoolean(config.get("includesPheno"));   
-        
-        topFittedModelsToOutput = Integer.parseInt(config.get("topFittedModelsToOutput"));
-        
-        File inputFile = new File(input);
-        File[] inputFiles;
-        String outputsDir;
-        if(inputFile.isDirectory()){
-            inputFiles = inputFile.listFiles();
-            //place output(s) in a subdirectory called "runJFuzzUtils/"
-            outputsDir = inputFile.getPath() + File.separator + "runJFuzzUtils";
-            new File(outputsDir).mkdirs();
-            adjMatOutputFile = outputsDir + File.separator + runId + "_runJFuzzUtils.adj";           
-            if(outputEdges){
-                edgesOutputFile = outputsDir + File.separator + runId + "_runJFuzzUtils.edg"; 
-                
-            }
-            fittedModelFile = outputsDir + File.separator + runId + "_runJFuzzUtils.fit";
-            ruleFrequenciesFile = outputsDir + File.separator + runId + "_runJFuzzUtils.fre";
-                        
-        }else{
-            inputFiles = new File[1];
-            inputFiles[0] = inputFile;            
-            adjMatOutputFile = inputFile.getParent() + File.separator + runId + "_runJFuzzUtils.adj";
-            if(outputEdges){
-                edgesOutputFile = inputFile.getParent() + File.separator + runId + "_runJFuzzUtils.edg";              
-            }
-            fittedModelFile = inputFile.getParent()  + File.separator + runId + "_runJFuzzUtils.fit";
-            ruleFrequenciesFile = inputFile.getParent()  + File.separator + runId + "_runJFuzzUtils.fre";
-        }
-        
-        if(useAnnotatedGraphModel){
-            System.out.println("Using the 'Annotated (Directed) Graph' model...");
-            AnnotatedGraph graph = new AnnotatedGraph(inputFiles, fitCutOff);           
-            System.out.println("Printing output(s)...");
-            graph.getAdjMatrix().print(adjMatOutputFile);
-            if(outputEdges){
-                graph.printEdges(edgesOutputFile);
-                graph.printEdges2(edgesOutputFile);
-            }
-            //print fitted models
-            graph.printBestFitModels(fittedModelFile); // best fit models...
-            graph.printAllFittedModels(fittedModelFile, topFittedModelsToOutput); // all fitted models...
-            //print rule frequencies...
-            graph.printRuleFrequencies(ruleFrequenciesFile);
-            
-        }else{
-            System.out.println("Using the 'Undirected Graph' model...");
-            Graph graph = new Graph(inputFiles, fitCutOff); 
-            
-            System.out.println("Printing output(s)...");
-            graph.getAdjMatrix().print(adjMatOutputFile);
-        }
+        HashMap<String, String> config = ConfigFileReader.read(args[0]); // configuration file path        
+        Graph gGraph = new Graph(config);
                 
         System.out.println("\n...Done!");        
         Date end = new Date();
