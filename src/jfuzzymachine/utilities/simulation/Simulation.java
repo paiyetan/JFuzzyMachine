@@ -1,12 +1,16 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package utilities.simulation;
+  jFuzzyMachine (c) 2020, by Paul Aiyetan
 
-import utilities.graph.Model;
-import utilities.graph.Vertex;
+  jFuzzyMachine is licensed under a
+  Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
+
+  You should have received a copy of the license along with this
+  work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>
+ */
+package jfuzzymachine.utilities.simulation;
+
+import jfuzzymachine.utilities.graph.Model;
+import jfuzzymachine.utilities.graph.Vertex;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -42,6 +46,9 @@ public class Simulation {
     private double k;
     
     private boolean simulateKnockout;
+    //private String geneToKnockout;
+    
+    private String[] knockouts;
     
     public Simulation(HashMap<Vertex, LinkedList<Model>> outputToModelsMap,
                       double[] initialValues,
@@ -72,9 +79,29 @@ public class Simulation {
         this.tanTransform = tanTransform;
         this.logitTransform = logitTransform;
         this.k = k;
+        
+        this.simulateKnockout = false;//to initiate as not to return nullValuePointer Exception in downstream call
+        this.knockouts = null;
+        
+    }
+    
+    public void setSimulateKnockout(boolean simulateKnockout){
+        this.simulateKnockout = simulateKnockout;
+    }
+
+    public void setGeneToKnockOut(String geneToKnockout){
+        //this.geneToKnockout = geneToKnockout;
+        this.knockouts = new String[1];
+        knockouts[0] = geneToKnockout;
+    }
+    
+    public void setKnockOuts(String[] geneKnockouts){
+        this.knockouts = geneKnockouts;
     }
 
     public void run(){
+        
+        //System.out.println(Thread.currentThread().getName());
         /**
          * Calculate the next value, I_1 of each node by the initial condition and 
            the fuzzy relations inferred from the data; 
@@ -102,10 +129,20 @@ public class Simulation {
         //System.out.println("# of nodes in outputsToModelsMap: " + outputsToModelsMap.keySet().size());
         //for(Vertex outputNode : outputNodes){
         //    System.out.printf("  output node found: %s", outputNode.getId());
-        //}        
-        
-        
+        //} 
+        //int knockedOutGeneIndex; // 
         while (iteration < maxIterations){
+            
+            if(this.simulateKnockout){           
+                Minimum min = new Minimum(currentValues);
+                //knockedOutGeneIndex = exprs.getRowIndex(geneToKnockout); //get index of knockedout get                                
+                //currentValues[knockedOutGeneIndex] = min.minimum();                
+                for(String knockout : knockouts){
+                    int knockoutGeneIndex = exprs.getRowIndex(knockout); //get row index of a knockedout gene...
+                    currentValues[knockoutGeneIndex] = min.minimum();
+                }
+            }
+            
             //infer new values from current values...
             inferredValues = new double[currentValues.length];
             nextValues = new double[inferredValues.length];
@@ -187,5 +224,24 @@ public class Simulation {
     
     public LinkedList<double[]> getDeltaValuesList(){
         return this.deltaValuesList;
+    }
+    
+    
+    
+    
+    class Minimum{
+        double[] arr;
+        
+        Minimum(double[] arr){
+            this.arr = arr;
+        }
+        
+        double minimum(){
+            double min = arr[0];
+            for(int i = 1; i < arr.length; i++)
+                if(arr[i] < min)
+                    min = arr[i];               
+            return(min);
+        }
     }
 }

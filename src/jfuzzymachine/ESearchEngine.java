@@ -1,7 +1,11 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+  jFuzzyMachine (c) 2020, by Paul Aiyetan
+
+  jFuzzyMachine is licensed under a
+  Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
+
+  You should have received a copy of the license along with this
+  work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>
  */
 package jfuzzymachine;
 
@@ -9,7 +13,7 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import jfuzzymachine.JFuzzyMachine.ExpressionType;
-import tables.Table;
+import jfuzzymachine.tables.Table;
 
 
 /**

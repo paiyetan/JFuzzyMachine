@@ -1,9 +1,13 @@
 /*
- * To change this license header, choose License Headers bestFitModel Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template bestFitModel the editor.
+  jFuzzyMachine (c) 2020, by Paul Aiyetan
+
+  jFuzzyMachine is licensed under a
+  Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
+
+  You should have received a copy of the license along with this
+  work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>
  */
-package utilities.graph;
+package jfuzzymachine.utilities.graph;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,7 +15,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -303,7 +306,7 @@ public class AnnotatedGraph {
         printer.close();       
     }
     
-    public void printAllFittedModels(String outputFile) throws FileNotFoundException{
+    public void printAllFittedModels(String outputFile, int topFittedModelsToOutput) throws FileNotFoundException{
         // how is this different from an edge(s) table....we could describe with filename _OutputFile.fit2
         PrintWriter printer = new PrintWriter(outputFile+2);
         printer.println("Output\tInputNodes\tRules\tFits");
@@ -317,12 +320,24 @@ public class AnnotatedGraph {
             //                this.getInputNodesString(mappedModels) + "\t" +
             //                this.getRulesString(mappedModels) + "\t" +
             //                this.getFitsString(mappedModels));
-            for(int i = mappedModels.size()-1; i >= 0; i--){
-                Model fittedModel = mappedModels.get(i);
-                printer.println(output.getId() + "\t" +
-                                fittedModel.getInputNodesString() + "\t" +
-                                fittedModel.getRulesString() + "\t" +
-                                fittedModel.getFit());
+            //for(int i = mappedModels.size()-1; i >= 0; i--){
+            if(mappedModels.size() <= topFittedModelsToOutput){
+                for(int i = mappedModels.size()-1; i >= 0; i--){
+                    Model fittedModel = mappedModels.get(i);
+                    printer.println(output.getId() + "\t" +
+                                    fittedModel.getInputNodesString() + "\t" +
+                                    fittedModel.getRulesString() + "\t" +
+                                    fittedModel.getFit());
+                }
+                
+            }else{
+                for(int i = mappedModels.size()-1; i >= (mappedModels.size() - topFittedModelsToOutput); i--){
+                    Model fittedModel = mappedModels.get(i);
+                    printer.println(output.getId() + "\t" +
+                                    fittedModel.getInputNodesString() + "\t" +
+                                    fittedModel.getRulesString() + "\t" +
+                                    fittedModel.getFit());
+                }
             }
         }
         printer.close();  
