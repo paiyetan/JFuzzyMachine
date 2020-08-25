@@ -15,7 +15,9 @@ import org.apache.commons.math3.util.Combinations;
 public class StringsTest {
     public static void main(String[] args){
         String str = "> End Search Result Table ";
+        String str2 = "Adekolajo.jfuz";
         System.out.println(str.startsWith("> End Search"));
+        System.out.println(str2.endsWith(".jfuz"));
             
     }
 }

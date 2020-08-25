@@ -36,7 +36,7 @@ public class JFuzzyMachineMHPPx {
         return config;
     }
        
-    private void monitor() throws FileNotFoundException, IOException, InterruptedException {
+    private synchronized void monitor() throws FileNotFoundException, IOException, InterruptedException {
         
         //monitor execution of provious initiated jFuzzyMachine executions....
         // 1. get the number of expected .jFuzz output files...
@@ -51,7 +51,7 @@ public class JFuzzyMachineMHPPx {
             }
         }
         reader.close();
-        
+        System.out.println("Identified " + processes + " processes to monitor");
         // 2. get the output directory where jfuzzymachine places it's .jfuz output files...
         //    - since this extends the MHPP plug, output directory would be as formulated in the "jfuzzymachine.utilities.SlurmFileMaker"
         String outputDir = config.get("outputDir");
@@ -68,7 +68,8 @@ public class JFuzzyMachineMHPPx {
         int itr = 0;
         while(!completed){ // while sbatch processes are not completed...
             itr++;
-            Runtime.getRuntime().wait(5000); // wait a little bit...
+            //Runtime.getRuntime().wait(5000); // wait a little bit...
+            wait(5000); //wait for five seconds (5000 milliseconds)...
             File[] jfuzzFiles = new File(runJFuzzyDir).listFiles();
             if(jfuzzFiles.length < processes){
                 //wait for some time and continue again...
@@ -99,7 +100,7 @@ public class JFuzzyMachineMHPPx {
     }
     
     
-    public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException, TableBindingException{
+    public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException, TableBindingException, Throwable{
         
         
         System.out.println("Starting JFuzzyMachineMHPPx...");
@@ -131,6 +132,8 @@ public class JFuzzyMachineMHPPx {
         RCaller rcaller = new RCaller();
         rcaller.execute(rCMD);
         
+        
+        /////////////////////////////////////////////////////////
         System.out.println("Running JfuzzyMachine for 4 regulatory input nodes...");
         String jConfigFilePath = args[2];
         HashMap<String, String> jConfig = ConfigFileReader.read(jConfigFilePath);  
@@ -143,13 +146,17 @@ public class JFuzzyMachineMHPPx {
         // re-compose rCaller output file (regulonMap)
         String regulonsMapFile = graphOutputsDir + File.separator + "oneTwoThreeInputs.topProbableRegulonsMap.txt";
         jConfig.replace("regulonsMapFile", regulonsMapFile);    
+        
         // run jFuzzyMachine for 4 regulatory inputs...
         JFuzzyMachine jfuzzy = new JFuzzyMachine(jConfig);
+        jfuzzy.finalize();
+        //new JFuzzyMachine(jConfig);
         
         System.out.println("Runnig JfuzzyMachine for 5 regulatory nodes...");
         jConfig.replace("numberOfInputs","5");
         // run jFuzzyMachine for 5 regulatory inputs...
-        jfuzzy = new JFuzzyMachine(jConfig);
+        JFuzzyMachine jfuzzy2 = new JFuzzyMachine(jConfig);
+        jfuzzy2.finalize();
         
         System.out.println("Re-running post-processing...");
         graph = new Graph(gConfig);
@@ -165,7 +172,7 @@ public class JFuzzyMachineMHPPx {
         Evaluator eval = new Evaluator(eConfig);
         
         
-        System.out.println("\n...Done!");        
+        System.out.println("\n...Done!");     
         Date end = new Date();
         long end_time = end.getTime();
         

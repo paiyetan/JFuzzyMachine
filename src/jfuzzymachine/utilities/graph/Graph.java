@@ -11,6 +11,7 @@ package jfuzzymachine.utilities.graph;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -94,7 +95,13 @@ public class Graph {
         File[] inputFiles;
         //String outputsDir;
         if(inputFile.isDirectory()){
-            inputFiles = inputFile.listFiles();
+            inputFiles = inputFile.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    //throw new UnsupportedOperationException("Not supported yet."); 
+                    return pathname.getName().endsWith(".jfuz");
+                }
+            });
             //place output(s) in a subdirectory called "runJFuzzUtils/"
             outputsDir = inputFile.getPath() + File.separator + "runJFuzzUtils";
             new File(outputsDir).mkdirs();
