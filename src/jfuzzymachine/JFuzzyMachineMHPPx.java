@@ -64,7 +64,7 @@ public class JFuzzyMachineMHPPx {
             }
         }
         reader.close();
-        System.out.println("Identified " + processes + " processes to monitor");
+        System.out.println("[" + new Date().toString() + "]:Identified " + processes + " processes to monitor");
         
 
         // 2. get the output directory where jfuzzymachine places it's .jfuz output files...
@@ -106,7 +106,7 @@ public class JFuzzyMachineMHPPx {
         while(!completed){ // while sbatch processes are not completed...
             itr++;
             if((itr % 100) == 0){
-                    System.out.println(new Date().toString() + "...Monitoring, all .jfuz processes still incomplete");
+                    System.out.println("[" + new Date().toString() + "]:...Monitoring, all .jfuz processes still incomplete");
             } 
             //Runtime.getRuntime().wait(5000); // wait a little bit...
             wait(5000); //wait for five seconds (5000 milliseconds)...
@@ -119,7 +119,7 @@ public class JFuzzyMachineMHPPx {
             // check if all the associated .jfuz files have all  been initiated or started, a situation that
             // may arise because the slurm process has not been initiated
             if((itr % 25) == 0){
-                System.out.println(new Date().toString() + "...Checking if all .jfuz processes have began");
+                System.out.println("[" + new Date().toString() + "]:...Checking if all .jfuz processes have began");
             }            
             boolean allInitiated = true;
             for(File jfuzzFile : jfuzzFiles){
@@ -130,7 +130,7 @@ public class JFuzzyMachineMHPPx {
             }
             
             if(allInitiated){               
-                System.out.println(new Date().toString() + ": All batched run .jfuz processes have began...");
+                System.out.println("[" + new Date().toString() + "]: All batched run .jfuz processes have began...");
                
                 // check that all outputted .jfuz files have the last line entry...
                 int filesWithCompletedExec = 0;

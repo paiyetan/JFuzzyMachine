@@ -387,7 +387,7 @@ public class SlurmRunFileMaker {
         }
             
         //make parent SLURM run file...
-        String slurmRunParentFile = System.getProperty("user.dir") + // the directory from which program was initiated
+        slurmRunParentFile = System.getProperty("user.dir") + // the directory from which program was initiated
                                           File.separator + "slurmruns.sh";
         PrintWriter pr = new PrintWriter(slurmRunParentFile);
         slurmRunFiles.forEach((slurmRunFile) -> {
