@@ -390,6 +390,7 @@ public class SlurmRunFileMaker {
         slurmRunParentFile = System.getProperty("user.dir") + // the directory from which program was initiated
                                           File.separator + "slurmruns.sh";
         PrintWriter pr = new PrintWriter(slurmRunParentFile);
+        pr.println("#! /bin/sh"); // print firstln of file -- path to an interpreter...s
         slurmRunFiles.forEach((slurmRunFile) -> {
             pr.println("sbatch " + slurmRunFile);
         });

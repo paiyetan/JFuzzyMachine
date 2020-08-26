@@ -170,7 +170,9 @@ public class JFuzzyMachineMHPPx {
         //chmod
         command = "chmod 777 "  + slurmRunParentFile;
         syscaller.execute(command); // change file mode to executable        
-        command = "sbatch " + slurmRunParentFile;
+        //command = "sbatch " + slurmRunParentFile;
+        command = slurmRunParentFile;
+        
         syscaller.execute(command); // execute the sbatch call...
 
         System.out.println("[" + new Date().toString() + "]:Monitoring first batched JFuzzyMachine(s) processes...");
