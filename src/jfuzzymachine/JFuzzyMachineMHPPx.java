@@ -11,16 +11,21 @@ import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import jfuzzymachine.exceptions.TableBindingException;
 import jfuzzymachine.tables.Table;
 import jfuzzymachine.utilities.ConfigFileReader;
 import jfuzzymachine.utilities.Evaluator;
 import jfuzzymachine.utilities.SlurmRunFileMaker;
 import jfuzzymachine.utilities.graph.Graph;
-import jfuzzymachine.utilities.rconnect.RCaller;
+import jfuzzymachine.utilities.sysconnect.SystemCaller;
 
 /**
  *
@@ -45,16 +50,23 @@ public class JFuzzyMachineMHPPx {
         // 1. get the number of expected .jFuzz output files...
         //     - this would be equal to the number of sbatch processes in the 'slurmruns.sh" file in working directory...
         int processes = 0;
-        String slurmrunsFile = System.getProperty("user.dir") + File.separator + "slurmruns.sh";
-        BufferedReader reader = new BufferedReader(new FileReader(slurmrunsFile));
+        LinkedList<String> slurmscriptFiles = new LinkedList();
+        String slurmBatchRunsFile = System.getProperty("user.dir") + File.separator + "slurmruns.sh";
+        
+        
+        BufferedReader reader = new BufferedReader(new FileReader(slurmBatchRunsFile));
         String line;
         while((line = reader.readLine())!= null){
             if(line.startsWith("sbatch")){
                 processes++;
+                String slurmscriptFile = line.replace("sbatch ", "");
+                slurmscriptFiles.add(slurmscriptFile);
             }
         }
         reader.close();
         System.out.println("Identified " + processes + " processes to monitor");
+        
+
         // 2. get the output directory where jfuzzymachine places it's .jfuz output files...
         //    - since this extends the MHPP plug, output directory would be as formulated in the "jfuzzymachine.utilities.SlurmFileMaker"
         String outputDir = config.get("outputDir");
@@ -63,27 +75,64 @@ public class JFuzzyMachineMHPPx {
         String inputFilename = inputFile.getName().replace(".txt", "");
         String outputFilesDir = outputDir + File.separator + inputFilename;
         String runJFuzzyDir = outputFilesDir + File.separator + "runJFuzzy";
-        
+        // alternatively,
+        /*
+        String slurmscriptFile = slurmscriptFiles.getFirst();
+        String slurmscriptDir = new File(slurmscriptFile).getParent();
+        runJFuzzyDir = slurmscriptDir.replace("slurmscripts","runJFuzzy");
+        */        
         config.put("runJFuzzyDir", runJFuzzyDir);
         
+        // b. get the output .jfuz file associated with each slurmscriptFile..
+        LinkedList<String> jfuzFiles = new LinkedList();
+        for(String slurmscriptFile : slurmscriptFiles){
+            String slurmscriptDir = new File(slurmscriptFile).getParent();
+            String slurmscriptFilename = new File(slurmscriptFile).getName();
+            runJFuzzyDir = slurmscriptDir.replace("slurmscripts","runJFuzzy"); 
+            String prefix = slurmscriptFilename.split("\\.")[0];
+            String basename = slurmscriptFilename.replace(prefix+".", "").replace("sh", "");
+            String jfuzFile = runJFuzzyDir + File.separator + basename + config.get("useParallel") + ".jfuz";
+            jfuzFiles.add(jfuzFile);
+        }
+        File[] jfuzzFiles = new File[jfuzFiles.size()];
+        for(int i=0; i < jfuzFiles.size(); i++){
+            jfuzzFiles[i] = new File(jfuzFiles.get(i));
+        }
+        
+               
         // 3. check for completion...
         boolean completed = false;
-        int itr = 0;
+        long itr = 0;
         while(!completed){ // while sbatch processes are not completed...
             itr++;
+            if((itr % 100) == 0){
+                    System.out.println(new Date().toString() + "...Monitoring, all .jfuz processes still incomplete");
+            } 
             //Runtime.getRuntime().wait(5000); // wait a little bit...
             wait(5000); //wait for five seconds (5000 milliseconds)...
-            File[] jfuzzFiles = new File(runJFuzzyDir).listFiles(new FileFilter() {
-                                                                        @Override
-                                                                        public boolean accept(File pathname) {
-                                                                            return pathname.getName().endsWith(".jfuz");
-                                                                        } //ensures only .jfuz files are selected...
-                                                                    });
-            if(jfuzzFiles.length < processes){
-                //wait for some time and continue again...
-                completed = false;
-            }else{
-                // check that all outputted .jfuzz file has the last line entry...
+            //jfuzzFiles = new File(runJFuzzyDir).listFiles(new FileFilter() {
+            //                                                            @Override
+            //                                                            public boolean accept(File pathname) {
+            //                                                                return pathname.getName().endsWith(".jfuz");
+            //                                                            } //ensures only .jfuz files are selected...
+            //                                                        });
+            // check if all the associated .jfuz files have all  been initiated or started, a situation that
+            // may arise because the slurm process has not been initiated
+            if((itr % 25) == 0){
+                System.out.println(new Date().toString() + "...Checking if all .jfuz processes have began");
+            }            
+            boolean allInitiated = true;
+            for(File jfuzzFile : jfuzzFiles){
+                if(!jfuzzFile.exists()){
+                    allInitiated = false;
+                    break;
+                }
+            }
+            
+            if(allInitiated){               
+                System.out.println(new Date().toString() + ": All batched run .jfuz processes have began...");
+               
+                // check that all outputted .jfuz files have the last line entry...
                 int filesWithCompletedExec = 0;
                 for(File jfuzzFile : jfuzzFiles){
                     reader = new BufferedReader(new FileReader(jfuzzFile));
@@ -94,35 +143,44 @@ public class JFuzzyMachineMHPPx {
                     }
                     reader.close();
                 }
+                
                 if(filesWithCompletedExec == processes){
                     completed = true;
                     break;
-                }
-            }
-            if((itr % 100) == 0){
-                System.out.println("...Monitoring, batched JFuzzyMachine(s) processes incomplete");
-            }
+                }                                
+            }           
         }
-        
-        //return;
     }
     
     
     public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException, TableBindingException, Throwable{
         
-        
-        System.out.println("Starting JFuzzyMachineMHPPx...");
         Date start = new Date();
+        System.out.println("[" + start.toString() + "]:Starting JFuzzyMachineMHPPx...");       
         long start_time = start.getTime();
 
         JFuzzyMachineMHPPx jFuzzMachMHPPx = new JFuzzyMachineMHPPx(args[0]); // mphh config file
-        System.out.println("Monitoring prior batched JFuzzyMachine(s) processes...");
+        
+        SlurmRunFileMaker sFMaker = new SlurmRunFileMaker();        
+        sFMaker.makeFiles(jFuzzMachMHPPx.getConfig());
+        String slurmRunParentFile = sFMaker.getSlurmRunParentFile();
+
+        SystemCaller syscaller = new SystemCaller();
+        String command;
+        //chmod
+        command = "chmod 777 "  + slurmRunParentFile;
+        syscaller.execute(command); // change file mode to executable        
+        command = "sbatch " + slurmRunParentFile;
+        syscaller.execute(command); // execute the sbatch call...
+
+        System.out.println("[" + new Date().toString() + "]:Monitoring first batched JFuzzyMachine(s) processes...");
         jFuzzMachMHPPx.monitor();//monitoring...
         
-        System.out.println("Appears batched JFuzzyMachine(s) processes are completed..."); //if completed
+        //jFuzzMachMHPPx.monitor();//monitoring...        
+        System.out.println("[" + new Date().toString() + "]:Batched jfuz processes are completed..."); //if completed
         
         
-        System.out.println("Running initial post-processing...");
+        System.out.println("[" + new Date().toString() + "]:Running initial post-processing...");
         String graphConfigFilePath = args[1]; // graph config files..
         HashMap<String, String> gConfig = ConfigFileReader.read(graphConfigFilePath);       
         gConfig.replace("input", jFuzzMachMHPPx.getConfig().get("runJFuzzyDir")); //update the output (input to Graph) parameter
@@ -137,11 +195,11 @@ public class JFuzzyMachineMHPPx {
                       " -t " + graphOutputsDir +
                       " -x oneTwoThreeInputs.";
         // "Rscript path-to-rscript.R -i inputFir -o outputTextDir -p prefixText"
-        RCaller rcaller = new RCaller();
+        SystemCaller rcaller = new SystemCaller();
         rcaller.execute(rCMD);
                 
         /////////////////////////////////////////////////////////
-        System.out.println("Running JfuzzyMachine for 4 or more regulatory input nodes...");
+        System.out.println("[" + new Date().toString() + "]:Running JfuzzyMachine for 4 or more regulatory input nodes...");
         String jConfigFilePath = args[2];
         HashMap<String, String> jConfig = ConfigFileReader.read(jConfigFilePath);  
         // re-modify the parameters: 
@@ -156,87 +214,99 @@ public class JFuzzyMachineMHPPx {
         
         
         if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("useMHPPxx"))){
+            
+            System.out.println("[" + new Date().toString() + "]:Using the MHPPxx approach...");       
             // call slurm run file maker,
             // modify input config file..
             // make slurm files,
             // run the slurm batch
             // monitor runs
-            SlurmRunFileMaker sFMaker = new SlurmRunFileMaker();
+            sFMaker = new SlurmRunFileMaker();
             jFuzzMachMHPPx.getConfig().replace("numberOfInputs", "4");
             jFuzzMachMHPPx.getConfig().replace("allInputsToNumberOfInputs", "FALSE");
             //jFuzzMachMHPPx.getConfig().replace("", "");
             
             sFMaker.makeFiles(jFuzzMachMHPPx.getConfig());
-            String slurmRunParentFile = sFMaker.getSlurmRunParentFile();
+            slurmRunParentFile = sFMaker.getSlurmRunParentFile();
             
+            syscaller = new SystemCaller();
+            //String command;
             
+            //chmod
+            command = "chmod 777 "  + slurmRunParentFile;
+            syscaller.execute(command); // change file mode to executable        
+            command = "sbatch " + slurmRunParentFile;
+            syscaller.execute(command); // execute the sbatch call...
+            
+            System.out.println("[" + new Date().toString() + "]:Monitoring batched jfuz processes...");
+            jFuzzMachMHPPx.monitor();//monitoring...
+            
+        }else{       
+            // run jFuzzyMachine for 4 regulatory inputs...
+            System.out.println("Running JfuzzyMachine for 4 input nodes...");
+            jConfig.replace("numberOfInputs","4");
+            JFuzzyMachine jfuzzy = null;
+            if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("modelPhenotype"))){
+                jConfig.replace("iGeneStart","0");
+                jConfig.replace("iGeneEnd","0");
+                jConfig.replace("modelPhenotype","TRUE");
+                jfuzzy = new JFuzzyMachine(jConfig); //run jFuzzy with modeling for phenotype first, then
+
+                jConfig.replace("iGeneStart","1");// first row...
+                jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+                jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+                jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+
+            }else{
+                jConfig.replace("iGeneStart","1");// first row...
+                jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+                jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+                jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+            }
+
+            jfuzzy.finalize();
+            //new JFuzzyMachine(jConfig);
+
+            /**
+             * 
+            System.out.println("Running JfuzzyMachine for 5 regulatory nodes...");
+            jConfig.replace("numberOfInputs","5");
+            // run jFuzzyMachine for 5 regulatory inputs...
+            JFuzzyMachine jfuzzy2 = new JFuzzyMachine(jConfig);
+            jfuzzy2.finalize();
+
+
+            // run jFuzzyMachine for 5 regulatory inputs...
+            System.out.println("\nRunning JfuzzyMachine for 5 input nodes...");
+            jConfig.replace("numberOfInputs","5");
+            JFuzzyMachine jfuzzy2 = null;
+            if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("modelPhenotype"))){
+                jConfig.replace("iGeneStart","0");
+                jConfig.replace("iGeneEnd","0");
+                jConfig.replace("modelPhenotype","TRUE");
+                jfuzzy2 = new JFuzzyMachine(jConfig); //run jFuzzy with modeling for phenotype first, then
+
+                jConfig.replace("iGeneStart","1");// first row...
+                jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+                jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+                jfuzzy2 = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+
+            }else{
+                jConfig.replace("iGeneStart","1");// first row...
+                jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+                jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+                jfuzzy2 = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+            }
+
+            jfuzzy2.finalize();
+            *
+            */ 
         }
         
-        
-        // run jFuzzyMachine for 4 regulatory inputs...
-        System.out.println("Running JfuzzyMachine for 4 input nodes...");
-        jConfig.replace("numberOfInputs","4");
-        JFuzzyMachine jfuzzy = null;
-        if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("modelPhenotype"))){
-            jConfig.replace("iGeneStart","0");
-            jConfig.replace("iGeneEnd","0");
-            jConfig.replace("modelPhenotype","TRUE");
-            jfuzzy = new JFuzzyMachine(jConfig); //run jFuzzy with modeling for phenotype first, then
-            
-            jConfig.replace("iGeneStart","1");// first row...
-            jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
-            jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
-            jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
-            
-        }else{
-            jConfig.replace("iGeneStart","1");// first row...
-            jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
-            jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
-            jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
-        }
-               
-        jfuzzy.finalize();
-        //new JFuzzyMachine(jConfig);
-        
-        /**
-         * 
-        System.out.println("Running JfuzzyMachine for 5 regulatory nodes...");
-        jConfig.replace("numberOfInputs","5");
-        // run jFuzzyMachine for 5 regulatory inputs...
-        JFuzzyMachine jfuzzy2 = new JFuzzyMachine(jConfig);
-        jfuzzy2.finalize();
-        
-        
-        // run jFuzzyMachine for 5 regulatory inputs...
-        System.out.println("\nRunning JfuzzyMachine for 5 input nodes...");
-        jConfig.replace("numberOfInputs","5");
-        JFuzzyMachine jfuzzy2 = null;
-        if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("modelPhenotype"))){
-            jConfig.replace("iGeneStart","0");
-            jConfig.replace("iGeneEnd","0");
-            jConfig.replace("modelPhenotype","TRUE");
-            jfuzzy2 = new JFuzzyMachine(jConfig); //run jFuzzy with modeling for phenotype first, then
-            
-            jConfig.replace("iGeneStart","1");// first row...
-            jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
-            jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
-            jfuzzy2 = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
-            
-        }else{
-            jConfig.replace("iGeneStart","1");// first row...
-            jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
-            jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
-            jfuzzy2 = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
-        }
-         
-        jfuzzy2.finalize();
-        *
-        */ 
-        
-        System.out.println("Re-running post-processing...");
+        System.out.println("[" + new Date().toString() + "]:Re-running post-processing...");
         graph = new Graph(gConfig);
         
-        System.out.println("Running evaluation...");
+        System.out.println("[" + new Date().toString() + "]:Running evaluation...");
         String eConfigFilePath = args[3];
         HashMap<String, String> eConfig = ConfigFileReader.read(eConfigFilePath);  
         // modify the parameter: fitFile (as formulated in the Graph class)
@@ -265,5 +335,26 @@ public class JFuzzyMachineMHPPx {
     
     
     
+    
+    
+    
+    
+    
+    
+    private static class StreamGobbler implements Runnable {
+        private InputStream inputStream;
+        private Consumer<String> consumer;
+
+        public StreamGobbler(InputStream inputStream, Consumer<String> consumer) {
+            this.inputStream = inputStream;
+            this.consumer = consumer;
+        }
+
+        @Override
+        public void run() {
+            new BufferedReader(new InputStreamReader(inputStream)).lines()
+              .forEach(consumer);
+        }
+    }
      
 }

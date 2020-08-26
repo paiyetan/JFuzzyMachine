@@ -4,7 +4,7 @@
  * and open the template in the editor.
 http://stackoverflow.com/questions/13008526/runtime-getruntime-execcmd-hanging
  */
-package jfuzzymachine.utilities.rconnect;
+package jfuzzymachine.utilities.sysconnect;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  *
  * @author paiyetan
  */
-public class RCaller {
+public class SystemCaller {
     
     public void execute(String cmd){
 
@@ -30,7 +30,7 @@ public class RCaller {
             p.waitFor(); 
 
         } catch (IOException ex) {  
-            Logger.getLogger(RCaller.class.getName()).log(Level.SEVERE, null, ex);  
+            Logger.getLogger(SystemCaller.class.getName()).log(Level.SEVERE, null, ex);  
         }catch (Exception e) {  
             e.printStackTrace();                 
         } finally {

@@ -18,6 +18,6 @@ public class StringsTest {
         String str2 = "Adekolajo.jfuz";
         System.out.println(str.startsWith("> End Search"));
         System.out.println(str2.endsWith(".jfuz"));
-            
+        System.out.println(str2.split("\\.")[0]);    
     }
 }
