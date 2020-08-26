@@ -7,6 +7,7 @@ package jfuzzymachine;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import jfuzzymachine.exceptions.TableBindingException;
+import jfuzzymachine.tables.Table;
 import jfuzzymachine.utilities.ConfigFileReader;
 import jfuzzymachine.utilities.Evaluator;
 import jfuzzymachine.utilities.graph.Graph;
@@ -70,7 +72,12 @@ public class JFuzzyMachineMHPPx {
             itr++;
             //Runtime.getRuntime().wait(5000); // wait a little bit...
             wait(5000); //wait for five seconds (5000 milliseconds)...
-            File[] jfuzzFiles = new File(runJFuzzyDir).listFiles();
+            File[] jfuzzFiles = new File(runJFuzzyDir).listFiles(new FileFilter() {
+                                                                        @Override
+                                                                        public boolean accept(File pathname) {
+                                                                            return pathname.getName().endsWith(".jfuz");
+                                                                        } //ensures only .jfuz files are selected...
+                                                                    });
             if(jfuzzFiles.length < processes){
                 //wait for some time and continue again...
                 completed = false;
@@ -96,7 +103,7 @@ public class JFuzzyMachineMHPPx {
             }
         }
         
-        return;
+        //return;
     }
     
     
@@ -131,31 +138,77 @@ public class JFuzzyMachineMHPPx {
         // "Rscript path-to-rscript.R -i inputFir -o outputTextDir -p prefixText"
         RCaller rcaller = new RCaller();
         rcaller.execute(rCMD);
-        
-        
+                
         /////////////////////////////////////////////////////////
-        System.out.println("Running JfuzzyMachine for 4 regulatory input nodes...");
+        System.out.println("Running JfuzzyMachine for 4 or more regulatory input nodes...");
         String jConfigFilePath = args[2];
         HashMap<String, String> jConfig = ConfigFileReader.read(jConfigFilePath);  
         // re-modify the parameters: 
         // outputDir, maxNumberOfInputs, numberOfInputs, useProbableRegulonsMap, regulonsMapFile
         jConfig.replace("outputDir", jFuzzMachMHPPx.getConfig().get("runJFuzzyDir"));
         jConfig.replace("maxNumberOfInputs","-1");
-        jConfig.replace("numberOfInputs","4");
         jConfig.replace("useProbableRegulonsMap","TRUE");
         // re-compose rCaller output file (regulonMap)
-        String regulonsMapFile = graphOutputsDir + File.separator + "oneTwoThreeInputs.topProbableRegulonsMap.txt";
+        String regulonsMapFile = graphOutputsDir + File.separator + 
+                                    "oneTwoThreeInputs.topProbableRegulonsMap.txt";
         jConfig.replace("regulonsMapFile", regulonsMapFile);    
         
         // run jFuzzyMachine for 4 regulatory inputs...
-        JFuzzyMachine jfuzzy = new JFuzzyMachine(jConfig);
+        System.out.println("Running JfuzzyMachine for 4 input nodes...");
+        jConfig.replace("numberOfInputs","4");
+        JFuzzyMachine jfuzzy = null;
+        if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("modelPhenotype"))){
+            jConfig.replace("iGeneStart","0");
+            jConfig.replace("iGeneEnd","0");
+            jConfig.replace("modelPhenotype","TRUE");
+            jfuzzy = new JFuzzyMachine(jConfig); //run jFuzzy with modeling for phenotype first, then
+            
+            jConfig.replace("iGeneStart","1");// first row...
+            jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+            jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+            jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+            
+        }else{
+            jConfig.replace("iGeneStart","1");// first row...
+            jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+            jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+            jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+        }
+               
         jfuzzy.finalize();
         //new JFuzzyMachine(jConfig);
         
-        System.out.println("Runnig JfuzzyMachine for 5 regulatory nodes...");
+        /**
+         * 
+        System.out.println("Running JfuzzyMachine for 5 regulatory nodes...");
         jConfig.replace("numberOfInputs","5");
         // run jFuzzyMachine for 5 regulatory inputs...
         JFuzzyMachine jfuzzy2 = new JFuzzyMachine(jConfig);
+        jfuzzy2.finalize();
+        */
+        
+        // run jFuzzyMachine for 5 regulatory inputs...
+        System.out.println("\nRunning JfuzzyMachine for 5 input nodes...");
+        jConfig.replace("numberOfInputs","5");
+        JFuzzyMachine jfuzzy2 = null;
+        if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("modelPhenotype"))){
+            jConfig.replace("iGeneStart","0");
+            jConfig.replace("iGeneEnd","0");
+            jConfig.replace("modelPhenotype","TRUE");
+            jfuzzy2 = new JFuzzyMachine(jConfig); //run jFuzzy with modeling for phenotype first, then
+            
+            jConfig.replace("iGeneStart","1");// first row...
+            jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+            jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+            jfuzzy2 = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+            
+        }else{
+            jConfig.replace("iGeneStart","1");// first row...
+            jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+            jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+            jfuzzy2 = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+        }
+         
         jfuzzy2.finalize();
         
         System.out.println("Re-running post-processing...");

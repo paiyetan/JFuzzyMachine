@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import org.apache.commons.math3.util.Combinations;
 import jfuzzymachine.tables.Table;
@@ -617,6 +618,10 @@ public class JFuzzyMachine {
                 Set<String> outputGenesSet = regulonsMap.keySet();
                 outputGenes = new String[outputGenesSet.size()];
                 outputGenes = outputGenesSet.toArray(outputGenes);
+                //exclude Phenotype id from the outputs to consider.
+                String phenotypeId = config.get("phenotypeId");
+                if(Arrays.asList(outputGenes).contains(phenotypeId))
+                    outputGenes = exprs.removeItem(outputGenes, phenotypeId); 
             }
             //Trouble shoot...
             System.out.println("                 All Genes#: " + allgenes.length);
@@ -630,9 +635,11 @@ public class JFuzzyMachine {
             esearch.printESearchResultFileHeader(printer, config); // printoutput header...
             // for each outputGene,
             for(String outputGene : outputGenes){
-                String[] otherGenes = exprs.removeItem(allgenes, outputGene); // get other genes to get combinations of
+                String[] otherGenes;
                 if(useProbableRegulonsMap){
                     otherGenes = regulonsMap.get(outputGene);
+                }else{
+                    otherGenes = exprs.removeItem(allgenes, outputGene); // get other genes to get combinations of
                 }
                 int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
                 if(maxInputs <= 0){ // a flag to simply use the specified "number of inputs"

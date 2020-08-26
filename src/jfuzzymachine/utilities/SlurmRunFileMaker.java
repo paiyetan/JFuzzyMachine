@@ -69,10 +69,15 @@ public class SlurmRunFileMaker {
         printer.println("iGeneStart=" + start);
         printer.println("iGeneEnd=" + end);
         printer.println("useParallel=" + params.get("useParallel"));
-        printer.println("modelPhenotype=" + params.get("modelPhenotype"));
-        printer.println("inputPhenoFile=" + params.get("inputPhenoFile"));
         
+        printer.println("useProbableRegulonsMap=" + params.get("useProbableRegulonsMap"));
+        printer.println("regulonsMapFile=" + params.get("regulonsMapFile"));
+        printer.println("phenotypeId=" + params.get("phenotypeId"));
+        
+        printer.println("modelPhenotype=" + params.get("modelPhenotype"));
+            
         if(Boolean.parseBoolean(params.get("modelPhenotype"))){
+            printer.println("inputPhenoFile=" + params.get("inputPhenoFile"));      
             printer.println("tanTransform=" + params.get("tanTransform"));
             printer.println("logitTransform=" + params.get("logitTransform"));
             printer.println("kValue=" + params.get("kValue"));
@@ -224,9 +229,34 @@ public class SlurmRunFileMaker {
             // NOTE: the input configuration would depend on weather a pheno or an expression
             //    run is being configured...
             if(Boolean.parseBoolean(params.get("modelPhenotype"))){
-                // create phenotype model runs...
-                for(int j = 1; j <= numberOfInputs; j++){
-                                            
+                
+                if(allInputsToNumberOfInputs){                   
+                    // create phenotype model runs...
+                    for(int j = 1; j <= numberOfInputs; j++){                                            
+                        start = 0;
+                        end = 0;
+                        // create a slurm output log file unique prepend identifier
+                        // create a single slurmscript and config file for these (j = {1, 2})...
+                        // create a .jconfig file path
+                        // create a .jconfig file...
+                        String jobNamePrependId = startTime + "." + inputFilename + ".runFuzzy";
+                        params.put("jobNamePrepend", jobNamePrependId);
+                        slurmscriptFilePath = slurmscriptsDir + File.separator + 
+                                startTime + "." + inputFilename + "." + 
+                                start + "." + end + "." + j + ".sh";
+                        jconfigFilePath = slurmscriptsDir + File.separator + 
+                                startTime + "." + inputFilename + "." + 
+                                start + "." + end + "." + j + ".jconfig";
+                        makeJConfigFile(jconfigFilePath, inputFile.getPath(),
+                                runJFuzzyDir, j, fitCutOff,
+                                start, end, params);
+                        makeSlurmRunFile(slurmscriptFilePath, start, end, j, fitCutOff, jconfigFilePath, params);
+
+                        String currDir = System.getProperty("user.dir");
+                        slurmRunFiles.add(slurmscriptFilePath.replace(currDir, "."));                    
+                    }
+                                        
+                }else{
                     start = 0;
                     end = 0;
                     // create a slurm output log file unique prepend identifier
@@ -237,20 +267,21 @@ public class SlurmRunFileMaker {
                     params.put("jobNamePrepend", jobNamePrependId);
                     slurmscriptFilePath = slurmscriptsDir + File.separator + 
                             startTime + "." + inputFilename + "." + 
-                            start + "." + end + "." + j + ".sh";
+                            start + "." + end + "." + numberOfInputs + ".sh";
                     jconfigFilePath = slurmscriptsDir + File.separator + 
                             startTime + "." + inputFilename + "." + 
-                            start + "." + end + "." + j + ".jconfig";
+                            start + "." + end + "." + numberOfInputs + ".jconfig";
                     makeJConfigFile(jconfigFilePath, inputFile.getPath(),
-                            runJFuzzyDir, j, fitCutOff,
+                            runJFuzzyDir, numberOfInputs, fitCutOff,
                             start, end, params);
-                    makeSlurmRunFile(slurmscriptFilePath, start, end, j, fitCutOff, jconfigFilePath, params);
+                    makeSlurmRunFile(slurmscriptFilePath, start, end, numberOfInputs, fitCutOff, jconfigFilePath, params);
 
                     String currDir = System.getProperty("user.dir");
-                    slurmRunFiles.add(slurmscriptFilePath.replace(currDir, "."));
+                    slurmRunFiles.add(slurmscriptFilePath.replace(currDir, "."));                    
                     
-                }
-            }else{
+                }    
+                               
+            }else{ // if creating slurmscript for all other outputs (not phenotype)
             
                 if(allInputsToNumberOfInputs){
                     for(int j = 1; j <= numberOfInputs; j++){
@@ -330,33 +361,27 @@ public class SlurmRunFileMaker {
         
     }
     
-    private void makeFiles(HashMap<String, String> params) throws IOException {
+    private synchronized void makeFiles(HashMap<String, String> params) throws IOException {
         
         // list of slurm run files... (for creating the batch run file)...
-        slurmRunFiles = new LinkedList();
-        
-        
+        slurmRunFiles = new LinkedList(); //slurm run files in this invocation...
+               
         String filesToGenerate = params.get("filesToGenerate");
         //SlurmRunFileMaker.filesToGenerate fileTypes; 
-        if(filesToGenerate.equalsIgnoreCase("BOTH")){
-            params.remove("modelPhenotype");
-            params.put("modelPhenotype", "FALSE");
+        if(filesToGenerate.equalsIgnoreCase("BOTH")){           
+            params.replace("modelPhenotype", "FALSE");
             makeFilesHelper(params);
-            // --- wait ---
-            params.remove("modelPhenotype");
-            params.put("modelPhenotype", "TRUE");
+            params.replace("modelPhenotype", "TRUE");
             makeFilesHelper(params);
         } 
         
         if(filesToGenerate.equalsIgnoreCase("PHENO")){
-            params.remove("modelPhenotype");
-            params.put("modelPhenotype", "TRUE");
+            params.replace("modelPhenotype", "TRUE");
             makeFilesHelper(params);
         }
             
         if(filesToGenerate.equalsIgnoreCase("EXPRS")){
-            params.remove("modelPhenotype");
-            params.put("modelPhenotype", "FALSE");
+            params.replace("modelPhenotype", "FALSE");
             makeFilesHelper(params);
         }
             
