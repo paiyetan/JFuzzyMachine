@@ -18,6 +18,7 @@ import jfuzzymachine.exceptions.TableBindingException;
 import jfuzzymachine.tables.Table;
 import jfuzzymachine.utilities.ConfigFileReader;
 import jfuzzymachine.utilities.Evaluator;
+import jfuzzymachine.utilities.SlurmRunFileMaker;
 import jfuzzymachine.utilities.graph.Graph;
 import jfuzzymachine.utilities.rconnect.RCaller;
 
@@ -153,6 +154,25 @@ public class JFuzzyMachineMHPPx {
                                     "oneTwoThreeInputs.topProbableRegulonsMap.txt";
         jConfig.replace("regulonsMapFile", regulonsMapFile);    
         
+        
+        if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("useMHPPxx"))){
+            // call slurm run file maker,
+            // modify input config file..
+            // make slurm files,
+            // run the slurm batch
+            // monitor runs
+            SlurmRunFileMaker sFMaker = new SlurmRunFileMaker();
+            jFuzzMachMHPPx.getConfig().replace("numberOfInputs", "4");
+            jFuzzMachMHPPx.getConfig().replace("allInputsToNumberOfInputs", "FALSE");
+            //jFuzzMachMHPPx.getConfig().replace("", "");
+            
+            sFMaker.makeFiles(jFuzzMachMHPPx.getConfig());
+            String slurmRunParentFile = sFMaker.getSlurmRunParentFile();
+            
+            
+        }
+        
+        
         // run jFuzzyMachine for 4 regulatory inputs...
         System.out.println("Running JfuzzyMachine for 4 input nodes...");
         jConfig.replace("numberOfInputs","4");
@@ -185,7 +205,7 @@ public class JFuzzyMachineMHPPx {
         // run jFuzzyMachine for 5 regulatory inputs...
         JFuzzyMachine jfuzzy2 = new JFuzzyMachine(jConfig);
         jfuzzy2.finalize();
-        */
+        
         
         // run jFuzzyMachine for 5 regulatory inputs...
         System.out.println("\nRunning JfuzzyMachine for 5 input nodes...");
@@ -210,6 +230,8 @@ public class JFuzzyMachineMHPPx {
         }
          
         jfuzzy2.finalize();
+        *
+        */ 
         
         System.out.println("Re-running post-processing...");
         graph = new Graph(gConfig);
@@ -240,5 +262,8 @@ public class JFuzzyMachineMHPPx {
         
         
     } 
+    
+    
+    
      
 }

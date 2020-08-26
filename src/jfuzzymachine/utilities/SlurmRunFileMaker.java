@@ -27,7 +27,8 @@ public class SlurmRunFileMaker {
     
     private enum filesToGenerate { BOTH, PHENO, EXPRS };
     // list of slurm run files... (for creating the batch run file)...
-    LinkedList<String> slurmRunFiles;
+    private LinkedList<String> slurmRunFiles;
+    private String slurmRunParentFile;
             
     private void makeJConfigFile(String jconfigFilePath, 
                                     String inputFileAbsolutePath, 
@@ -361,7 +362,7 @@ public class SlurmRunFileMaker {
         
     }
     
-    private synchronized void makeFiles(HashMap<String, String> params) throws IOException {
+    public synchronized void makeFiles(HashMap<String, String> params) throws IOException {
         
         // list of slurm run files... (for creating the batch run file)...
         slurmRunFiles = new LinkedList(); //slurm run files in this invocation...
@@ -395,6 +396,12 @@ public class SlurmRunFileMaker {
         pr.close();
         
     }
+
+    public String getSlurmRunParentFile() {
+        return slurmRunParentFile;
+    }
+    
+    
     
     public static void main(String[] args) throws FileNotFoundException, IOException{
         
