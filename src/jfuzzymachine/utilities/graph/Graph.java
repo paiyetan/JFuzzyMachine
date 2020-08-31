@@ -125,9 +125,9 @@ public class Graph {
         }
         
         if(useAnnotatedGraphModel){
-            System.out.println("Using the 'Annotated (Directed) Graph' model...");
+            System.out.println("[" + new Date().toString() + "]:Using the 'Annotated (Directed) Graph' model...");
             AnnotatedGraph graph = new AnnotatedGraph(inputFiles, fitCutOff);           
-            System.out.println("Printing output(s)...");
+            System.out.println("[" + new Date().toString() + "]:Printing output(s)...");
             graph.getAdjMatrix().print(adjMatOutputFile);
             if(outputEdges){
                 graph.printEdges(edgesOutputFile);
@@ -140,10 +140,10 @@ public class Graph {
             graph.printRuleFrequencies(ruleFrequenciesFile);
             
         }else{
-            System.out.println("Using the 'Undirected Graph' model...");
+            System.out.println("[" + new Date().toString() + "]:Using the 'Undirected Graph' model...");
             Graph graph = new Graph(inputFiles, fitCutOff); 
             
-            System.out.println("Printing output(s)...");
+            System.out.println("[" + new Date().toString() + "]:Printing output(s)...");
             graph.getAdjMatrix().print(adjMatOutputFile);
         }
         
@@ -252,14 +252,14 @@ public class Graph {
     
     public static void main(String[] args) throws IOException{
         
-        System.out.println("Starting...");
         Date start = new Date();
+        System.out.println("[" + start.toString() + "]:Starting...");
         long start_time = start.getTime();              
         
         HashMap<String, String> config = ConfigFileReader.read(args[0]); // configuration file path        
         Graph gGraph = new Graph(config);
                 
-        System.out.println("\n...Done!");        
+        System.out.println("\n[" + new Date().toString() + "]:...Done!");        
         Date end = new Date();
         long end_time = end.getTime();
         
@@ -269,8 +269,6 @@ public class Graph {
                         TimeUnit.MILLISECONDS.toMinutes(end_time - start_time) + " min(s), "
                         + (TimeUnit.MILLISECONDS.toSeconds(end_time - start_time) - 
                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(end_time - start_time))) + 
-                                                      " seconds.");
-        
-    }
- 
+                                                      " seconds.");        
+    } 
 }

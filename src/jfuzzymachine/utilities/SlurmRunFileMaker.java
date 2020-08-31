@@ -286,7 +286,7 @@ public class SlurmRunFileMaker {
             
                 if(allInputsToNumberOfInputs){
                     for(int j = 1; j <= numberOfInputs; j++){
-                        if(j > 2){
+                        if(j > 1){
                             for( int k = 1; k <= numberOfFeatures; k++ ){
                                 start = k;
                                 end = k;
