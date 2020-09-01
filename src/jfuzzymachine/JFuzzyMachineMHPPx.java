@@ -24,6 +24,7 @@ import jfuzzymachine.utilities.ConfigFileReader;
 import jfuzzymachine.utilities.Evaluator;
 import jfuzzymachine.utilities.SlurmRunFileMaker;
 import jfuzzymachine.utilities.graph.Graph;
+import jfuzzymachine.utilities.simulation.Simulator;
 import jfuzzymachine.utilities.sysconnect.SystemCaller;
 
 /**
@@ -196,7 +197,7 @@ public class JFuzzyMachineMHPPx {
                       "rJFuzzyMachineRegulons.R " +
                       "-i " + graphOutputsDir + 
                       " -t " + graphOutputsDir +
-                      " -x oneTwoThreeInputs.";
+                      " -x xinputs.";
         // "Rscript path-to-rscript.R -i inputFir -o outputTextDir -p prefixText"
         SystemCaller rcaller = new SystemCaller();
         rcaller.execute(rCMD);
@@ -301,6 +302,24 @@ public class JFuzzyMachineMHPPx {
                                         "_runJFuzzUtils.fit";
         eConfig.replace("fitFile", fittedModelFile);
         Evaluator eval = new Evaluator(eConfig);
+        
+        if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("runSimulations"))){
+            System.out.println("[" + new Date().toString() + "]:Running simulations...");
+            String sConfigFilePath = args[4];
+            HashMap<String, String> sConfig = ConfigFileReader.read(sConfigFilePath);  
+            // modify the parameter: fitFile (as formulated in the Graph class)
+            fittedModelFile = graphOutputsDir + File.separator + 
+                                        gConfig.get("runId") + 
+                                            "_runJFuzzUtils.fit";
+            String modelEdgesFile = graphOutputsDir + File.separator + 
+                                        gConfig.get("runId") + 
+                                            "_runJFuzzUtils.edg";
+            sConfig.replace("fitFile", fittedModelFile);
+            sConfig.replace("edgesFile", modelEdgesFile); 
+            Simulator sim = new Simulator(sConfig);
+            
+        }
+        
         
         
         System.out.println("\n...Done!");     
