@@ -3,19 +3,12 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-<<<<<<< HEAD
-<<<<<<< HEAD
-            <file>file:/Users/aiyetanpo/Workspace/Java/JFuzzyMachine/src/utilities/graph/Graph.java</file>
-=======
-=======
             <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/utilities/Evaluator.java</file>
->>>>>>> 927e0b2d25b99eaf0aaf326046ebdaf2fd25596d
             <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/utilities/SlurmRunFileMaker.java</file>
             <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/JFuzzyMachineMHPPx.java</file>
-            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/utilities/rconnect/RCaller.java</file>
             <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/utilities/graph/Graph.java</file>
             <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/JFuzzyMachine.java</file>
->>>>>>> efde50c0c8edc1ccf50fa81438202a6af8e96fcd
+            <file>file:/home/paiyetan/Workspace/Java/JFuzzyMachine/src/jfuzzymachine/utilities/simulation/Simulator.java</file>
         </group>
     </open-files>
 </project-private>
