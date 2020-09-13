@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Set;
 import jfuzzymachine.tables.Table;
 
 /**
@@ -71,6 +72,7 @@ public class SlurmRunFileMaker {
         printer.println("iGeneEnd=" + end);
         printer.println("useParallel=" + params.get("useParallel"));
         
+        printer.println("directJFuzzyMachineMode=" + params.get("directJFuzzyMachineMode"));
         printer.println("useProbableRegulonsMap=" + params.get("useProbableRegulonsMap"));
         printer.println("regulonsMapFile=" + params.get("regulonsMapFile"));
         printer.println("phenotypeId=" + params.get("phenotypeId"));
@@ -220,6 +222,25 @@ public class SlurmRunFileMaker {
             Table exprs = new Table(inputFile.getAbsolutePath());
             int numberOfFeatures = exprs.getRowIds().length;
             
+            boolean useProbableRegulonsMap = Boolean.parseBoolean(params.get("useProbableRegulonsMap"));
+            String regulonsMapFile = params.get("useProbableRegulonsMap");
+            HashMap<String, String[]> regulonsMap = null;
+            String[] mappedFeatures = null;
+            
+            if(useProbableRegulonsMap){
+                ProbableRegulonsMapFileReader regReader = new ProbableRegulonsMapFileReader();
+                regulonsMap = regReader.read(regulonsMapFile);
+                Set<String> regulonsMapKeys = regulonsMap.keySet();
+                numberOfFeatures = regulonsMapKeys.size();
+                
+                mappedFeatures = new String[numberOfFeatures];
+                int mappedFeaturesIndex = 0;
+                for(String regulonsMapKey : regulonsMapKeys){
+                    mappedFeatures[mappedFeaturesIndex] = regulonsMapKey;
+                    mappedFeaturesIndex++;
+                }
+            }
+            
             // Let the number of features determine the num the "number of nodes" -N and "number of cores" -n SLURM parameters..
             int n = numberOfFeatures * 2;
             int N = n/24 ; // used 28 to ensure cores "desired" per node do not exceed that "available" per node...
@@ -290,6 +311,12 @@ public class SlurmRunFileMaker {
                             for( int k = 1; k <= numberOfFeatures; k++ ){
                                 start = k;
                                 end = k;
+                                if(useProbableRegulonsMap){                                   
+                                    String feature = mappedFeatures[k];
+                                    int featureIndex = exprs.getRowIndex(feature);
+                                    start = featureIndex;
+                                    end = featureIndex;
+                                }
                                 // create a slurm output log file unique prepend identifier
                                 // create a single slurmscript and config file for these (j = {1, 2})...
                                 // create a .jconfig file path
@@ -313,7 +340,7 @@ public class SlurmRunFileMaker {
 
                         }else{
                             start = 1;
-                            end = numberOfFeatures;
+                            end = exprs.getRowIds().length;;
                             // create a slurm output log file unique prepend identifier
                             // create a single slurmscript and config file for these (j = {1, 2})...
                             // create a .jconfig file path
@@ -333,6 +360,12 @@ public class SlurmRunFileMaker {
                     for( int k = 1; k <= numberOfFeatures; k++ ){
                         start = k;
                         end = k;
+                        if(useProbableRegulonsMap){                                   
+                            String feature = mappedFeatures[k];
+                            int featureIndex = exprs.getRowIndex(feature);
+                            start = featureIndex;
+                            end = featureIndex;
+                        }
                         // create a slurm output log file unique prepend identifier
                         // create a single slurmscript and config file for these (j = {1, 2})...
                         // create a .jconfig file path
@@ -355,11 +388,7 @@ public class SlurmRunFileMaker {
                     }
                 }
             }
-        }
-        
-        
-        
-        
+        }       
     }
     
     public synchronized void makeFiles(HashMap<String, String> params) throws IOException {
