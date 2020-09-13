@@ -223,7 +223,7 @@ public class SlurmRunFileMaker {
             int numberOfFeatures = exprs.getRowIds().length;
             
             boolean useProbableRegulonsMap = Boolean.parseBoolean(params.get("useProbableRegulonsMap"));
-            String regulonsMapFile = params.get("useProbableRegulonsMap");
+            String regulonsMapFile = params.get("regulonsMapFile");
             HashMap<String, String[]> regulonsMap = null;
             String[] mappedFeatures = null;
             
@@ -312,10 +312,10 @@ public class SlurmRunFileMaker {
                                 start = k;
                                 end = k;
                                 if(useProbableRegulonsMap){                                   
-                                    String feature = mappedFeatures[k];
+                                    String feature = mappedFeatures[k-1];
                                     int featureIndex = exprs.getRowIndex(feature);
-                                    start = featureIndex;
-                                    end = featureIndex;
+                                    start = featureIndex + 1;
+                                    end = featureIndex + 1;
                                 }
                                 // create a slurm output log file unique prepend identifier
                                 // create a single slurmscript and config file for these (j = {1, 2})...
@@ -361,10 +361,10 @@ public class SlurmRunFileMaker {
                         start = k;
                         end = k;
                         if(useProbableRegulonsMap){                                   
-                            String feature = mappedFeatures[k];
+                            String feature = mappedFeatures[k-1];
                             int featureIndex = exprs.getRowIndex(feature);
-                            start = featureIndex;
-                            end = featureIndex;
+                            start = featureIndex + 1;
+                            end = featureIndex + 1;
                         }
                         // create a slurm output log file unique prepend identifier
                         // create a single slurmscript and config file for these (j = {1, 2})...
