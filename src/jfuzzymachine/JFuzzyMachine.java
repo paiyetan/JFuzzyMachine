@@ -42,6 +42,8 @@ public class JFuzzyMachine {
     public enum ExpressionType {PHENOTYPE, GENOTYPE};
     
     private final boolean useProbableRegulonsMap; //a less exhaustive but guided search approach...
+    
+    private boolean directJFuzzyMachineMode;
         
     
     public JFuzzyMachine(HashMap<String, String> config) throws IOException{
@@ -105,6 +107,8 @@ public class JFuzzyMachine {
             this.exprsFMat = fuzzifier.getFuzzyMatrix(exprs, ExpressionType.GENOTYPE);
             this.modelPhenotype = Boolean.parseBoolean(config.get("modelPhenotype"));
             this.useProbableRegulonsMap = Boolean.parseBoolean(config.get("useProbableRegulonsMap"));
+            
+            this.directJFuzzyMachineMode = Boolean.parseBoolean(config.get("directJFuzzyMachineMode"));
             
             if(this.modelPhenotype){
                 phenoExprs = new Table(config.get("inputPhenoFile"), Table.TableType.DOUBLE); 
@@ -614,7 +618,8 @@ public class JFuzzyMachine {
                   outputGenes[i] = expGenes[(istart-1)+i];
                 }
             }
-            if(useProbableRegulonsMap){
+            
+            if(directJFuzzyMachineMode && useProbableRegulonsMap){
                 Set<String> outputGenesSet = regulonsMap.keySet();
                 outputGenes = new String[outputGenesSet.size()];
                 outputGenes = outputGenesSet.toArray(outputGenes);
@@ -623,6 +628,7 @@ public class JFuzzyMachine {
                 if(Arrays.asList(outputGenes).contains(phenotypeId))
                     outputGenes = exprs.removeItem(outputGenes, phenotypeId); 
             }
+            
             //Trouble shoot...
             System.out.println("                 All Genes#: " + allgenes.length);
             System.out.println("   Output Nodes Considered#: " + outputGenes.length);

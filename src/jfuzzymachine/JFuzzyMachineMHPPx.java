@@ -179,10 +179,7 @@ public class JFuzzyMachineMHPPx {
 
         System.out.println("[" + new Date().toString() + "]:Monitoring first batched JFuzzyMachine(s) processes...");
         jFuzzMachMHPPx.monitor();//monitoring...
-        
-        //jFuzzMachMHPPx.monitor();//monitoring...        
         System.out.println("[" + new Date().toString() + "]:Batched jfuz processes are completed..."); //if completed
-        
         
         System.out.println("[" + new Date().toString() + "]:Running initial post-processing...");
         String graphConfigFilePath = args[1]; // graph config files..
@@ -214,85 +211,85 @@ public class JFuzzyMachineMHPPx {
         // re-compose rCaller output file (regulonMap)
         String regulonsMapFile = graphOutputsDir + File.separator + 
                                     "xinputs.topProbableRegulonsMap.txt";
-        jConfig.replace("regulonsMapFile", regulonsMapFile);    
+        jConfig.replace("regulonsMapFile", regulonsMapFile);  
         
+        boolean runHigherOrderInference = Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("runHigherOrderInference"));
+        boolean useMHPPxx = Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("useMHPPxx"));
         
-        if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("useMHPPxx"))){
+        if(runHigherOrderInference){
             
-            System.out.println("[" + new Date().toString() + "]:Using the MHPPxx approach...");       
-            // call slurm run file maker,
-            // modify input config file..
-            // make slurm files,
-            // run the slurm batch
-            // monitor runs
-            int initialRegulators = Integer.parseInt(jFuzzMachMHPPx.getConfig().get("numberOfInputs")); //initial number of inputs...
-            int ordersHigher = Integer.parseInt(jFuzzMachMHPPx.getConfig().get("howManyOrdersHigher"));
-            int maxOrder = initialRegulators + ordersHigher;
-            
-            int nextOrder = initialRegulators + 1;
-            
-            while(nextOrder <= maxOrder){
-                sFMaker = new SlurmRunFileMaker();
-                //jFuzzMachMHPPx.getConfig().replace("numberOfInputs", "4");
-                jFuzzMachMHPPx.getConfig().replace("numberOfInputs", String.valueOf(nextOrder));
-                jFuzzMachMHPPx.getConfig().replace("allInputsToNumberOfInputs", "FALSE");
-                //jFuzzMachMHPPx.getConfig().replace("", "");
-                sFMaker.makeFiles(jFuzzMachMHPPx.getConfig());
-                slurmRunParentFile = sFMaker.getSlurmRunParentFile();
+            if(useMHPPxx){                
+                System.out.println("[" + new Date().toString() + "]:Using the MHPPxx approach...");       
+                int initialRegulators = Integer.parseInt(jFuzzMachMHPPx.getConfig().get("numberOfInputs")); //initial number of inputs...
+                int ordersHigher = Integer.parseInt(jFuzzMachMHPPx.getConfig().get("howManyOrdersHigher"));
+                int maxOrder = initialRegulators + ordersHigher;
 
-                syscaller = new SystemCaller();
-                //String command;
-                //chmod
-                command = "chmod 777 "  + slurmRunParentFile;
-                syscaller.execute(command); // change file mode to executable        
-                command = "sbatch " + slurmRunParentFile;
-                syscaller.execute(command); // execute the sbatch call...
-                System.out.println("[" + new Date().toString() + "]:Monitoring batched jfuz processes...");
-                jFuzzMachMHPPx.monitor();//monitoring...
-                
-                nextOrder++;
-            }
-            
-            
-        }else{       
-            // run jFuzzyMachine for higher regulatory inputs...
-            System.out.println("[" + new Date().toString() + "]:Running JfuzzyMachine for higher input nodes...");
-            
-            int initialRegulators = Integer.parseInt(jFuzzMachMHPPx.getConfig().get("numberOfInputs")); //initial number of inputs...
-            int ordersHigher = Integer.parseInt(jFuzzMachMHPPx.getConfig().get("howManyOrdersHigher"));
-            int maxOrder = initialRegulators + ordersHigher;
-            
-            int nextOrder = initialRegulators + 1;
-            
-            while(nextOrder <= maxOrder){           
-                jConfig.replace("numberOfInputs", String.valueOf(nextOrder));
-                JFuzzyMachine jfuzzy = null;
-                if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("modelPhenotype"))){
-                    jConfig.replace("iGeneStart","0");
-                    jConfig.replace("iGeneEnd","0");
-                    jConfig.replace("modelPhenotype","TRUE");
-                    jfuzzy = new JFuzzyMachine(jConfig); //run jFuzzy with modeling for phenotype first, then
+                int nextOrder = initialRegulators + 1;
 
-                    jConfig.replace("iGeneStart","1");// first row...
-                    jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
-                    jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
-                    jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+                while(nextOrder <= maxOrder){
+                    sFMaker = new SlurmRunFileMaker();
+                    //jFuzzMachMHPPx.getConfig().replace("numberOfInputs", "4");
+                    jFuzzMachMHPPx.getConfig().replace("numberOfInputs", String.valueOf(nextOrder));
+                    jFuzzMachMHPPx.getConfig().replace("allInputsToNumberOfInputs", "FALSE");
+                    //jFuzzMachMHPPx.getConfig().replace("", "");
+                    sFMaker.makeFiles(jFuzzMachMHPPx.getConfig());
+                    slurmRunParentFile = sFMaker.getSlurmRunParentFile();
 
-                }else{
-                    jConfig.replace("iGeneStart","1");// first row...
-                    jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
-                    jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
-                    jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+                    syscaller = new SystemCaller();
+                    //String command;
+                    //chmod
+                    command = "chmod 777 "  + slurmRunParentFile;
+                    syscaller.execute(command); // change file mode to executable        
+                    command = "sbatch " + slurmRunParentFile;
+                    syscaller.execute(command); // execute the sbatch call...
+                    System.out.println("[" + new Date().toString() + "]:Monitoring batched jfuz processes...");
+                    jFuzzMachMHPPx.monitor();//monitoring...
+
+                    nextOrder++;
+                }        
+
+            }else{       
+                // run jFuzzyMachine for higher regulatory inputs...
+                System.out.println("[" + new Date().toString() + "]:Running JfuzzyMachine for higher input nodes...");
+
+                int initialRegulators = Integer.parseInt(jFuzzMachMHPPx.getConfig().get("numberOfInputs")); //initial number of inputs...
+                int ordersHigher = Integer.parseInt(jFuzzMachMHPPx.getConfig().get("howManyOrdersHigher"));
+                int maxOrder = initialRegulators + ordersHigher;
+
+                int nextOrder = initialRegulators + 1;
+
+                while(nextOrder <= maxOrder){           
+                    jConfig.replace("numberOfInputs", String.valueOf(nextOrder));
+                    JFuzzyMachine jfuzzy = null;
+                    if(Boolean.parseBoolean(jFuzzMachMHPPx.getConfig().get("modelPhenotype"))){
+                        jConfig.replace("iGeneStart","0");
+                        jConfig.replace("iGeneEnd","0");
+                        jConfig.replace("modelPhenotype","TRUE");
+                        jfuzzy = new JFuzzyMachine(jConfig); //run jFuzzy with modeling for phenotype first, then
+
+                        jConfig.replace("iGeneStart","1");// first row...
+                        jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+                        jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+                        jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+
+                    }else{
+                        jConfig.replace("iGeneStart","1");// first row...
+                        jConfig.replace("iGeneEnd",String.valueOf(new Table(jConfig.get("inputFile")).getRowIds().length));
+                        jConfig.replace("modelPhenotype","FALSE"); // replace attribute 
+                        jfuzzy = new JFuzzyMachine(jConfig); // and run without considering to model phenotype...
+                    }
+
+                    jfuzzy.finalize();
+                    nextOrder++;
                 }
-
-                jfuzzy.finalize();
-                nextOrder++;
             }
         }
         
-        System.out.println("[" + new Date().toString() + "]:Re-running post-processing...");
-        graph = new Graph(gConfig);
-        
+        if(runHigherOrderInference){
+            System.out.println("[" + new Date().toString() + "]:Re-running post-processing...");
+            graph = new Graph(gConfig);
+        } // re-graph consolidated network to include higher order models
+
         System.out.println("[" + new Date().toString() + "]:Running evaluation...");
         String eConfigFilePath = args[3];
         HashMap<String, String> eConfig = ConfigFileReader.read(eConfigFilePath);  
@@ -338,12 +335,7 @@ public class JFuzzyMachineMHPPx {
         
     } 
     
-    
-    
-    
-    
-    
-    
+       
     
     
     private static class StreamGobbler implements Runnable {
