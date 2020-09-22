@@ -139,7 +139,16 @@ public class Simulation {
                 //currentValues[knockedOutGeneIndex] = min.minimum();                
                 for(String knockout : knockouts){
                     int knockoutGeneIndex = exprs.getRowIndex(knockout); //get row index of a knockedout gene...
-                    currentValues[knockoutGeneIndex] = min.minimum();
+                    
+                    try{
+                        currentValues[knockoutGeneIndex] = min.minimum();
+                    }catch(ArrayIndexOutOfBoundsException e){
+                        System.out.println("ArrayIndexOutOfBoundsException@");
+                        System.out.println("           knockout: " + knockout);
+                        System.out.println("  knockoutGeneIndex: " + knockoutGeneIndex);
+                        e.printStackTrace();
+                        System.exit(-1);
+                    }
                 }
             }
             
