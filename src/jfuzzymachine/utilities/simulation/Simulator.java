@@ -9,6 +9,7 @@
  */
 package jfuzzymachine.utilities.simulation;
 
+import jfuzzymachine.tables.Table;
 import jfuzzymachine.exceptions.TableBindingException;
 import java.io.File;
 import jfuzzymachine.utilities.graph.Model;
@@ -34,7 +35,7 @@ import jfuzzymachine.utilities.ModelFitFileReader;
 public class Simulator {
 
         
-    private enum INIT{FIRST, RANDOM, AVERAGE, ALL}; //initial values
+    public enum INIT{FIRST, RANDOM, AVERAGE, ALL}; //initial values
     private enum KOTYPE{ SINGLE, DOUBLE}; // type of knockout to simulate...
     
     @SuppressWarnings("FieldMayBeFinal")
@@ -483,7 +484,7 @@ public class Simulator {
     }
 
     
-    private double[] getInitialValues(Table exprs, INIT init) {
+    public double[] getInitialValues(Table exprs, INIT init) {
         double[] initValues = null;
         switch(init){
             case FIRST:

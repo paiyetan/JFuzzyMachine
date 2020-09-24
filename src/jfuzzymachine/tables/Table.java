@@ -9,6 +9,7 @@
  */
 package jfuzzymachine.tables;
 
+import jfuzzymachine.exceptions.TableBindingException;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -30,6 +31,7 @@ public class Table {
     private float[][] fMatrix;
     
     public enum TableType {INTEGER, DOUBLE, FLOAT};
+    public enum BindType {COLUMN, ROW};
         
     public Table(String inFilePath) throws IOException{
         read(inFilePath);
@@ -62,8 +64,7 @@ public class Table {
                 break;
         }
     }
-
-    
+   
     public Table(String[] rowIds, 
                  String[] columnIds, 
                  String[][] matrix) {
@@ -71,7 +72,15 @@ public class Table {
         this.columnIds = columnIds;
         this.matrix = matrix;
     }
-  
+    
+    public Table(String[] rowIds,
+                 String[] columnIds,
+                 double[][] matrix){
+        this.rowIds = rowIds;
+        this.columnIds = columnIds;
+        this.dMatrix = matrix;
+    }
+    
     public String[] getColumnIds() {
         return columnIds;
     }
@@ -90,6 +99,14 @@ public class Table {
     
     public float[][] getFloatMatrix() {
         return fMatrix;
+    }
+    
+    public int getNumberOfRows(){
+        return this.getRowIds().length;
+    }
+    
+    public int getNumberOfColumns(){
+        return this.getColumnIds().length;
     }
         
     public int getRowIndex(String rowId){
@@ -113,8 +130,7 @@ public class Table {
         }
         return index;
     }
-    
-    
+       
     public String[] getRow(int index){
         String[] indexedRow = new String[columnIds.length];
         for(int i=0; i < indexedRow.length; i++){
@@ -162,8 +178,7 @@ public class Table {
         }
         return indexedColumn;
     }
-    
-    
+        
     public String[] removeItem(String[] items, String itemToRemove){
         String[] newArr = new String[items.length - 1];
         int newArrIndex = 0;
@@ -176,7 +191,53 @@ public class Table {
         return newArr;
     }
     
-    
+    public Table bind(Table table, BindType bindType) throws TableBindingException {
+        Table combinedTable = null;
+        String[] newTableRowIds = null;
+        String[] newTableColumnIds = null;
+        double[][] newTableMatrix = null;
+        
+        switch(bindType){
+            
+            case COLUMN:
+                // yet-to-implement...
+                throw new UnsupportedOperationException("Not supported yet.");                
+                //break;
+                
+            default: // by ROW...               
+                if(this.getNumberOfColumns() != table.getNumberOfColumns()) //first, ensure the columns are of the same length...
+                    throw new TableBindingException("incompartible colums");
+                // instantiate new 'combined' table
+                int newTableRows = this.getNumberOfRows() + table.getNumberOfRows();
+                int newTableColumns = this.getNumberOfColumns();
+                newTableRowIds = new String[newTableRows];
+                newTableColumnIds = this.columnIds;
+                newTableMatrix = new double[newTableRows][newTableColumns];
+                // populate new table rowIds, columnIds, and table fields...
+                for(int i = 0; i < newTableRowIds.length; i++){
+                    if(i < this.getNumberOfRows())
+                        newTableRowIds[i] = this.getRowIds()[i];
+                    else
+                        newTableRowIds[i] = table.getRowIds()[newTableRows - this.getNumberOfRows() - 1];
+                }
+                // populate new table fields
+                for(int i = 0; i < newTableRowIds.length; i++){
+                    for(int j = 0; j < newTableColumnIds.length; j++){
+                        if(i < this.getNumberOfRows())
+                            newTableMatrix[i][j] = this.getDoubleMatrix()[i][j];
+                        else
+                            newTableMatrix[i][j] = table.getDoubleMatrix()[newTableRows - this.getNumberOfRows() - 1][j];
+                            
+                    }
+                }
+                                
+                break;
+                
+        }
+        combinedTable = new Table(newTableRowIds, newTableColumnIds, newTableMatrix);
+        return combinedTable;
+    }
+        
     public void print(String outFile) throws FileNotFoundException{
         PrintWriter printer = new PrintWriter(outFile);
         // print header...
@@ -193,6 +254,39 @@ public class Table {
                 printer.print("\t" + matrix[i][j]);
             }
             printer.print("\n");
+        }
+        
+        printer.close();
+    }
+    
+    public void print(String outFile, Table.TableType tbType) throws FileNotFoundException{
+        PrintWriter printer = new PrintWriter(outFile);
+        // print header...
+        printer.print("Features");
+        for(String columnID : columnIds){
+           printer.print("\t" + columnID);
+        }
+        printer.print("\n");
+        
+        // print the body
+        switch(tbType){
+            case DOUBLE:
+                for(int i = 0; i < rowIds.length; i++){
+                    printer.print(rowIds[i]);
+                    for(int j = 0; j < columnIds.length; j++){
+                        printer.print("\t" + dMatrix[i][j]);
+                    }
+                    printer.print("\n");
+                }     
+                break;
+            default://String...
+                for(int i = 0; i < rowIds.length; i++){
+                    printer.print(rowIds[i]);
+                    for(int j = 0; j < columnIds.length; j++){
+                        printer.print("\t" + matrix[i][j]);
+                    }
+                    printer.print("\n");
+                }                        
         }
         
         printer.close();

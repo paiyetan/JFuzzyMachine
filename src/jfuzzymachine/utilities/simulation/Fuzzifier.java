@@ -9,6 +9,7 @@
  */
 package jfuzzymachine.utilities.simulation;
 
+import jfuzzymachine.tables.Table;
 /**
  *
  * @author aiyetanpo

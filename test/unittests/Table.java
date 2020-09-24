@@ -7,7 +7,7 @@
   You should have received a copy of the license along with this
   work. If not, see <http://creativecommons.org/licenses/by-nc-nd/4.0/>
  */
-package jfuzzymachine.utilities.simulation;
+package unittests;
 
 import jfuzzymachine.exceptions.TableBindingException;
 import java.io.BufferedReader;
@@ -22,9 +22,7 @@ import java.util.ArrayList;
  * @author aiyetanpo
  */
 public class Table {
-
     
-            
     private String[] rowIds;
     private String[] columnIds;
     private String[][] matrix;
@@ -32,11 +30,6 @@ public class Table {
     private double[][] dMatrix;
     private float[][] fMatrix;
 
-    //private void getUnkownMethod() {
-    //    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    //}
-
-    
     public enum TableType {INTEGER, DOUBLE, FLOAT};
     public enum BindType {COLUMN, ROW};
         
@@ -71,8 +64,7 @@ public class Table {
                 break;
         }
     }
-
-    
+  
     public Table(String[] rowIds, 
                  String[] columnIds, 
                  String[][] matrix) {
@@ -139,7 +131,6 @@ public class Table {
         return index;
     }
     
-    
     public String[] getRow(int index){
         String[] indexedRow = new String[columnIds.length];
         for(int i=0; i < indexedRow.length; i++){
@@ -187,8 +178,7 @@ public class Table {
         }
         return indexedColumn;
     }
-    
-    
+       
     public String[] removeItem(String[] items, String itemToRemove){
         String[] newArr = new String[items.length - 1];
         int newArrIndex = 0;
@@ -247,9 +237,7 @@ public class Table {
         combinedTable = new Table(newTableRowIds, newTableColumnIds, newTableMatrix);
         return combinedTable;
     }
-    
-    
-    
+       
     public void print(String outFile) throws FileNotFoundException{
         PrintWriter printer = new PrintWriter(outFile);
         // print header...
@@ -270,8 +258,7 @@ public class Table {
         
         printer.close();
     }
-    
-    
+       
     public void print(String outFile, Table.TableType tbType) throws FileNotFoundException{
         PrintWriter printer = new PrintWriter(outFile);
         // print header...

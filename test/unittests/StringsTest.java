@@ -6,6 +6,7 @@
 package unittests;
 
 import java.util.Arrays;
+import jfuzzymachine.Rule;
 import org.apache.commons.math3.util.Combinations;
 
 /**
@@ -19,5 +20,8 @@ public class StringsTest {
         System.out.println(str.startsWith("> End Search"));
         System.out.println(str2.endsWith(".jfuz"));
         System.out.println(str2.split("\\.")[0]);    
+       //
+        Rule rule = new Rule(2,3,1);
+        System.out.println(rule.toString().replace("[", "").replace("]",""));
     }
 }

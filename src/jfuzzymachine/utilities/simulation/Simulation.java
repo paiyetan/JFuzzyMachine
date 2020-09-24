@@ -9,6 +9,7 @@
  */
 package jfuzzymachine.utilities.simulation;
 
+import jfuzzymachine.tables.Table;
 import jfuzzymachine.utilities.graph.Model;
 import jfuzzymachine.utilities.graph.Vertex;
 import java.util.Collections;
@@ -25,25 +26,25 @@ public class Simulation {
     public enum ExpressionType {PHENOTYPE, GENOTYPE};
     public enum KnockoutType {SINGLE, DOUBLE, TRIPLE};
     
-    private double alpha;
-    private int maxIterations; 
+    private final double alpha;
+    private final int maxIterations; 
     private final double eCutOff;// = 0d;
     
     private HashMap<Vertex, LinkedList<Model>> outputsToModelsMap;
     private LinkedList<double[]> simulatedValues;
     private LinkedList<double[]> deltaValuesList;
-    private double[] initialTableValues;
-    private Table exprs;
+    private final double[] initialTableValues;
+    private final Table exprs;
 
     private int iteration;
     private Fuzzifier fzr;
     
-    private boolean includesPheno;
-    private String phenotypeId;
+    private final boolean includesPheno;
+    private final String phenotypeId;
     
-    private boolean tanTransform;
-    private boolean logitTransform; 
-    private double k;
+    private final boolean tanTransform;
+    private final boolean logitTransform; 
+    private final double k;
     
     private boolean simulateKnockout;
     //private String geneToKnockout;
@@ -236,8 +237,7 @@ public class Simulation {
     }
     
     
-    
-    
+        
     class Minimum{
         double[] arr;
         

@@ -13,7 +13,7 @@ import jfuzzymachine.utilities.graph.Model;
 import jfuzzymachine.utilities.graph.Vertex;
 import jfuzzymachine.utilities.simulation.Fuzzifier;
 import jfuzzymachine.utilities.simulation.FuzzySet;
-import jfuzzymachine.utilities.simulation.Table;
+import jfuzzymachine.tables.Table;
 import jfuzzymachine.exceptions.TableBindingException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
