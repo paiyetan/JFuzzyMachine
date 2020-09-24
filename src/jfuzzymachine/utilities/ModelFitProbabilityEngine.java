@@ -6,7 +6,9 @@
 package jfuzzymachine.utilities;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Set;
 import java.util.Random;
 import jfuzzymachine.Fuzzifier;
 import jfuzzymachine.FuzzySet;
@@ -14,6 +16,8 @@ import jfuzzymachine.JFuzzyMachine;
 import jfuzzymachine.Rule;
 import jfuzzymachine.tables.RuleTable;
 import jfuzzymachine.tables.Table;
+import jfuzzymachine.utilities.graph.Model;
+import jfuzzymachine.utilities.graph.Vertex;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 /**
@@ -40,10 +44,44 @@ public class ModelFitProbabilityEngine {
         return fitPValue;
     }
     
-    public LinkedList getRandomFitEstimates(String outputNode,
+    public LinkedList<Double> getRandomDynamicPredictions(
+            HashMap<Vertex, LinkedList<Model>> outputToModelsMap,
+                      double[] initialValues,
+                      double alpha,
+                          int maxIterations,
+                            String outputNode,
+                                int maxNoOfInputs,
+                                    Table expMat,
+                                        int sampleSize, //number of randomization
+                                            boolean outputIsPheno,
+                                                Table phenoMat,
+                                                    boolean tanTransform,
+                                                        boolean logitTransform, 
+                                                            double k){
+        
+        LinkedList<Double> randomDynPreds = new LinkedList();
+        RuleTable ruleTable = new RuleTable();
+        Random rand = new Random();
+        //get output nodes in network nodes...
+        //Set<Vertex> outputVertex = outputToModelsMap.keySet();
+        for(int i = 0; i < sampleSize; i++){
+            HashMap<Vertex, LinkedList<Model>> randomOutputToModelsMap = new HashMap();
+            //for each output node...
+              //get a random number of inputs
+              //for each input, associate a random rule
+            //run network simulation x (number of iterations) 
+            //get the derived desired output value at the end of the simulation
+            //repeat process x (sample size)....
+        }
+        
+        
+        return(randomDynPreds);
+    }
+    
+    public LinkedList<Double> getRandomFitEstimates(String outputNode,
                                                 int maxNoOfInputs,
                                                     Table expMat,
-                                                        int sampleSize,
+                                                        int sampleSize, //number of randomization
                                                             boolean outputIsPheno,
                                                                 Table phenoMat,
                                                                     boolean tanTransform,
