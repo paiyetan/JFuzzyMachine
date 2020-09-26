@@ -65,7 +65,8 @@ public class ProbabilityEngine {
                                                 Table phenoExprs,
                                                     boolean tanTransform,
                                                         boolean logitTransform, 
-                                                        double k) throws TableBindingException{    
+                                                        double k,
+                                                            PrintWriter printer) throws TableBindingException{    
     LinkedList<Double> randomDynPreds = new LinkedList();
         Simulator simulator = new Simulator();
         double[] initialValues;
@@ -114,7 +115,16 @@ public class ProbabilityEngine {
             //get the derived desired output value at the end of the simulation
             LinkedList<double[]> simulatedValuesList = simulation.getSimulatedValues();
             double[] simulatedValues = simulatedValuesList.getLast();
-            randomDynPreds.add(simulatedValues[exprs.getRowIndex(outputNode)]);
+            
+            if(printer!= null){
+                printer.println(simulatedValues[exprs.getRowIndex(outputNode)]);
+            }else{
+                randomDynPreds.add(simulatedValues[exprs.getRowIndex(outputNode)]);
+            }
+            
+            if((i % 500)==0)
+               System.out.println(i + " sampling already perfomed...");
+            
         }//repeat process x (sample size)....       
         return(randomDynPreds);
     }
@@ -135,7 +145,8 @@ public class ProbabilityEngine {
                                                                 Table phenoMat,
                                                                     boolean tanTransform,
                                                                         boolean logitTransform, 
-                                                                            double k){
+                                                                            double k,
+                                                                            PrintWriter printer){
         final int maxNoOfInputs = 5;
         LinkedList<Double> randomFits = new LinkedList();
         String[] rowIds = expMat.getRowIds();
@@ -169,8 +180,17 @@ public class ProbabilityEngine {
                                                             tanTransform,
                                                             logitTransform, 
                                                                 k);
-            randomFits.add(computedFit);
-        }        
+            
+            if(printer!= null){
+                printer.println(computedFit);
+            }else{
+                randomFits.add(computedFit);
+            }            
+            
+            if((i % 500)==0)
+               System.out.println(i + " sampling already perfomed...");
+            
+        }//repeat        
         return(randomFits);
     }
     
@@ -273,7 +293,16 @@ public class ProbabilityEngine {
         boolean tanTransform = Boolean.parseBoolean(config.get("tanTransform"));
         boolean logitTransform = Boolean.parseBoolean(config.get("logitTransform")); 
         double k = Double.parseDouble(config.get("kValue"));
-
+        
+        
+        PrintWriter printer = null;
+        if(Boolean.parseBoolean(config.get("printRandomization"))){
+            printer = new PrintWriter(config.get("randomizationOutputFile"));
+            //for(double prediction : predictions){
+            //    printer.println(prediction);
+            //}
+        }
+        
         
         System.out.println("[" + new Date() + "]: " + "Getting random predictions...");  
         
@@ -291,7 +320,8 @@ public class ProbabilityEngine {
                                                                         phenoExprs, 
                                                                         tanTransform, 
                                                                         logitTransform, 
-                                                                        k);
+                                                                        k,
+                                                                        printer);
         }
         if(config.get("randomization").equalsIgnoreCase("FIT")){
             predictions = probabilityEngine.getRandomFitEstimates(outputNode, 
@@ -301,17 +331,16 @@ public class ProbabilityEngine {
                                                                     phenoExprs, 
                                                                     tanTransform, 
                                                                     logitTransform, 
-                                                                    k);
+                                                                    k,
+                                                                    printer);
         }
+        
+        if(Boolean.parseBoolean(config.get("printRandomization")))
+            printer.close();
+        
         
         System.out.println("[" + new Date() + "]: " + "Printing random predictions..."); 
         
-        if(Boolean.parseBoolean(config.get("printRandomization"))){
-            PrintWriter printer = new PrintWriter(config.get("randomizationOutputFile"));
-            for(double prediction : predictions){
-                printer.println(prediction);
-            }
-        }
         
         System.out.println("\n" + "[" + new Date() + "]: " + "...Done!");        
         Date end = new Date();
