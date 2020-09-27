@@ -66,7 +66,8 @@ public class ProbabilityEngine {
                                                     boolean tanTransform,
                                                         boolean logitTransform, 
                                                         double k,
-                                                            PrintWriter printer) throws TableBindingException{    
+                                                            PrintWriter printer,
+                                                            boolean nullPrinter) throws TableBindingException{    
     LinkedList<Double> randomDynPreds = new LinkedList();
         Simulator simulator = new Simulator();
         double[] initialValues;
@@ -116,13 +117,13 @@ public class ProbabilityEngine {
             LinkedList<double[]> simulatedValuesList = simulation.getSimulatedValues();
             double[] simulatedValues = simulatedValuesList.getLast();
             
-            if(printer!= null){
+            if(!nullPrinter){
                 printer.println(simulatedValues[exprs.getRowIndex(outputNode)]);
             }else{
                 randomDynPreds.add(simulatedValues[exprs.getRowIndex(outputNode)]);
             }
             
-            if((i % 500)==0)
+            if((i % 20)==0)
                System.out.println(i + " sampling already perfomed...");
             
         }//repeat process x (sample size)....       
@@ -146,7 +147,8 @@ public class ProbabilityEngine {
                                                                     boolean tanTransform,
                                                                         boolean logitTransform, 
                                                                             double k,
-                                                                            PrintWriter printer){
+                                                                            PrintWriter printer,
+                                                                                boolean nullPrinter){
         final int maxNoOfInputs = 5;
         LinkedList<Double> randomFits = new LinkedList();
         String[] rowIds = expMat.getRowIds();
@@ -181,13 +183,13 @@ public class ProbabilityEngine {
                                                             logitTransform, 
                                                                 k);
             
-            if(printer!= null){
+            if(!nullPrinter){
                 printer.println(computedFit);
             }else{
                 randomFits.add(computedFit);
             }            
             
-            if((i % 500)==0)
+            if((i % 20)==0)
                System.out.println(i + " sampling already perfomed...");
             
         }//repeat        
@@ -296,8 +298,10 @@ public class ProbabilityEngine {
         
         
         PrintWriter printer = null;
+        boolean nullPrinter = true;
         if(Boolean.parseBoolean(config.get("printRandomization"))){
             printer = new PrintWriter(config.get("randomizationOutputFile"));
+            nullPrinter = false;
             //for(double prediction : predictions){
             //    printer.println(prediction);
             //}
@@ -321,7 +325,8 @@ public class ProbabilityEngine {
                                                                         tanTransform, 
                                                                         logitTransform, 
                                                                         k,
-                                                                        printer);
+                                                                        printer,
+                                                                        nullPrinter);
         }
         if(config.get("randomization").equalsIgnoreCase("FIT")){
             predictions = probabilityEngine.getRandomFitEstimates(outputNode, 
@@ -332,7 +337,8 @@ public class ProbabilityEngine {
                                                                     tanTransform, 
                                                                     logitTransform, 
                                                                     k,
-                                                                    printer);
+                                                                    printer,
+                                                                    nullPrinter);
         }
         
         if(Boolean.parseBoolean(config.get("printRandomization")))
