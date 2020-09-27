@@ -71,21 +71,39 @@ public class ProbabilityEngine {
     LinkedList<Double> randomDynPreds = new LinkedList();
         Simulator simulator = new Simulator();
         double[] initialValues;
+        final int maxNoOfInputs = 5;
         
         //get output nodes in network nodes...
         Set<Vertex> outputVertices = outputToModelsMap.keySet();
+        System.out.println("Number of Network Nodes: " + outputVertices.size());
+        
+        
         for(int i = 0; i < sampleSize; i++){
+            
+            if((i > 0) && ((i % 20)==0))
+               System.out.println("[" + new Date() + "]: " +  i  +  " sampling already perfomed...");
+            
             HashMap<Vertex, LinkedList<Model>> outputToRandomModelsMap = new HashMap();
             //for each output node...
             for(Vertex outputVertex : outputVertices){
                 //get a random number of inputs or get the number of inputs
                 int vertexModelsNumber = outputToModelsMap.get(outputVertex).size();
+                //int randomVertexModelsNumber = random.nextInt(maxNoOfInputs);
+                
                 LinkedList<Model> randomModels = new LinkedList();
                 for(int j = 0; j < vertexModelsNumber; j++){ //for each input, associate a random rule
                     Model vertexModel = outputToModelsMap.get(outputVertex).get(j);
-                    LinkedList<Vertex> inputVertices = vertexModel.getInputNodes();
+                    //LinkedList<Vertex> inputVertices = vertexModel.getInputNodes();
+                    LinkedList<Vertex> inputVertices = new LinkedList();
+                    int numberOfInputVertices = random.nextInt((maxNoOfInputs + 1));
+                    // for each of the input vertices, scramble the input nodes Id...
+                    for(int m = 0; m < numberOfInputVertices; m++){
+                        String vertexId = exprs.getRowIds()[random.nextInt(exprs.getRowIds().length)];
+                        Vertex vertex = new Vertex(vertexId);
+                        inputVertices.add(vertex);
+                    }
                     LinkedList<String> rulesList = getRandomRules(inputVertices.size());
-                    double fit = vertexModel.getFit();
+                    double fit = random.nextDouble();
                     
                     Model randomModel = new Model(outputVertex, inputVertices, rulesList, fit);
                     randomModels.add(randomModel);
@@ -96,14 +114,15 @@ public class ProbabilityEngine {
             //LinkedList<Double> simulationValues = runSimulations();
             boolean includesPheno;
             includesPheno = outputIsPheno;
+            Table samplingExprs = exprs;
             if(includesPheno){            
-                exprs = exprs.bind(phenoExprs, Table.BindType.ROW);
+                samplingExprs = exprs.bind(phenoExprs, Table.BindType.ROW);
             }
-            initialValues = simulator.getInitialValues(exprs, initType);
+            initialValues = simulator.getInitialValues(samplingExprs, initType);
                     
-            Simulation simulation = new Simulation(outputToModelsMap,
+            Simulation simulation = new Simulation(outputToRandomModelsMap,
                                                       initialValues,
-                                                      exprs,
+                                                      samplingExprs,
                                                       alpha,
                                                       maxIterations,
                                                       eCutOff,
@@ -117,14 +136,27 @@ public class ProbabilityEngine {
             LinkedList<double[]> simulatedValuesList = simulation.getSimulatedValues();
             double[] simulatedValues = simulatedValuesList.getLast();
             
-            if(!nullPrinter){
-                printer.println(simulatedValues[exprs.getRowIndex(outputNode)]);
-            }else{
-                randomDynPreds.add(simulatedValues[exprs.getRowIndex(outputNode)]);
+            randomDynPreds.add(simulatedValues[samplingExprs.getRowIndex(outputNode)]);
+            
+            // for trouble shooting
+            if((i > 0) && ((i % 20)==0)){
+               System.out.println("[" + new Date() + "]: " + "retrieved " +
+                       simulatedValues.length + " simulated values at end of current sample simulation...");
+               System.out.println("    Retrieved Values (current sampling simulation):\n        " + 
+                                        Arrays.toString(simulatedValues));
+               //double currentPredictions = (new double[randomDynPreds.size()]);
+               System.out.println("    Current Prediction(s) so far:\n        "  + 
+                                        randomDynPreds.toString());
             }
             
-            if((i % 20)==0)
-               System.out.println(i + " sampling already perfomed...");
+            /*
+            if(nullPrinter){
+                // do nothing...
+            }else{
+                //printer.println(simulatedValues[samplingExprs.getRowIndex(outputNode)]);
+            }
+            */  
+            
             
         }//repeat process x (sample size)....       
         return(randomDynPreds);
@@ -190,7 +222,7 @@ public class ProbabilityEngine {
             }            
             
             if((i % 20)==0)
-               System.out.println(i + " sampling already perfomed...");
+               System.out.println("[" + new Date() + "]: " +  i  + " sampling already perfomed...");
             
         }//repeat        
         return(randomFits);
