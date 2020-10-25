@@ -51,6 +51,8 @@ public class Simulation {
     
     private String[] knockouts;
     
+    private boolean keepKOFeatAtExprsValue;
+    
     public Simulation(HashMap<Vertex, LinkedList<Model>> outputToModelsMap,
                       double[] initialValues,
                       Table exprs,
@@ -83,6 +85,7 @@ public class Simulation {
         
         this.simulateKnockout = false;//to initiate as not to return nullValuePointer Exception in downstream call
         this.knockouts = null;
+        this.keepKOFeatAtExprsValue = false;
         
     }
     
@@ -98,6 +101,10 @@ public class Simulation {
     
     public void setKnockOuts(String[] geneKnockouts){
         this.knockouts = geneKnockouts;
+    }
+    
+    public void setKeepKOFeatAtExprsValue(boolean keepKOFeatAtExprsValue){
+        this.keepKOFeatAtExprsValue = keepKOFeatAtExprsValue;
     }
 
     public void run(){
@@ -134,22 +141,40 @@ public class Simulation {
         //int knockedOutGeneIndex; // 
         while (iteration < maxIterations){
             
-            if(this.simulateKnockout){           
-                Minimum min = new Minimum(currentValues);
-                //knockedOutGeneIndex = exprs.getRowIndex(geneToKnockout); //get index of knockedout get                                
-                //currentValues[knockedOutGeneIndex] = min.minimum();                
-                for(String knockout : knockouts){
-                    int knockoutGeneIndex = exprs.getRowIndex(knockout); //get row index of a knockedout gene...
+            if(this.simulateKnockout){
+                
+                if(this.keepKOFeatAtExprsValue){
                     
-                    try{
-                        currentValues[knockoutGeneIndex] = min.minimum();
-                    }catch(ArrayIndexOutOfBoundsException e){
-                        System.out.println("ArrayIndexOutOfBoundsException@");
-                        System.out.println("           knockout: " + knockout);
-                        System.out.println("  knockoutGeneIndex: " + knockoutGeneIndex);
-                        e.printStackTrace();
-                        System.exit(-1);
-                    }
+                    for(String knockout : knockouts){
+                        int knockoutGeneIndex = exprs.getRowIndex(knockout); //get row index of a knockedout gene...   
+                        double exprValue = initialTableValues[knockoutGeneIndex];//get the expression value of knockedout feature
+                        try{
+                            currentValues[knockoutGeneIndex] = exprValue; 
+                        }catch(ArrayIndexOutOfBoundsException e){
+                            System.out.println("ArrayIndexOutOfBoundsException@");
+                            System.out.println("           knockout: " + knockout);
+                            System.out.println("  knockoutGeneIndex: " + knockoutGeneIndex);
+                            e.printStackTrace();
+                            System.exit(-1);
+                        }
+                    } 
+                    
+                }else{
+                    Minimum min = new Minimum(currentValues); // set knockedout feature a minimum expression value
+                    //knockedOutGeneIndex = exprs.getRowIndex(geneToKnockout); //get index of knockedout get                                
+                    //currentValues[knockedOutGeneIndex] = min.minimum();                
+                    for(String knockout : knockouts){
+                        int knockoutGeneIndex = exprs.getRowIndex(knockout); //get row index of a knockedout gene...                    
+                        try{
+                            currentValues[knockoutGeneIndex] = min.minimum();
+                        }catch(ArrayIndexOutOfBoundsException e){
+                            System.out.println("ArrayIndexOutOfBoundsException@");
+                            System.out.println("           knockout: " + knockout);
+                            System.out.println("  knockoutGeneIndex: " + knockoutGeneIndex);
+                            e.printStackTrace();
+                            System.exit(-1);
+                        }
+                    }               
                 }
             }
             
