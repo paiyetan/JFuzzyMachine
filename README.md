@@ -42,8 +42,11 @@ The configuration files are pre-filled to satisfy required parameters for this m
 ## Running jFuzzyMachine
 
 To run the tool, on the command-line,
+
     Navigate into the application directory
+
     Appropriately fill-in the desired run-time options in the configuration files and
+
     Depending on application module or functional unit of interest, type the appropriate commands
 
 For a full description of jFuzzyMachine, please this publication: https://www.biorxiv.org/content/10.1101/2020.10.06.315994v1.full 
