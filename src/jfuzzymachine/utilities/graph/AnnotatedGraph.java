@@ -35,11 +35,27 @@ public class AnnotatedGraph {
     private HashMap<Integer, LinkedList<Edge>> edgeIdToMappedEdges; //hashedEdgeId<=>mappedEdges
     private int[][] directedAdjMatrix;
     private HashMap<String, Integer> ruleFrequencies;
-    
+    private boolean penalizeNullRules;
+    private LinkedList<String> nullRules;
 
-    public AnnotatedGraph(File[] jfuzzFiles, double fitCutOff) throws IOException {
+    public AnnotatedGraph(File[] jfuzzFiles, double fitCutOff, boolean penalizeNullRules) throws IOException {
         this.jfuzzFiles = jfuzzFiles;
         this.fitCutOff = fitCutOff;
+        this.penalizeNullRules = penalizeNullRules;
+        
+        nullRules = new LinkedList();
+        nullRules.add("1, 1, 1");
+        nullRules.add("1, 2, 1");
+        nullRules.add("1, 3, 1");
+        
+        nullRules.add("2, 1, 2");
+        nullRules.add("2, 2, 2");
+        nullRules.add("2, 3, 2");
+        
+        nullRules.add("3, 1, 3");
+        nullRules.add("3, 2, 3");
+        nullRules.add("3, 3, 3");
+        
         readInputFiles();
         //updateOutputNodeToInputNodesMap();
         extractDirectedAdjMatrix();
@@ -275,7 +291,35 @@ public class AnnotatedGraph {
         outputs.forEach((output) -> {
             LinkedList<Model> mappedModels = outputToModelsMap.get(output);
             Collections.sort(mappedModels); // sort bestFitModel bestFitModel ascending order of fit...
+            
             Model bestFitModel = mappedModels.getLast();// get the bestFitModel with the best fit...
+            
+            if(this.penalizeNullRules){
+                //iterate from the last model (best fitted model) till you have a model without null rules...
+                boolean foundBestFit = false;
+                int modelIndex = mappedModels.size() - 1;
+                
+                while(!foundBestFit && (modelIndex >= 0)){
+                    Model model = mappedModels.get(modelIndex);
+                    LinkedList<String> modelRules = model.getRules();
+                    boolean containsNullRule = false;
+                    checkRules:
+                    for(int i = 0; i < modelRules.size(); i++){
+                        //iterate thru the rules and ensure non is a null rule
+                        if(this.nullRules.contains(modelRules.get(i))){
+                            containsNullRule = true;
+                            break checkRules; 
+                        }                        
+                    }
+                    if(containsNullRule){
+                       modelIndex--;
+                    }else{
+                        foundBestFit = true;
+                        bestFitModel = model;
+                    }
+                }
+            }
+            
             LinkedList<Vertex> inputsNodes = bestFitModel.getInputNodes();
             //inputs.forEach((input) -> {
             for(int i = 0; i < inputsNodes.size(); i++){
@@ -295,8 +339,36 @@ public class AnnotatedGraph {
         Set<Vertex> outputs = outputToModelsMap.keySet();
         for(Vertex output : outputs){
             LinkedList<Model> mappedModels = outputToModelsMap.get(output);
-            Collections.sort(mappedModels); // sort mapped models in ascending order
-            Model bestFitModel = mappedModels.getLast();
+            Collections.sort(mappedModels); // sort mapped models in ascending order           
+            
+            Model bestFitModel = mappedModels.getLast(); 
+            
+            if(this.penalizeNullRules){
+                //iterate from the last model (best fitted model) till you have a model without null rules...
+                boolean foundBestFit = false;
+                int modelIndex = mappedModels.size() - 1;
+                
+                while(!foundBestFit && (modelIndex >= 0)){
+                    Model model = mappedModels.get(modelIndex);
+                    LinkedList<String> modelRules = model.getRules();
+                    boolean containsNullRule = false;
+                    checkRules:
+                    for(int i = 0; i < modelRules.size(); i++){
+                        //iterate thru the rules and ensure non is a null rule
+                        if(this.nullRules.contains(modelRules.get(i))){
+                            containsNullRule = true;
+                            break checkRules; 
+                        }                        
+                    }
+                    if(containsNullRule){
+                       modelIndex--;
+                    }else{
+                        foundBestFit = true;
+                        bestFitModel = model;
+                    }
+                }
+            }
+                       
             printer.println(output.getId() + "\t" +
                             mappedModels.size() + "\t" +
                             bestFitModel.getInputNodesString() + "\t" +

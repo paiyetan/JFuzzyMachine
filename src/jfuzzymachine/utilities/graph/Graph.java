@@ -61,6 +61,7 @@ public class Graph {
         String ruleFrequenciesFile = null;
         
         int topFittedModelsToOutput = 0;
+        boolean penalizeNullRules;
         
         
         //include reading from a .config file..
@@ -88,9 +89,10 @@ public class Graph {
         useAnnotatedGraphModel = Boolean.parseBoolean(config.get("useAnnotatedGraphModel"));
         outputEdges = Boolean.parseBoolean(config.get("outputEdges"));
         //includesPheno = Boolean.parseBoolean(config.get("includesPheno"));   
-        
+                
         topFittedModelsToOutput = Integer.parseInt(config.get("topFittedModelsToOutput"));
-        
+        penalizeNullRules = Boolean.parseBoolean(config.get("penalizeNullRules"));
+                       
         File inputFile = new File(input);
         File[] inputFiles;
         //String outputsDir;
@@ -126,7 +128,7 @@ public class Graph {
         
         if(useAnnotatedGraphModel){
             System.out.println("[" + new Date().toString() + "]:Using the 'Annotated (Directed) Graph' model...");
-            AnnotatedGraph graph = new AnnotatedGraph(inputFiles, fitCutOff);           
+            AnnotatedGraph graph = new AnnotatedGraph(inputFiles, fitCutOff, penalizeNullRules);           
             System.out.println("[" + new Date().toString() + "]:Printing output(s)...");
             graph.getAdjMatrix().print(adjMatOutputFile);
             if(outputEdges){
