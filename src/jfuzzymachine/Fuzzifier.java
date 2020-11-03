@@ -18,7 +18,7 @@ import jfuzzymachine.tables.Table;
 public class Fuzzifier { 
     
     
-    FuzzySet[][] getFuzzyMatrix(Table exprs, JFuzzyMachine.ExpressionType expressionType) {
+    public FuzzySet[][] getFuzzyMatrix(Table exprs, JFuzzyMachine.ExpressionType expressionType) {
         //Table fuzzyTable;
         double[][] mat = exprs.getDoubleMatrix();
         FuzzySet[][] xfMat = new FuzzySet[exprs.getRowIds().length][exprs.getColumnIds().length];

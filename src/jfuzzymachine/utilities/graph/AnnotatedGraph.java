@@ -337,7 +337,10 @@ public class AnnotatedGraph {
         PrintWriter printer = new PrintWriter(outputFile);
         printer.println("Output\tNumberOfFittedModels\tInputNodes(BestFit)\tRules\tFit");
         Set<Vertex> outputs = outputToModelsMap.keySet();
-        for(Vertex output : outputs){
+        
+        outputs.forEach((output) -> {
+        //for(Vertex output : outputs){
+            
             LinkedList<Model> mappedModels = outputToModelsMap.get(output);
             Collections.sort(mappedModels); // sort mapped models in ascending order           
             
@@ -374,7 +377,8 @@ public class AnnotatedGraph {
                             bestFitModel.getInputNodesString() + "\t" +
                             bestFitModel.getRulesString() + "\t" +
                             bestFitModel.getFit());
-        }
+        //}
+        });
         printer.close();       
     }
     
