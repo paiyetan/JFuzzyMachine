@@ -69,11 +69,11 @@ public class AnnotatedGraph {
         edgeIdToMappedEdges = new HashMap();
         ruleFrequencies = new HashMap();
         
-        
         for(File jfuzzFile : jfuzzFiles){
+            System.out.println("Reading file: " + jfuzzFile.getName());
             BufferedReader reader = new BufferedReader(new FileReader(jfuzzFile));
             String line;
-            //ArrayList<String> fileLines = new ArrayList<>();
+            
             boolean readTable = false;
             boolean readHeaderLineNext = false;
             while((line = reader.readLine())!=null){
@@ -89,7 +89,15 @@ public class AnnotatedGraph {
                 }
                 if(readTable && !readHeaderLineNext){
                     String[] lineArr = line.split("\t");
-                    double fit = Double.parseDouble(lineArr[4]);
+                    
+                    double fit = 0;
+                    try{
+                        fit = Double.parseDouble(lineArr[4]);
+                    }catch(ArrayIndexOutOfBoundsException e){
+                        System.out.println("jFuzzFile: " + jfuzzFile.getName());
+                        e.printStackTrace();
+                    }
+                    
                     // only use nodes above specified fit value...
                     if(fit >= fitCutOff){
                         Vertex outputNode = new Vertex(lineArr[0].trim());
@@ -103,23 +111,7 @@ public class AnnotatedGraph {
                                 vertices.add(inputNode);
                             }
                         }
-                        //update output to inputNodes map...
-                        /**
-                        if(outputToInputNodes.containsKey(outputNode)){                           
-                            LinkedList<Vertex> mappedInputNodes = outputToInputNodes.remove(outputNode);
-                            for(Vertex inputNode : inputNodes){
-                                if(!mappedInputNodes.contains(inputNode)){
-                                    mappedInputNodes.add(inputNode);
-                                }
-                            }
-                            outputToInputNodes.put(outputNode, mappedInputNodes);
-                        }else{                          
-                            outputToInputNodes.put(outputNode, inputNodes);
-                        }
-                        */
-                        
-                        
-                        
+                                                
                         //update edgeIdToMappedEdges HashMap and edges...
                         LinkedList<String> rules = getInputRules(lineArr[3]);
                         //update rule frequencies..
@@ -132,26 +124,7 @@ public class AnnotatedGraph {
                                 ruleFrequencies.put(rule, 1);
                             }
                         }
-                        /*
-                        for(int i = 0; i < inputNodes.size(); i++){
-                            Vertex v = inputNodes.get(i);
-                            Edge edge = new Edge(v, outputNode, rules.get(i), fit);
-                            int edgeId = edge.hashCode();
-                            if(edgeIdToMappedEdges.containsKey(edgeId)){
-                                LinkedList<Edge> mappedEdges = edgeIdToMappedEdges.remove(edgeId);
-                                mappedEdges.add(edge);
-                                edgeIdToMappedEdges.put(edgeId, mappedEdges);
-                            }else{
-                                LinkedList<Edge> mappedEdges = new LinkedList();
-                                mappedEdges.add(edge);
-                                edgeIdToMappedEdges.put(edgeId, mappedEdges);
-                            }
-                            //update edges...
-                            if(!(edges.contains(edge))){
-                                edges.add(edge);
-                            }
-                        }
-                        */
+                        
                         Model nodeInputs = new Model(outputNode, inputNodes, rules, fit);
                         if(outputToModelsMap.containsKey(outputNode)){                           
                             LinkedList<Model> mappedModels = outputToModelsMap.remove(outputNode);
@@ -418,35 +391,6 @@ public class AnnotatedGraph {
         }
         printer.close();  
     }
-    
-    /*
-    public String getInputNodesString(LinkedList<Model> ins){
-        String str = "";
-        String[] insArr = new String[ins.size()];
-        for(int i=0; i < insArr.length; i++)
-            insArr[i] = "[" + ins.get(i).getInputNodesString() + "]";
-        str = Arrays.toString(insArr);
-        return str;
-    }
-    
-    public String getRulesString(LinkedList<Model> ins){
-        String str = "";
-        String[] insArr = new String[ins.size()];
-        for(int i=0; i < insArr.length; i++)
-            insArr[i] = "[" + ins.get(i).getRulesString() + "]";
-        str = Arrays.toString(insArr);
-        return str;
-    }
-    
-    public String getFitsString(LinkedList<Model> ins){
-        String str = "";
-        double[] insArr = new double[ins.size()];
-        for(int i=0; i < insArr.length; i++)
-            insArr[i] = ins.get(i).getFit();
-        str = Arrays.toString(insArr);
-        return str;
-    }
-    */
     
     public void printRuleFrequencies(String outputFile) throws FileNotFoundException{
         // how is this different from an edge(s) table....we could describe with filename _OutputFile.freq
