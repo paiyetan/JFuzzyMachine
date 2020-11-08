@@ -63,6 +63,7 @@ public class Graph {
         int topFittedModelsToOutput = 0;
         boolean penalizeNullRules;
         
+        boolean reduceMemoryFootprint;
         
         //include reading from a .config file..
         /**
@@ -92,6 +93,8 @@ public class Graph {
                 
         topFittedModelsToOutput = Integer.parseInt(config.get("topFittedModelsToOutput"));
         penalizeNullRules = Boolean.parseBoolean(config.get("penalizeNullRules"));
+        
+        reduceMemoryFootprint = Boolean.parseBoolean(config.get("reduceMemoryFootprint"));
                        
         File inputFile = new File(input);
         File[] inputFiles;
@@ -128,7 +131,10 @@ public class Graph {
         
         if(useAnnotatedGraphModel){
             System.out.println("[" + new Date().toString() + "]:Using the 'Annotated (Directed) Graph' model...");
-            AnnotatedGraph graph = new AnnotatedGraph(inputFiles, fitCutOff, penalizeNullRules);           
+            AnnotatedGraph graph = new AnnotatedGraph(inputFiles, 
+                                                      fitCutOff, 
+                                                      penalizeNullRules,
+                                                      reduceMemoryFootprint);           
             System.out.println("[" + new Date().toString() + "]:Printing output(s)...");
             graph.getAdjMatrix().print(adjMatOutputFile);
             if(outputEdges){

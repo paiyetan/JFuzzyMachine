@@ -37,8 +37,22 @@ public class AnnotatedGraph {
     private HashMap<String, Integer> ruleFrequencies;
     private boolean penalizeNullRules;
     private LinkedList<String> nullRules;
+    
+    private boolean reduceMemoryFootprint;
+    private HashMap<Vertex, MappedModels> outputToMappedModelsMap;
 
-    public AnnotatedGraph(File[] jfuzzFiles, double fitCutOff, boolean penalizeNullRules) throws IOException {
+    public AnnotatedGraph(File[] jfuzzFiles, 
+                          double fitCutOff, 
+                          boolean penalizeNullRules,
+                          boolean reduceMemoryFootprint) throws IOException {
+        
+        
+        vertices = new LinkedList();
+        edges = new LinkedList();        
+        outputToModelsMap = new HashMap();
+        edgeIdToMappedEdges = new HashMap();
+        ruleFrequencies = new HashMap();        
+        
         this.jfuzzFiles = jfuzzFiles;
         this.fitCutOff = fitCutOff;
         this.penalizeNullRules = penalizeNullRules;
@@ -56,18 +70,15 @@ public class AnnotatedGraph {
         nullRules.add("3, 2, 3");
         nullRules.add("3, 3, 3");
         
+        this.reduceMemoryFootprint = reduceMemoryFootprint;
+        this.outputToMappedModelsMap = new HashMap();       
+        
         readInputFiles();
-        //updateOutputNodeToInputNodesMap();
         extractDirectedAdjMatrix();
     }
     
     private void readInputFiles() throws FileNotFoundException, IOException {
         
-        vertices = new LinkedList();
-        edges = new LinkedList();        
-        outputToModelsMap = new HashMap();
-        edgeIdToMappedEdges = new HashMap();
-        ruleFrequencies = new HashMap();
         
         for(File jfuzzFile : jfuzzFiles){
             System.out.println("Reading file: " + jfuzzFile.getName());
@@ -100,6 +111,7 @@ public class AnnotatedGraph {
                     
                     // only use nodes above specified fit value...
                     if(fit >= fitCutOff){
+                        
                         Vertex outputNode = new Vertex(lineArr[0].trim());
                         if(!(vertices.contains(outputNode))){
                             vertices.add(outputNode);
@@ -111,7 +123,7 @@ public class AnnotatedGraph {
                                 vertices.add(inputNode);
                             }
                         }
-                                                
+
                         //update edgeIdToMappedEdges HashMap and edges...
                         LinkedList<String> rules = getInputRules(lineArr[3]);
                         //update rule frequencies..
@@ -124,17 +136,42 @@ public class AnnotatedGraph {
                                 ruleFrequencies.put(rule, 1);
                             }
                         }
-                        
-                        Model nodeInputs = new Model(outputNode, inputNodes, rules, fit);
-                        if(outputToModelsMap.containsKey(outputNode)){                           
-                            LinkedList<Model> mappedModels = outputToModelsMap.remove(outputNode);
-                            mappedModels.add(nodeInputs);
-                            outputToModelsMap.put(outputNode, mappedModels);
-                        }else{ 
-                            LinkedList<Model> mappedModels = new LinkedList();
-                            mappedModels.add(nodeInputs);
-                            outputToModelsMap.put(outputNode, mappedModels);
-                        }                        
+
+                        Model model = new Model(outputNode, inputNodes, rules, fit);
+                        if(this.reduceMemoryFootprint){
+                            if(outputToMappedModelsMap.containsKey(outputNode)){                           
+                                MappedModels mappedModels = outputToMappedModelsMap.remove(outputNode);
+                                if(mappedModels.getNumOfMappedModels() < mappedModels.getMaxMappedModels()){
+                                    mappedModels.add(model);
+                                }else if(model.getFit() > mappedModels.getMaxEstimatedFit()){
+                                    mappedModels.removeLeastFitted();
+                                    mappedModels.add(model);                                    
+                                }                                
+                                outputToMappedModelsMap.put(outputNode, mappedModels);
+                            }else{ 
+                                LinkedList<Model> mappedModelsList = new LinkedList();
+                                MappedModels mappedModels = 
+                                        new MappedModels(outputNode, 
+                                                         mappedModelsList, //empty mapped models...
+                                                         250, //maxMappedModels, defaults to 250
+                                                         -100.0, //maxEstimatedFit 
+                                                         100.0 //minEstimatedFit 
+                                                        );
+                                mappedModels.add(model);
+                                outputToMappedModelsMap.put(outputNode, mappedModels);
+                            }                                                         
+                        }else{                                                       
+                            if(outputToModelsMap.containsKey(outputNode)){                           
+                                LinkedList<Model> mappedModels = outputToModelsMap.remove(outputNode);
+                                mappedModels.add(model);
+                                outputToModelsMap.put(outputNode, mappedModels);
+                            }else{ 
+                                LinkedList<Model> mappedModels = new LinkedList();
+                                mappedModels.add(model);
+                                outputToModelsMap.put(outputNode, mappedModels);
+                            }  
+                            
+                        }                                                
                     }                    
                 }
                 if(line.contains("> Begin")){
@@ -143,36 +180,74 @@ public class AnnotatedGraph {
                 }
             }
             //update the edgesIdToMappedEdges
-            Set<Vertex> outputNodes = outputToModelsMap.keySet();
-            for(Vertex outputNode : outputNodes){
-                LinkedList<Model> mappedModels = outputToModelsMap.get(outputNode);
-                Collections.sort(mappedModels);
-                Model model = mappedModels.getLast();
-                
-                LinkedList<Vertex> inputNodes = model.getInputNodes();
-                LinkedList<String> rules = model.getRules();
-                double fit = model.getFit();
-                for(int i = 0; i < inputNodes.size(); i++){
-                    Vertex inputNode = inputNodes.get(i);
-                    String rule = rules.get(i);
-                    Edge edge = new Edge(inputNode, outputNode, rule, fit);
-                    int edgeId = edge.hashCode();
-                    if(edgeIdToMappedEdges.containsKey(edgeId)){
-                        LinkedList<Edge> mappedEdges = edgeIdToMappedEdges.remove(edgeId);    
-                        //mappedEdges.add(edge);
-                        if(!mappedEdges.contains(edge))
+            if(this.reduceMemoryFootprint){
+                Set<Vertex> outputNodes = outputToMappedModelsMap.keySet();
+                for(Vertex outputNode : outputNodes){
+                    LinkedList<Model> mappedModels = outputToMappedModelsMap.get(outputNode).getMappedModels();
+                    Collections.sort(mappedModels);
+                    Model model = mappedModels.getLast();
+
+                    LinkedList<Vertex> inputNodes = model.getInputNodes();
+                    LinkedList<String> rules = model.getRules();
+                    double fit = model.getFit();
+                    for(int i = 0; i < inputNodes.size(); i++){
+                        Vertex inputNode = inputNodes.get(i);
+                        String rule = rules.get(i);
+                        Edge edge = new Edge(inputNode, outputNode, rule, fit);
+                        int edgeId = edge.hashCode();
+                        if(edgeIdToMappedEdges.containsKey(edgeId)){
+                            LinkedList<Edge> mappedEdges = edgeIdToMappedEdges.remove(edgeId);    
+                            //mappedEdges.add(edge);
+                            if(!mappedEdges.contains(edge))
+                                mappedEdges.add(edge);
+
+                            edgeIdToMappedEdges.put(edgeId, mappedEdges);
+                        }else{
+                            LinkedList<Edge> mappedEdges = new LinkedList();
                             mappedEdges.add(edge);
-                        
-                        edgeIdToMappedEdges.put(edgeId, mappedEdges);
-                    }else{
-                        LinkedList<Edge> mappedEdges = new LinkedList();
-                        mappedEdges.add(edge);
-                        edgeIdToMappedEdges.put(edgeId, mappedEdges);
+                            edgeIdToMappedEdges.put(edgeId, mappedEdges);
+                        }
                     }
                 }
                 
-            }
-            
+            }else{
+                Set<Vertex> outputNodes = outputToModelsMap.keySet();
+                for(Vertex outputNode : outputNodes){
+                    LinkedList<Model> mappedModels = outputToModelsMap.get(outputNode);
+                    Collections.sort(mappedModels);
+                    Model model = mappedModels.getLast();
+
+                    LinkedList<Vertex> inputNodes = model.getInputNodes();
+                    LinkedList<String> rules = model.getRules();
+                    double fit = model.getFit();
+                    for(int i = 0; i < inputNodes.size(); i++){
+                        Vertex inputNode = inputNodes.get(i);
+                        String rule = rules.get(i);
+                        Edge edge = new Edge(inputNode, outputNode, rule, fit);
+                        int edgeId = edge.hashCode();
+                        if(edgeIdToMappedEdges.containsKey(edgeId)){
+                            LinkedList<Edge> mappedEdges = edgeIdToMappedEdges.remove(edgeId);    
+                            //mappedEdges.add(edge);
+                            if(!mappedEdges.contains(edge))
+                                mappedEdges.add(edge);
+
+                            edgeIdToMappedEdges.put(edgeId, mappedEdges);
+                        }else{
+                            LinkedList<Edge> mappedEdges = new LinkedList();
+                            mappedEdges.add(edge);
+                            edgeIdToMappedEdges.put(edgeId, mappedEdges);
+                        }
+                    }
+
+                }
+            }            
+        }
+        // if reduceMemoryFootprint option was employed, tranfer all objects in outputToMappedModelsModels to outputToModelsMap
+        if(this.reduceMemoryFootprint){
+            Set<Vertex> outputNodes = outputToMappedModelsMap.keySet();
+            outputNodes.forEach((outputNode) -> {
+                outputToModelsMap.put(outputNode, outputToMappedModelsMap.get(outputNode).getMappedModels());
+            });
         }
     }
     
