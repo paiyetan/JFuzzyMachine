@@ -349,8 +349,20 @@ public class SlurmRunFileMaker {
                             params.put("jobNamePrepend", jobNamePrependId);
                             slurmscriptFilePath = slurmscriptsDir + File.separator +  startTime + "." + inputFilename + "." + start + "." + end + "." + j + ".sh";
                             jconfigFilePath = slurmscriptsDir + File.separator + startTime + "." + inputFilename + "." + start + "." + end + "." + j + ".jconfig";
-                            makeJConfigFile(jconfigFilePath, inputFile.getPath(), runJFuzzyDir, j, fitCutOff, start, end, params);
-                            makeSlurmRunFile(slurmscriptFilePath, start, end, j, fitCutOff, jconfigFilePath, params);
+                            makeJConfigFile(jconfigFilePath, 
+                                            inputFile.getPath(), 
+                                            runJFuzzyDir, j, 
+                                            fitCutOff, 
+                                            start, 
+                                            end, 
+                                            params);
+                            makeSlurmRunFile(slurmscriptFilePath, 
+                                             start, 
+                                             end, 
+                                             j, 
+                                             fitCutOff, 
+                                             jconfigFilePath, 
+                                             params);
 
                             String currDir = System.getProperty("user.dir");
                             slurmRunFiles.add(slurmscriptFilePath.replace(currDir, "."));

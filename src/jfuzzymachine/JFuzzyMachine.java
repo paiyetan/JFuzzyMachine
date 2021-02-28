@@ -650,24 +650,27 @@ public class JFuzzyMachine {
                 int maxInputs = Integer.parseInt(config.get("maxNumberOfInputs")); // get max # of inputs            
                 if(maxInputs <= 0){ // a flag to simply use the specified "number of inputs"
                     int inputs = Integer.parseInt(config.get("numberOfInputs"));                
-                    //results = 
-                    this.searchHelper(inputs, 
-                                        outputGene, 
-                                            otherGenes, 
-                                                //esearch,
-                                                    printer
-                                            );
-                }else{ // otherwise use the 
-                    // for each 1 to max # of inputs
-                    for (int i = 0; i < maxInputs; i++ ){
-                        int inputs = i + 1;
-                        //results = 
+                    if(otherGenes.length >= inputs){
                         this.searchHelper(inputs, 
                                             outputGene, 
                                                 otherGenes, 
                                                     //esearch,
                                                         printer
-                                            );
+                                                );
+                    }
+                    
+                }else{ // otherwise use the 
+                    // for each 1 to max # of inputs
+                    for (int i = 0; i < maxInputs; i++ ){
+                        int inputs = i + 1;
+                        if(otherGenes.length >= inputs){
+                            this.searchHelper(inputs, 
+                                                outputGene, 
+                                                    otherGenes, 
+                                                        //esearch,
+                                                            printer
+                                                );
+                        }
                     }
                 }
             }
