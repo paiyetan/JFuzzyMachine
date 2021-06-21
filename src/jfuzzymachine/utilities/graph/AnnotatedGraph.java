@@ -19,6 +19,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Set;
+import jfuzzymachine.tables.Table;
+import jfuzzymachine.utilities.FitEvaluator;
+import jfuzzymachine.utilities.ProbabilityEngine;
 
 /**
  *
@@ -40,13 +43,14 @@ public class AnnotatedGraph {
     
     private boolean reduceMemoryFootprint;
     private HashMap<Vertex, MappedModels> outputToMappedModelsMap;
-
+    
+    //private boolean evaluateFittedModels;
+    //private String testDataExprsMat;
+    
     public AnnotatedGraph(File[] jfuzzFiles, 
                           double fitCutOff, 
                           boolean penalizeNullRules,
-                          boolean reduceMemoryFootprint) throws IOException {
-        
-        
+                          boolean reduceMemoryFootprint) throws IOException {    
         vertices = new LinkedList();
         edges = new LinkedList();        
         outputToModelsMap = new HashMap();
@@ -99,80 +103,76 @@ public class AnnotatedGraph {
                     continue;
                 }
                 if(readTable && !readHeaderLineNext){
-                    String[] lineArr = line.split("\t");
-                    
-                    double fit = 0;
-                    try{
-                        fit = Double.parseDouble(lineArr[4]);
-                    }catch(ArrayIndexOutOfBoundsException e){
-                        System.out.println("jFuzzFile: " + jfuzzFile.getName());
-                        e.printStackTrace();
-                    }
-                    
-                    // only use nodes above specified fit value...
-                    if(fit >= fitCutOff){
-                        
-                        Vertex outputNode = new Vertex(lineArr[0].trim());
-                        if(!(vertices.contains(outputNode))){
-                            vertices.add(outputNode);
-                        }                    
-                        LinkedList<Vertex> inputNodes = getInputNodes(lineArr[2]);
-                        //update vertices list...
-                        for(Vertex inputNode : inputNodes){
-                            if(!(vertices.contains(inputNode))){
-                                vertices.add(inputNode);
-                            }
+                    String[] lineArr = line.split("\t");                    
+                    if(lineArr.length >= 5){ //to facilitate reading incomplete .jfuz file...
+                        double fit = 0;
+                        try{
+                            fit = Double.parseDouble(lineArr[4]);
+                        }catch(ArrayIndexOutOfBoundsException e){
+                            System.out.println("jFuzzFile: " + jfuzzFile.getName());
+                            e.printStackTrace();
                         }
-
-                        //update edgeIdToMappedEdges HashMap and edges...
-                        LinkedList<String> rules = getInputRules(lineArr[3]);
-                        //update rule frequencies..
-                        for(String rule : rules){
-                            if(ruleFrequencies.containsKey(rule)){
-                                int freq = ruleFrequencies.remove(rule);
-                                freq++;
-                                ruleFrequencies.put(rule, freq);
-                            }else{
-                                ruleFrequencies.put(rule, 1);
+                        // only use nodes above specified fit value...
+                        if(fit >= fitCutOff){
+                            Vertex outputNode = new Vertex(lineArr[0].trim());
+                            if(!(vertices.contains(outputNode))){
+                                vertices.add(outputNode);
+                            }                    
+                            LinkedList<Vertex> inputNodes = getInputNodes(lineArr[2]);
+                            //update vertices list...
+                            for(Vertex inputNode : inputNodes){
+                                if(!(vertices.contains(inputNode))){
+                                    vertices.add(inputNode);
+                                }
                             }
-                        }
-
-                        Model model = new Model(outputNode, inputNodes, rules, fit);
-                        if(this.reduceMemoryFootprint){
-                            if(outputToMappedModelsMap.containsKey(outputNode)){                           
-                                MappedModels mappedModels = outputToMappedModelsMap.remove(outputNode);
-                                if(mappedModels.getNumOfMappedModels() < mappedModels.getMaxMappedModels()){
+                            //update edgeIdToMappedEdges HashMap and edges...
+                            LinkedList<String> rules = getInputRules(lineArr[3]);
+                            //update rule frequencies..
+                            for(String rule : rules){
+                                if(ruleFrequencies.containsKey(rule)){
+                                    int freq = ruleFrequencies.remove(rule);
+                                    freq++;
+                                    ruleFrequencies.put(rule, freq);
+                                }else{
+                                    ruleFrequencies.put(rule, 1);
+                                }
+                            }
+                            Model model = new Model(outputNode, inputNodes, rules, fit);
+                            if(this.reduceMemoryFootprint){
+                                if(outputToMappedModelsMap.containsKey(outputNode)){                           
+                                    MappedModels mappedModels = outputToMappedModelsMap.remove(outputNode);
+                                    if(mappedModels.getNumOfMappedModels() < mappedModels.getMaxMappedModels()){
+                                        mappedModels.add(model);
+                                    }else if(model.getFit() > mappedModels.getMaxEstimatedFit()){
+                                        mappedModels.removeLeastFitted();
+                                        mappedModels.add(model);                                    
+                                    }                                
+                                    outputToMappedModelsMap.put(outputNode, mappedModels);
+                                }else{ 
+                                    LinkedList<Model> mappedModelsList = new LinkedList();
+                                    MappedModels mappedModels = 
+                                            new MappedModels(outputNode, 
+                                                             mappedModelsList, //empty mapped models...
+                                                             250, //maxMappedModels, defaults to 250
+                                                             -100.0, //maxEstimatedFit 
+                                                             100.0 //minEstimatedFit 
+                                                            );
                                     mappedModels.add(model);
-                                }else if(model.getFit() > mappedModels.getMaxEstimatedFit()){
-                                    mappedModels.removeLeastFitted();
-                                    mappedModels.add(model);                                    
-                                }                                
-                                outputToMappedModelsMap.put(outputNode, mappedModels);
-                            }else{ 
-                                LinkedList<Model> mappedModelsList = new LinkedList();
-                                MappedModels mappedModels = 
-                                        new MappedModels(outputNode, 
-                                                         mappedModelsList, //empty mapped models...
-                                                         250, //maxMappedModels, defaults to 250
-                                                         -100.0, //maxEstimatedFit 
-                                                         100.0 //minEstimatedFit 
-                                                        );
-                                mappedModels.add(model);
-                                outputToMappedModelsMap.put(outputNode, mappedModels);
-                            }                                                         
-                        }else{                                                       
-                            if(outputToModelsMap.containsKey(outputNode)){                           
-                                LinkedList<Model> mappedModels = outputToModelsMap.remove(outputNode);
-                                mappedModels.add(model);
-                                outputToModelsMap.put(outputNode, mappedModels);
-                            }else{ 
-                                LinkedList<Model> mappedModels = new LinkedList();
-                                mappedModels.add(model);
-                                outputToModelsMap.put(outputNode, mappedModels);
-                            }  
-                            
-                        }                                                
-                    }                    
+                                    outputToMappedModelsMap.put(outputNode, mappedModels);
+                                }                                                         
+                            }else{                                                       
+                                if(outputToModelsMap.containsKey(outputNode)){                           
+                                    LinkedList<Model> mappedModels = outputToModelsMap.remove(outputNode);
+                                    mappedModels.add(model);
+                                    outputToModelsMap.put(outputNode, mappedModels);
+                                }else{ 
+                                    LinkedList<Model> mappedModels = new LinkedList();
+                                    mappedModels.add(model);
+                                    outputToModelsMap.put(outputNode, mappedModels);
+                                }  
+                            }                                                
+                        }                        
+                    }                                        
                 }
                 if(line.contains("> Begin")){
                     readTable = true;
@@ -208,8 +208,7 @@ public class AnnotatedGraph {
                             edgeIdToMappedEdges.put(edgeId, mappedEdges);
                         }
                     }
-                }
-                
+                }               
             }else{
                 Set<Vertex> outputNodes = outputToModelsMap.keySet();
                 for(Vertex outputNode : outputNodes){
@@ -238,7 +237,6 @@ public class AnnotatedGraph {
                             edgeIdToMappedEdges.put(edgeId, mappedEdges);
                         }
                     }
-
                 }
             }            
         }
@@ -314,6 +312,33 @@ public class AnnotatedGraph {
         return new Matrix(nodesArr, nodesArr, directedAdjMatrix);
     }
     
+    public Matrix getBestEvalModelsAdjMatrix(String testDataExpMat) throws IOException{
+        Table exprsMat = new Table(testDataExpMat, Table.TableType.DOUBLE);
+        HashMap <Vertex, LinkedList<TestedModel>> outputToTestedModelsMap = evaluateOutputModels(exprsMat);
+        Set<Vertex> vvs = outputToTestedModelsMap.keySet();
+        LinkedList<Vertex> vv = new LinkedList();
+        vvs.forEach((v) -> {
+            vv.add(v);
+        });
+              
+        int[][] adjMatrix = new int[vv.size()][vv.size()];
+        for(int i = 0; i < vv.size(); i++){
+            Vertex inputNode = vv.get(i);                
+            for(int j = 0; j < vv.size(); j++){
+                Vertex outputNode = vv.get(j);
+                LinkedList<TestedModel> mappedNodeInputs = outputToTestedModelsMap.get(outputNode);
+                if(mappedNodeInputs != null){
+                    Collections.sort(mappedNodeInputs);
+                    LinkedList<Vertex> inputNodes = mappedNodeInputs.getFirst().getInputNodes(); // 
+                    if(inputNodes.contains(inputNode))
+                        adjMatrix[i][j] = 1;
+                }
+            }
+        }        
+        Vertex[] nodesArr = vv.toArray(new Vertex[vv.size()]);
+        return new Matrix(nodesArr, nodesArr, adjMatrix);
+    }
+    
     public void printEdges(String outputFile) throws FileNotFoundException{
         PrintWriter printer = new PrintWriter(outputFile);
         printer.println("From\tTo\tRule\tHashCode\tWeight");        
@@ -380,6 +405,128 @@ public class AnnotatedGraph {
         printer.close();  
     }
     
+    public HashMap<Vertex, LinkedList<TestedModel>> evaluateOutputModels(Table exprsMat //test exprs data table...
+    ){
+        HashMap<Vertex, LinkedList<TestedModel>> outputToTestedModelsMap = new HashMap();
+        FitEvaluator fitEvaluator = new FitEvaluator();
+        Set<Vertex> outputs = outputToModelsMap.keySet();
+        for(Vertex output : outputs){
+            LinkedList<Model> mappedModels = outputToModelsMap.get(output);
+            LinkedList<TestedModel> mappedTestedModels = new LinkedList();
+            for(Model fittedModel : mappedModels){
+                if(this.penalizeNullRules){
+                    if(!modelHasNULLRule(fittedModel)){
+                        double trainingFit = fittedModel.getFit();
+                        double testFit = fitEvaluator.evaluateFit(output.getId(), //String outputNode
+                                                                  fittedModel.getInputNodesStringArray(), //String[] inputNodes,
+                                                                  fittedModel.getRulesLinkedList(), //LinkedList<Rule> rules,
+                                                                  exprsMat, //Table expMat,
+                                                                  false, //boolean outputIsPheno,
+                                                                  null, // Table phenoMat,
+                                                                  false, //boolean tanTransform
+                                                                  false, //boolean logitTransform
+                                                                  0 //double k
+                                                                  );
+                        double delta = Math.abs(testFit - trainingFit);
+                        mappedTestedModels.add(new TestedModel(output,
+                                                               fittedModel.getInputNodes(),
+                                                               fittedModel.getRules(),
+                                                               trainingFit, testFit, delta));
+                    }
+                }else{
+                    double trainingFit = fittedModel.getFit();
+                    double testFit = fitEvaluator.evaluateFit(output.getId(), //String outputNode
+                                                              fittedModel.getInputNodesStringArray(), //String[] inputNodes,
+                                                              fittedModel.getRulesLinkedList(), //LinkedList<Rule> rules,
+                                                              exprsMat, //Table expMat,
+                                                              false, //boolean outputIsPheno,
+                                                              null, // Table phenoMat,
+                                                              false, //boolean tanTransform
+                                                              false, //boolean logitTransform
+                                                              0 //double k
+                                                              );
+                    double delta = Math.abs(testFit - trainingFit);
+                    mappedTestedModels.add(new TestedModel(output,
+                                                           fittedModel.getInputNodes(),
+                                                           fittedModel.getRules(),
+                                                           trainingFit, testFit, delta));
+                }
+            }
+            if(mappedTestedModels.size() > 0){ // there are models with non-null rules in fitted models....
+                outputToTestedModelsMap.put(output, mappedTestedModels);
+            } 
+        }        
+        return outputToTestedModelsMap;
+    }
+    
+    public void printBestEvaluatedFitEdges(String outputFile, String testDataExprMat) throws FileNotFoundException, IOException{
+        PrintWriter printer = new PrintWriter(outputFile + 3); // _EdgesOutputFile.edg2
+        
+        Table exprsMat = new Table(testDataExprMat, Table.TableType.DOUBLE);
+        
+        HashMap <Vertex, LinkedList<TestedModel>> outputToTestedModelsMap = evaluateOutputModels(exprsMat);
+        printer.println("From\tTo\tRule\tWeight\tDelta");        
+        Set<Vertex> outputs = outputToTestedModelsMap.keySet();
+        outputs.forEach((output) -> {
+            LinkedList<TestedModel> mappedModels = outputToTestedModelsMap.get(output);
+            Collections.sort(mappedModels); // sort bestFitModel bestFitModel ascending order of fit...
+            
+            TestedModel bestFitModel = mappedModels.getFirst();// get the model with minimum difference btw taining and test data...
+            
+            LinkedList<Vertex> inputsNodes = bestFitModel.getInputNodes();
+            //inputs.forEach((input) -> {
+            for(int i = 0; i < inputsNodes.size(); i++){
+                printer.println(inputsNodes.get(i).getId() + "\t" +
+                                output.getId() + "\t" +
+                                bestFitModel.getRules().get(i) + "\t" +
+                                bestFitModel.getFit() + "\t" +
+                                bestFitModel.getDelta());
+            }
+        });
+        printer.close();  
+    }
+    
+    public Model getBestNotNULLRuleModel(LinkedList<Model> mappedModels){
+        Model bestNotNULLRuleModel = mappedModels.getLast();
+        //iterate from the last model (best fitted model) till you have a model without null rules...
+        boolean foundBestFit = false;
+        int modelIndex = mappedModels.size() - 1;
+
+        while(!foundBestFit && (modelIndex >= 0)){
+            Model model = mappedModels.get(modelIndex);
+            LinkedList<String> modelRules = model.getRules();
+            boolean containsNullRule = false;
+            checkRules:
+            for(int i = 0; i < modelRules.size(); i++){
+                //iterate thru the rules and ensure non is a null rule
+                if(this.nullRules.contains(modelRules.get(i))){
+                    containsNullRule = true;
+                    break checkRules; 
+                }                        
+            }
+            if(containsNullRule){
+               modelIndex--;
+            }else{
+                foundBestFit = true;
+                bestNotNULLRuleModel = model;
+            }
+        }        
+        return bestNotNULLRuleModel;
+    }
+    
+    public boolean modelHasNULLRule(Model model){
+        boolean containsNullRule = false;
+        LinkedList<String> modelRules = model.getRules();
+        for(int i = 0; i < modelRules.size(); i++){
+            //iterate thru the rules and ensure non is a null rule
+            if(this.nullRules.contains(modelRules.get(i))){
+                containsNullRule = true;
+                break; 
+            }                        
+        }        
+        return containsNullRule;
+    }
+    
     public void printBestFitModels(String outputFile) throws FileNotFoundException{
         // how is this different from an edge(s) table....we could describe with filename _OutputFile.fit
         PrintWriter printer = new PrintWriter(outputFile);
@@ -387,44 +534,18 @@ public class AnnotatedGraph {
         Set<Vertex> outputs = outputToModelsMap.keySet();
         
         outputs.forEach((output) -> {
-        //for(Vertex output : outputs){
-            
+        //for(Vertex output : outputs){            
             LinkedList<Model> mappedModels = outputToModelsMap.get(output);
-            Collections.sort(mappedModels); // sort mapped models in ascending order           
-            
-            Model bestFitModel = mappedModels.getLast(); 
-            
+            Collections.sort(mappedModels); // sort mapped models in ascending order                   
+            Model bestFitModel = mappedModels.getLast();             
             if(this.penalizeNullRules){
-                //iterate from the last model (best fitted model) till you have a model without null rules...
-                boolean foundBestFit = false;
-                int modelIndex = mappedModels.size() - 1;
-                
-                while(!foundBestFit && (modelIndex >= 0)){
-                    Model model = mappedModels.get(modelIndex);
-                    LinkedList<String> modelRules = model.getRules();
-                    boolean containsNullRule = false;
-                    checkRules:
-                    for(int i = 0; i < modelRules.size(); i++){
-                        //iterate thru the rules and ensure non is a null rule
-                        if(this.nullRules.contains(modelRules.get(i))){
-                            containsNullRule = true;
-                            break checkRules; 
-                        }                        
-                    }
-                    if(containsNullRule){
-                       modelIndex--;
-                    }else{
-                        foundBestFit = true;
-                        bestFitModel = model;
-                    }
-                }
+                bestFitModel = this.getBestNotNULLRuleModel(mappedModels);                
             }
-                       
             printer.println(output.getId() + "\t" +
                             mappedModels.size() + "\t" +
                             bestFitModel.getInputNodesString() + "\t" +
                             bestFitModel.getRulesString() + "\t" +
-                            bestFitModel.getFit());
+                            bestFitModel.getFit());                      
         //}
         });
         printer.close();       
@@ -448,19 +569,36 @@ public class AnnotatedGraph {
             if(mappedModels.size() <= topFittedModelsToOutput){
                 for(int i = mappedModels.size()-1; i >= 0; i--){
                     Model fittedModel = mappedModels.get(i);
-                    printer.println(output.getId() + "\t" +
-                                    fittedModel.getInputNodesString() + "\t" +
-                                    fittedModel.getRulesString() + "\t" +
-                                    fittedModel.getFit());
-                }
-                
+                    if(this.penalizeNullRules){
+                        if(!modelHasNULLRule(fittedModel)){
+                            printer.println(output.getId() + "\t" +
+                                            fittedModel.getInputNodesString() + "\t" +
+                                            fittedModel.getRulesString() + "\t" +
+                                            fittedModel.getFit());
+                        }
+                    }else{
+                        printer.println(output.getId() + "\t" +
+                                            fittedModel.getInputNodesString() + "\t" +
+                                            fittedModel.getRulesString() + "\t" +
+                                            fittedModel.getFit());
+                    }
+                }                
             }else{
                 for(int i = mappedModels.size()-1; i >= (mappedModels.size() - topFittedModelsToOutput); i--){
                     Model fittedModel = mappedModels.get(i);
-                    printer.println(output.getId() + "\t" +
-                                    fittedModel.getInputNodesString() + "\t" +
-                                    fittedModel.getRulesString() + "\t" +
-                                    fittedModel.getFit());
+                    if(this.penalizeNullRules){
+                        if(!modelHasNULLRule(fittedModel)){
+                            printer.println(output.getId() + "\t" +
+                                            fittedModel.getInputNodesString() + "\t" +
+                                            fittedModel.getRulesString() + "\t" +
+                                            fittedModel.getFit());
+                        }
+                    }else{
+                        printer.println(output.getId() + "\t" +
+                                            fittedModel.getInputNodesString() + "\t" +
+                                            fittedModel.getRulesString() + "\t" +
+                                            fittedModel.getFit());
+                    }
                 }
             }
         }
@@ -477,6 +615,148 @@ public class AnnotatedGraph {
         });
         printer.close();
         
+    }
+
+    public void printEvaluatedFittedModels(String outputFile, int topFittedModelsToOutput, String testDataExprMat) throws FileNotFoundException, IOException {
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //output\tInputNodes\tRules\tTrainingFit\tTestFit\tDelta
+        PrintWriter printer = new PrintWriter(outputFile + 3);
+        FitEvaluator fitEvaluator = new FitEvaluator();
+        
+        Table exprsMat = new Table(testDataExprMat, Table.TableType.DOUBLE);
+        
+        printer.println("Output\tInputNodes\tRules\tTrainingFit\tTestFit\tDelta");
+        Set<Vertex> outputs = outputToModelsMap.keySet();
+        for(Vertex output : outputs){
+            LinkedList<Model> mappedModels = outputToModelsMap.get(output);
+            Collections.sort(mappedModels);
+            if(mappedModels.size() <= topFittedModelsToOutput){
+                for(int i = mappedModels.size()-1; i >= 0; i--){
+                    Model fittedModel = mappedModels.get(i);
+                    if(this.penalizeNullRules){
+                        if(!modelHasNULLRule(fittedModel)){
+                            double trainingFit = fittedModel.getFit();
+                            double testFit = fitEvaluator.evaluateFit(output.getId(), //String outputNode
+                                                                      fittedModel.getInputNodesStringArray(), //String[] inputNodes,
+                                                                      fittedModel.getRulesLinkedList(), //LinkedList<Rule> rules,
+                                                                      exprsMat, //Table expMat,
+                                                                      false, //boolean outputIsPheno,
+                                                                      null, // Table phenoMat,
+                                                                      false, //boolean tanTransform
+                                                                      false, //boolean logitTransform
+                                                                      0 //double k
+                                                                      );
+                            printer.println(output.getId() + "\t" +
+                                            fittedModel.getInputNodesString() + "\t" +
+                                            fittedModel.getRulesString() + "\t" +
+                                            trainingFit + "\t" +  //tainingFit...
+                                            testFit + "\t" + //test Fit...
+                                            Math.abs(trainingFit - testFit)//Delta...
+                                    );
+                        }
+                    }else{
+                        double trainingFit = fittedModel.getFit();
+                        double testFit = fitEvaluator.evaluateFit(output.getId(), //String outputNode
+                                                                  fittedModel.getInputNodesStringArray(), //String[] inputNodes,
+                                                                  fittedModel.getRulesLinkedList(), //LinkedList<Rule> rules,
+                                                                  exprsMat, //Table expMat,
+                                                                  false, //boolean outputIsPheno,
+                                                                  null, // Table phenoMat,
+                                                                  false, //boolean tanTransform
+                                                                  false, //boolean logitTransform
+                                                                  0 //double k
+                                                                  );
+                        printer.println(output.getId() + "\t" +
+                                        fittedModel.getInputNodesString() + "\t" +
+                                        fittedModel.getRulesString() + "\t" +
+                                        trainingFit + "\t" +  //tainingFit...
+                                        testFit + "\t" + //test Fit...
+                                        Math.abs(trainingFit - testFit)//Delta...
+                                );
+                    }
+                }
+                
+            }else{
+                for(int i = mappedModels.size()-1; i >= (mappedModels.size() - topFittedModelsToOutput); i--){
+                    Model fittedModel = mappedModels.get(i);
+                    //printer.println(output.getId() + "\t" +
+                    //                fittedModel.getInputNodesString() + "\t" +
+                    //                fittedModel.getRulesString() + "\t" +
+                    //                fittedModel.getFit());
+                    if(this.penalizeNullRules){
+                        if(!modelHasNULLRule(fittedModel)){
+                            double trainingFit = fittedModel.getFit();
+                            double testFit = fitEvaluator.evaluateFit(output.getId(), //String outputNode
+                                                                      fittedModel.getInputNodesStringArray(), //String[] inputNodes,
+                                                                      fittedModel.getRulesLinkedList(), //LinkedList<Rule> rules,
+                                                                      exprsMat, //Table expMat,
+                                                                      false, //boolean outputIsPheno,
+                                                                      null, // Table phenoMat,
+                                                                      false, //boolean tanTransform
+                                                                      false, //boolean logitTransform
+                                                                      0 //double k
+                                                                      );
+                            printer.println(output.getId() + "\t" +
+                                            fittedModel.getInputNodesString() + "\t" +
+                                            fittedModel.getRulesString() + "\t" +
+                                            trainingFit + "\t" +  //tainingFit...
+                                            testFit + "\t" + //test Fit...
+                                            Math.abs(trainingFit - testFit)//Delta...
+                                    );
+                        }
+                    }else{
+                        double trainingFit = fittedModel.getFit();
+                        double testFit = fitEvaluator.evaluateFit(output.getId(), //String outputNode
+                                                                  fittedModel.getInputNodesStringArray(), //String[] inputNodes,
+                                                                  fittedModel.getRulesLinkedList(), //LinkedList<Rule> rules,
+                                                                  exprsMat, //Table expMat,
+                                                                  false, //boolean outputIsPheno,
+                                                                  null, // Table phenoMat,
+                                                                  false, //boolean tanTransform
+                                                                  false, //boolean logitTransform
+                                                                  0 //double k
+                                                                  );
+                        printer.println(output.getId() + "\t" +
+                                        fittedModel.getInputNodesString() + "\t" +
+                                        fittedModel.getRulesString() + "\t" +
+                                        trainingFit + "\t" +  //tainingFit...
+                                        testFit + "\t" + //test Fit...
+                                        Math.abs(trainingFit - testFit)//Delta...
+                                );
+                    }
+                }
+            }
+        }
+        printer.close();  
+    }
+    
+    public void printBestEvaluatedFittedModel(String outputFile, String testDataExprMat) throws FileNotFoundException, IOException{
+        
+        PrintWriter printer = new PrintWriter(outputFile + 4); // _EdgesOutputFile.edg2        
+        Table exprsMat = new Table(testDataExprMat, Table.TableType.DOUBLE);
+        
+        HashMap <Vertex, LinkedList<TestedModel>> outputToTestedModelsMap = evaluateOutputModels(exprsMat);
+        printer.println("Output\tNumberOfFittedModels\tInputNodes(BestFit)\tRules\tFit");
+        Set<Vertex> outputs = outputToTestedModelsMap.keySet();
+        
+        outputs.forEach((output) -> {
+        //for(Vertex output : outputs){            
+            LinkedList<TestedModel> mappedModels = outputToTestedModelsMap.get(output);
+            Collections.sort(mappedModels); // sort mapped models in ascending order           
+            
+            Model bestFitModel = mappedModels.getFirst(); // model with minimal delta...            
+            //if(this.penalizeNullRules){
+            //    bestFitModel = this.getBestNotNULLRuleModel(mappedModels);
+            //}  // models reported have already being ensured they do not contain null rules...
+                       
+            printer.println(output.getId() + "\t" +
+                            mappedModels.size() + "\t" +
+                            bestFitModel.getInputNodesString() + "\t" +
+                            bestFitModel.getRulesString() + "\t" +
+                            bestFitModel.getFit());
+        //}
+        });
+        printer.close();   
     }
     
 }

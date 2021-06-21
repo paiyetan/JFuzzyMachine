@@ -5,7 +5,7 @@
  */
 package jfuzzymachine.utilities;
 
-import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Date;
@@ -13,10 +13,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import jfuzzymachine.Fuzzifier;
-import jfuzzymachine.FuzzySet;
-import jfuzzymachine.JFuzzyMachine;
 import jfuzzymachine.Rule;
 import jfuzzymachine.exceptions.TableBindingException;
 import jfuzzymachine.tables.RuleTable;
@@ -25,7 +21,6 @@ import jfuzzymachine.utilities.graph.Model;
 import jfuzzymachine.utilities.graph.Vertex;
 import jfuzzymachine.utilities.simulation.Simulation;
 import jfuzzymachine.utilities.simulation.Simulator;
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 /**
  *
@@ -35,6 +30,31 @@ public class ProbabilityEngine {
     
     private final RuleTable ruleTable = new RuleTable();
     private final Random random = new Random();
+    
+    public void getRandomFits(int iterations,
+                              String outputNodeId, 
+                              Table exprsTable,
+                              String outputFile) throws FileNotFoundException{
+        FitEvaluator fe = new FitEvaluator();
+        PrintWriter printer = new PrintWriter(outputFile);
+        //print header....
+        printer.println("Output\tInputs\tRules\tFit");
+        while(iterations > 0){
+            //get random inputs (up to three inputs[current default])
+            int number = random.nextInt(3) + 1; //number of inputs
+            String[] features = exprsTable.getRowIds();
+            String[] possibleInputs = exprsTable.removeItem(features, outputNodeId);
+            String[] inputs = this.getRandomInputs(number, possibleInputs);
+            LinkedList<Rule> rules = this.getRandomRulesList(number);
+            double fit = fe.evaluateFit(outputNodeId, inputs, rules, exprsTable);
+            printer.println(outputNodeId + "\t" + 
+                            Arrays.toString(inputs) + "\t" +
+                            rules.toString() + "\t" +
+                            fit);
+            iterations--;
+        }        
+        printer.close();
+    }
             
     /* 
      recall that the fit is computed by 
@@ -162,14 +182,32 @@ public class ProbabilityEngine {
         return(randomDynPreds);
     }
      
-    public LinkedList<String> getRandomRules(int numberOfRules){
+    public LinkedList<String> getRandomRules(int number){
         LinkedList<String> rulesList = new LinkedList();
-        while(rulesList.size() < numberOfRules){
+        while(rulesList.size() < number){
             int[] rule = ruleTable.getRule(random.nextInt(27));
             rulesList.add(new Rule(rule).toString().replace("[", "").replace("]",""));
         }
         return(rulesList);    
     }
+    
+    public String[] getRandomInputs(int number, String[] possibleInputs){
+        String[] inputs = new String[number];
+        for(int i = 0; i < inputs.length; i++){
+            inputs[i] = possibleInputs[random.nextInt(possibleInputs.length)];
+        }
+        return inputs;
+    }
+    
+    public LinkedList<Rule> getRandomRulesList(int numberOfRules){
+        LinkedList<Rule> rulesList = new LinkedList();
+        while(rulesList.size() < numberOfRules){
+            int[] rule = ruleTable.getRule(random.nextInt(27));
+            rulesList.add(new Rule(rule));
+        }
+        return(rulesList);    
+    }
+    
     
     public LinkedList<Double> getRandomFitEstimates(String outputNode,
                                                     Table expMat,
@@ -229,63 +267,10 @@ public class ProbabilityEngine {
     }
     
     
-    class FitEvaluator{
-        
-        double evaluateFit(String outputNode,
-                            String[] inputNodes,
-                                LinkedList<Rule> rules,
-                                    Table expMat,
-                                        boolean outputIsPheno,
-                                                Table phenoMat,
-                                                    boolean tanTransform,
-                                                       boolean logitTransform, 
-                                                           double k){
-            double fit = 0;
-            Fuzzifier fuzzifier = new Fuzzifier();
-            //get the output expression values...
-            double[] outputExprValues = null;
-            if(outputIsPheno){
-                outputExprValues = phenoMat.getRow(phenoMat.getRowIndex(outputNode), Table.TableType.DOUBLE);
-            }else{
-                outputExprValues = expMat.getRow(expMat.getRowIndex(outputNode), Table.TableType.DOUBLE);
-            }
-            
-            double deviationSquaredSum = 0;
-            double residualSquaredSum = 0; 
-            Mean mean = new Mean();
-            double xBar = mean.evaluate(outputExprValues); // average expression value for output outputGene
-            for(int i = 0; i < outputExprValues.length; i++){
-                deviationSquaredSum = deviationSquaredSum + Math.pow((outputExprValues[i] - xBar), 2);
-            }
-                        
-            for(int index = 0; index < outputExprValues.length; index++){                                                                                                                                                        
-                //get fuzzyValues of input genes,                 
-                double[] expValues = expMat.getColumn(index, Table.TableType.DOUBLE);
-                //get expression value of input features..
-                double[] inputsExpValues = new double[inputNodes.length];
-                for(int i = 0; i < inputsExpValues.length; i++){
-                    inputsExpValues[i] = expValues[expMat.getRowIndex(inputNodes[i])];             
-                }
-                //get the fuzzyset array 
-                FuzzySet[] inputsFuzzArr = new FuzzySet[inputsExpValues.length];
-                for(int i = 0; i < inputsFuzzArr.length; i++){
-                    inputsFuzzArr[i] = fuzzifier.fuzzify(inputsExpValues[i], JFuzzyMachine.ExpressionType.GENOTYPE);
-                }
-                FuzzySet zValue = fuzzifier.getZValue(inputsFuzzArr, rules);
-                //get defuzzified (xCaretValue) value of Z @ position index
-                //double dfz = fuzzifier.deFuzzify(new FuzzySet(zx, zy, zz), ExpressionType.PHENOTYPE);
-                double dfz = fuzzifier.deFuzzify(zValue, tanTransform, logitTransform, k);
-                // compute residual and cummulative residual squared sum...
-                residualSquaredSum = residualSquaredSum + Math.pow((outputExprValues[index] - dfz), 2);                                        
-            }
-            // compute error..
-            fit = 1 - (residualSquaredSum/deviationSquaredSum);
-            
-            return fit;
-        }
-        
-    }
-            
+    
+    /**
+     * 
+     * 
     public static void main(String[] args) throws IOException, TableBindingException{
         
         System.out.println("[" + new Date() + "]: " + "Starting...");       
@@ -392,4 +377,6 @@ public class ProbabilityEngine {
                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(end_time - start_time))) + 
                                                       " seconds.");                
     }
+    * 
+    */
 }

@@ -42,9 +42,7 @@ public class JFuzzyMachine {
     public enum ExpressionType {PHENOTYPE, GENOTYPE};
     
     private final boolean useProbableRegulonsMap; //a less exhaustive but guided search approach...
-    
-    private boolean directJFuzzyMachineMode;
-        
+    private final boolean directJFuzzyMachineMode;      
     
     public JFuzzyMachine(HashMap<String, String> config) throws IOException{
         
@@ -69,32 +67,36 @@ public class JFuzzyMachine {
             //Print Parammeters to stderr and
             System.out.println("> StartTime: " + start.toString());
             System.out.println("> Search Parameters: ");
-            System.out.println("          inputFile = " + config.get("inputFile"));
-            System.out.println("  maxNumberOfInputs = " + config.get("maxNumberOfInputs"));
-            System.out.println("     numberOfInputs = " + config.get("numberOfInputs"));
-            System.out.println("   outputInRealtime = " + config.get("outputInRealtime"));
-            System.out.println("            eCutOff = " + config.get("eCutOff"));
-            System.out.println("useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
-            System.out.println("         iGeneStart = " + config.get("iGeneStart"));
-            System.out.println("           iGeneEnd = " + config.get("iGeneEnd"));
-            System.out.println("        useParallel = " + config.get("useParallel"));
-            System.out.println("         outputFile = " + outFile);
-            System.out.println("     modelPhenotype = " + config.get("modelPhenotype"));
+            System.out.println("               inputFile = " + config.get("inputFile"));
+            System.out.println("       maxNumberOfInputs = " + config.get("maxNumberOfInputs"));
+            System.out.println("          numberOfInputs = " + config.get("numberOfInputs"));
+            System.out.println("        outputInRealtime = " + config.get("outputInRealtime"));
+            System.out.println("                 eCutOff = " + config.get("eCutOff"));
+            System.out.println("     useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
+            System.out.println("              iGeneStart = " + config.get("iGeneStart"));
+            System.out.println("                iGeneEnd = " + config.get("iGeneEnd"));
+            System.out.println("             useParallel = " + config.get("useParallel"));
+            System.out.println("              outputFile = " + outFile);
+            System.out.println("          modelPhenotype = " + config.get("modelPhenotype"));
+            System.out.println("  useProbableRegulonsMap = " + config.get("useProbableRegulonsMap"));
+            System.out.println(" directJFuzzyMachineMode = " + config.get("directJFuzzyMachineMode"));
             System.out.println();
             
             printer.println("> StartTime: " + start.toString());
             printer.println("> Search Parameters: ");
-            printer.println("          inputFile = " + config.get("inputFile"));
-            printer.println("  maxNumberOfInputs = " + config.get("maxNumberOfInputs"));
-            printer.println("     numberOfInputs = " + config.get("numberOfInputs"));
-            printer.println("   outputInRealtime = " + config.get("outputInRealtime"));
-            printer.println("            eCutOff = " + config.get("eCutOff"));
-            printer.println("useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
-            printer.println("         iGeneStart = " + config.get("iGeneStart"));
-            printer.println("           iGeneEnd = " + config.get("iGeneEnd"));
-            printer.println("        useParallel = " + config.get("useParallel"));
-            printer.println("         outputFile = " + outFile);
-            printer.println("     modelPhenotype = " + config.get("modelPhenotype"));
+            printer.println("               inputFile = " + config.get("inputFile"));
+            printer.println("       maxNumberOfInputs = " + config.get("maxNumberOfInputs"));
+            printer.println("          numberOfInputs = " + config.get("numberOfInputs"));
+            printer.println("        outputInRealtime = " + config.get("outputInRealtime"));
+            printer.println("                 eCutOff = " + config.get("eCutOff"));
+            printer.println("     useAllGenesAsOutput = " + config.get("useAllGenesAsOutput"));
+            printer.println("              iGeneStart = " + config.get("iGeneStart"));
+            printer.println("                iGeneEnd = " + config.get("iGeneEnd"));
+            printer.println("             useParallel = " + config.get("useParallel"));
+            printer.println("              outputFile = " + outFile);
+            printer.println("          modelPhenotype = " + config.get("modelPhenotype"));
+            printer.println("  useProbableRegulonsMap = " + config.get("useProbableRegulonsMap"));
+            printer.println(" directJFuzzyMachineMode = " + config.get("directJFuzzyMachineMode"));
             printer.println();
             
             System.out.println("Initiating...");
@@ -664,6 +666,8 @@ public class JFuzzyMachine {
                     for (int i = 0; i < maxInputs; i++ ){
                         int inputs = i + 1;
                         if(otherGenes.length >= inputs){
+                            //System.out.println("");
+                            //printer.println();
                             this.searchHelper(inputs, 
                                                 outputGene, 
                                                     otherGenes, 

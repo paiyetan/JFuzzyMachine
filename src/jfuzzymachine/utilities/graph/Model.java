@@ -11,6 +11,9 @@ package jfuzzymachine.utilities.graph;
 
 import java.util.Arrays;
 import java.util.LinkedList;
+import jfuzzymachine.Rule;
+import jfuzzymachine.tables.Table;
+import jfuzzymachine.utilities.FitEvaluator;
 
 /**
  *
@@ -48,6 +51,13 @@ public class Model implements Comparable{
             ins[i] = inputNodes.get(i).getId();
         return Arrays.toString(ins);
     }
+    
+    public String[] getInputNodesStringArray(){
+        String[] ins = new String[inputNodes.size()];
+        for(int i = 0; i < ins.length; i++)
+            ins[i] = inputNodes.get(i).getId();
+        return ins;
+    }
 
     public LinkedList<String> getRules() {
         return rules;
@@ -58,6 +68,19 @@ public class Model implements Comparable{
         for(int i = 0; i < ins.length; i++)
             ins[i] = "[" + rules.get(i) + "]";
         return Arrays.toString(ins);
+    }
+    
+    public LinkedList<Rule> getRulesLinkedList(){
+        LinkedList<Rule> rulesList = new LinkedList();
+        for(int i = 0; i < rules.size(); i++){
+            String rule = rules.get(i);
+            String[] ruleArr = rule.split(", ");
+            int[] ruleArri = new int[ruleArr.length];
+            for(int j = 0; j < ruleArri.length; j++)
+                ruleArri[j] = Integer.parseInt(ruleArr[j]);
+            rulesList.add(new Rule(ruleArri));
+        }       
+        return rulesList;
     }
 
 
@@ -78,6 +101,18 @@ public class Model implements Comparable{
             return 0;
     }
     
-    
+    public void computeFit(Table exprs){
+        FitEvaluator fitEvaluator = new FitEvaluator();
+        fit = fitEvaluator.evaluateFit(outputNode.getId(), //String outputNode,
+                                        getInputNodesStringArray(), //String[] inputNodes
+                                        getRulesLinkedList(), //LinkedList<Rule> rules
+                                        exprs, //Table expMat
+                                        false, //boolean outputIsPheno
+                                        null, //Table phenoMat
+                                        false, //boolean tanTransform
+                                        true, //boolean logitTransform
+                                        0 //double k
+                                        );
+    }
     
 }

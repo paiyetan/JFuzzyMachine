@@ -237,6 +237,10 @@ public class Table {
         combinedTable = new Table(newTableRowIds, newTableColumnIds, newTableMatrix);
         return combinedTable;
     }
+    
+    public void setMatrix(double[][] mat){
+        this.dMatrix = mat;
+    }
         
     public void print(String outFile) throws FileNotFoundException{
         PrintWriter printer = new PrintWriter(outFile);
